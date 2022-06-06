@@ -1,0 +1,54 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/icon.png</file>
+        <file>images/file.png</file>
+        <file>images/copy.png</file>
+        <file>images/cut.png</file>
+        <file>images/exit.png</file>
+        <file>images/new.png</file>
+        <file>images/open.png</file>
+        <file>images/opendriver.png</file>
+        <file>images/paste.png</file>
+        <file>images/redo.png</file>
+        <file>images/save.png</file>
+        <file>images/saveas.png</file>
+        <file>images/undo.png</file>
+        <file>images/find.png</file>
+        <file>images/jmp.png</file>
+        <file>images/setting.png</file>
+        <file>images/general.png</file>
+        <file>images/plugin.png</file>
+        <file>images/closefile.png</file>
+        <file>images/goto.png</file>
+        <file>images/settingplugin.png</file>
+        <file>images/lock.png</file>
+        <file>images/unlock.png</file>
+        <file>images/canover.png</file>
+        <file>images/mAddr.png</file>
+        <file>images/readonly.png</file>
+        <file>images/saved.png</file>
+        <file>images/unover.png</file>
+        <file>images/unsaved.png</file>
+        <file>images/writable.png</file>
+        <file>images/mColInfo.png</file>
+        <file>images/mStr.png</file>
+        <file>images/metadata.png</file>
+        <file>images/author.png</file>
+        <file>images/sponsor.png</file>
+        <file>images/soft.png</file>
+        <file>images/fill.png</file>
+        <file>images/fillNop.png</file>
+        <file>images/fillZero.png</file>
+        <file>images/mLineInfo.png</file>
+        <file>images/del.png</file>
+        <file>images/edit.png</file>
+        <file>images/author.jpg</file>
+        <file>images/bookmark.png</file>
+        <file>images/export.png</file>
+    </qresource>
+    <qresource prefix="/resources">
+        <file>settings.json</file>
+        <file>README.md</file>
+        <file>sponsor.png</file>
+    </qresource>
+</RCC>

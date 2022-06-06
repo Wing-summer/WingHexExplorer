@@ -1,0 +1,65 @@
+#include "driverselectordialog.h"
+#include "utilities.h"
+#include <DDialogButtonBox>
+#include <DLabel>
+
+DriverSelectorDialog::DriverSelectorDialog(DMainWindow *parent)
+    : DDialog(parent) {
+  setWindowTitle(tr("OpenDriver"));
+  drivers = new DListWidget(this);
+  drivers->setSortingEnabled(false);
+  QStorageInfo si;
+  auto ico = ICONRES("opendriver");
+  m_infos = si.mountedVolumes();
+  addContent(new DLabel("PleaseChooseDriver", this));
+  addSpacing(5);
+  for (auto item : m_infos) {
+    drivers->addItem(new QListWidgetItem(ico, item.device()));
+  }
+  addContent(drivers);
+  addSpacing(5);
+  infob = new DTextBrowser(this);
+  addContent(infob);
+  addSpacing(5);
+  addContent(new DLabel(tr("DriverTips"), this));
+  addSpacing(5);
+  auto dbbox =
+      new DDialogButtonBox(DDialogButtonBox::Ok | DDialogButtonBox::Cancel);
+
+  connect(dbbox, &DDialogButtonBox::accepted, this,
+          &DriverSelectorDialog::on_accepted);
+  connect(dbbox, &DDialogButtonBox::rejected, this,
+          &DriverSelectorDialog::on_rejected);
+  addContent(dbbox);
+
+  connect(drivers, &QListWidget::itemSelectionChanged, this,
+          &DriverSelectorDialog::on_list_selectionChanged);
+}
+
+void DriverSelectorDialog::on_list_selectionChanged() {
+  infob->clear();
+#define Info(mem, info) infob->append(mem + " : " + info)
+  auto item = m_infos.at(drivers->currentRow());
+  Info(tr("device"), item.device());
+  Info(tr("displayName"), item.displayName());
+  Info(tr("fileSystemType"), item.fileSystemType());
+  Info(tr("name"), item.name());
+
+  if (item.isReady()) {
+    Info(tr("isReady"), "True");
+    Info(tr("bytesAvailable"),
+         Utilities::ProcessBytesCount(item.bytesAvailable()));
+    Info(tr("bytesTotal"), Utilities::ProcessBytesCount(item.bytesTotal()));
+  } else {
+    Info(tr("isReady"), "False");
+  }
+}
+
+void DriverSelectorDialog::on_accepted() {
+  m_si = m_infos.at(drivers->currentRow());
+  done(1);
+}
+
+void DriverSelectorDialog::on_rejected() { done(0); }
+
+QStorageInfo DriverSelectorDialog::GetResult() { return m_si; }

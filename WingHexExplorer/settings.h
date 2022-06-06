@@ -1,0 +1,57 @@
+#ifndef SETTING_H
+#define SETTING_H
+
+#include <DApplication>
+#include <DDialog>
+#include <DKeySequenceEdit>
+#include <DSettings>
+#include <DSettingsDialog>
+#include <QKeyEvent>
+#include <QObject>
+#include <QWidget>
+#include <QtCore>
+#include <qsettingbackend.h>
+
+DWIDGET_USE_NAMESPACE
+DCORE_USE_NAMESPACE
+DTK_USE_NAMESPACE
+
+class Settings : public QObject {
+  Q_OBJECT
+
+public:
+  explicit Settings(QWidget *parent = nullptr);
+  ~Settings();
+
+  void dtkThemeWorkaround(QWidget *parent, const QString &theme);
+  static QPair<QWidget *, QWidget *> createFontComBoBoxHandle(QObject *obj);
+  static Settings *instance();
+
+  void setSettingDialog(DSettingsDialog *settingsDialog);
+
+  int m_iDefaultFontSize = 12;
+  int m_iMaxFontSize = 50;
+  int m_iMinFontSize = 8;
+
+  DSettings *settings;
+
+signals:
+  void sigAdjustFont(QString name);
+  void sigAdjustFontSize(int fontSize);
+  void sigShowAddressNumber(bool enable);
+  void sigShowColNumber(bool enable);
+  void sigShowEncodingText(bool enable);
+  void sigChangeWindowSize(QString mode);
+
+private:
+  DDialog *createDialog(const QString &title, const QString &content,
+                        const bool &bIsConflicts);
+
+private:
+  Dtk::Core::QSettingBackend *m_backend;
+  DSettingsDialog *m_pSettingsDialog;
+  static Settings *s_pSetting;
+  DDialog *m_pDialog;
+};
+
+#endif // SETTING_H

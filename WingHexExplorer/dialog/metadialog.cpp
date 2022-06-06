@@ -1,0 +1,101 @@
+#include "metadialog.h"
+#include <DDialogButtonBox>
+
+MetaDialog::MetaDialog(DMainWindow *parent) : DDialog(parent) {
+  setWindowTitle(tr("Metadata"));
+  cforeground = new DCheckBox(this);
+  cforeground->setText(tr("foreground"));
+  addContent(cforeground);
+  addSpacing(2);
+
+  iforeground = new DPushButton(this);
+  iforeground->setText(tr("foreground"));
+  iforeground->setEnabled(false);
+  addContent(iforeground);
+
+  addSpacing(2);
+
+  cbackground = new DCheckBox(this);
+  cbackground->setText(tr("background"));
+  addContent(cbackground);
+
+  addSpacing(2);
+
+  ibackground = new DPushButton(this);
+  ibackground->setText(tr("background"));
+  ibackground->setEnabled(false);
+  addContent(ibackground);
+
+  addSpacing(2);
+
+  ccomment = new DCheckBox(this);
+  ccomment->setText(tr("comment"));
+  addContent(ccomment);
+
+  addSpacing(2);
+
+  m_comment = new DLineEdit(this);
+  addContent(m_comment);
+  m_comment->setEnabled(false);
+
+  addSpacing(5);
+
+  auto dbbox = new DDialogButtonBox(
+      DDialogButtonBox::Ok | DDialogButtonBox::Cancel, this);
+  addContent(dbbox);
+  addSpacing(2);
+
+  connect(cforeground, &DCheckBox::clicked, iforeground,
+          &DPushButton::setEnabled);
+  connect(cbackground, &DCheckBox::clicked, ibackground,
+          &DPushButton::setEnabled);
+  connect(ccomment, &DCheckBox::clicked, m_comment, &DPushButton::setEnabled);
+  connect(iforeground, &DPushButton::clicked, [=] {
+    QColorDialog cd;
+    if (cd.exec()) {
+      QPalette pe;
+      pe.setColor(QPalette::ButtonText, cd.currentColor());
+      iforeground->setPalette(pe);
+      _foreground = cd.currentColor();
+    }
+  });
+  connect(ibackground, &DPushButton::clicked, [=] {
+    QColorDialog cd;
+    if (cd.exec()) {
+      QPalette pe;
+      pe.setColor(QPalette::ButtonText, cd.currentColor());
+      ibackground->setPalette(pe);
+      _background = cd.currentColor();
+    }
+  });
+  connect(dbbox, &DDialogButtonBox::accepted, this, &MetaDialog::on_accept);
+  connect(dbbox, &DDialogButtonBox::rejected, this, &MetaDialog::on_reject);
+}
+
+void MetaDialog::on_accept() {
+  _comment = ccomment->text();
+  done(1);
+}
+
+void MetaDialog::on_reject() { done(0); }
+
+QString MetaDialog::comment() {
+  if (ccomment->isChecked())
+    return m_comment->text();
+  else
+    return "";
+}
+
+QColor MetaDialog::foreGroundColor() {
+  if (cforeground->isChecked())
+    return _foreground;
+  else
+    return QColor();
+}
+
+QColor MetaDialog::backGroundColor() {
+  if (cbackground->isChecked())
+    return _background;
+  else
+    return QColor();
+}

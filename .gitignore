@@ -1,0 +1,3 @@
+*.json
+!settings.json
+!TestPlugin.json

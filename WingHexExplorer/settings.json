@@ -1,0 +1,87 @@
+{
+    "groups": [
+        {
+            "key": "editor",
+            "name": "Editor",
+            "groups": [
+                {
+                    "key": "font",
+                    "name": "Font Style",
+                    "options": [
+                        {
+                            "key": "family",
+                            "name": "Font",
+                            "type": "fontcombobox",
+                            "default": "Noto Mono"
+                        },
+                        {
+                            "key": "size",
+                            "name": "Font Size",
+                            "type": "spinbutton",
+                            "default": 12,
+                            "max": 50,
+                            "min": 8
+                        },
+                        {
+                            "key": "showaddr",
+                            "name": "Show address number",
+                            "type": "checkbox",
+                            "text": "Show adress numbers",
+                            "default": true
+                        },
+                        {
+                            "key": "showcol",
+                            "name": "Show column number",
+                            "type": "checkbox",
+                            "text": "Show column numbers",
+                            "default": true
+                        },
+                        {
+                            "key": "showtext",
+                            "name": "Show the encoding text",
+                            "type": "checkbox",
+                            "text": "Show the encoding text",
+                            "default": true
+                        },
+                        {
+                            "key": "file_dialog_dir",
+                            "hide": true,
+                            "reset": false,
+                            "default": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "advance",
+            "name": "Advanced",
+            "groups": [
+                {
+                    "key": "window",
+                    "name": "Window",
+                    "options": [
+                        {
+                            "key": "windowstate",
+                            "name": "Window size",
+                            "type": "combobox",
+                            "default": "window_normal"
+                        },
+                        {
+                            "key": "window_width",
+                            "hide": true,
+                            "reset": false,
+                            "default": 0.6
+                        },
+                        {
+                            "key": "window_height",
+                            "hide": true,
+                            "reset": false,
+                            "default": 0.6
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
