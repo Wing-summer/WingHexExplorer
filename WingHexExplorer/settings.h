@@ -28,6 +28,7 @@ public:
   static Settings *instance();
 
   void setSettingDialog(DSettingsDialog *settingsDialog);
+  void applySetting();
 
   int m_iDefaultFontSize = 12;
   int m_iMaxFontSize = 50;
@@ -37,11 +38,13 @@ public:
 
 signals:
   void sigAdjustFont(QString name);
-  void sigAdjustFontSize(int fontSize);
+  void sigAdjustInfoFontSize(int fontSize);
+  void sigAdjustEditorFontSize(int fontSize);
   void sigShowAddressNumber(bool enable);
   void sigShowColNumber(bool enable);
   void sigShowEncodingText(bool enable);
   void sigChangeWindowSize(QString mode);
+  void sigChangeWindowState(QString state);
 
 private:
   DDialog *createDialog(const QString &title, const QString &content,

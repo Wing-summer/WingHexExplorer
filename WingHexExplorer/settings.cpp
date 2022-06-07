@@ -31,25 +31,31 @@ Settings::Settings(QWidget *parent) : QObject(parent) {
   connect(Var, &Dtk::Core::DSettingsOption::valueChanged, this,                \
           [=](QVariant value) { emit Signal; });
 
-  BindConfigSignal(fontFamliy, "editor.font.family",
+  BindConfigSignal(fontFamliy, "appearance.font.family",
                    sigAdjustFont(value.toString()));
-  BindConfigSignal(fontSize, "editor.font.size",
-                   sigAdjustFontSize(value.toInt()));
-  BindConfigSignal(showAddr, "edit.font.showaddr",
+  BindConfigSignal(hexfontSize, "editor.font.size",
+                   sigAdjustEditorFontSize(value.toInt()));
+  BindConfigSignal(infofontSize, "appearance.font.size",
+                   sigAdjustInfoFontSize(value.toInt()));
+  BindConfigSignal(showAddr, "editor.font.showaddr",
                    sigShowAddressNumber(value.toBool()));
-  BindConfigSignal(showCol, "edit.font.showcol",
+  BindConfigSignal(showCol, "editor.font.showcol",
                    sigShowColNumber(value.toBool()));
-  BindConfigSignal(showText, "edit.font.showtext",
+  BindConfigSignal(showText, "editor.font.showtext",
                    sigShowEncodingText(value.toBool()));
+  BindConfigSignal(windowstate, "appearance.window.windowstate",
+                   sigChangeWindowState(value.toString()));
 
   // only used by new window
-  auto windowState = settings->option("advance.window.windowstate");
+  auto windowState = settings->option("appearance.window.windowstate");
   QMap<QString, QVariant> windowStateMap;
   windowStateMap.insert("keys", QStringList() << "window_normal"
                                               << "window_maximum"
+                                              << "window_minimum"
                                               << "fullscreen");
-  windowStateMap.insert("values", QStringList() << tr("Normal") << tr("Maximum")
-                                                << tr("Fullscreen"));
+  windowStateMap.insert("values", QStringList()
+                                      << tr("Normal") << tr("Maximum")
+                                      << tr("Minimum") << tr("Fullscreen"));
   windowState->setData("items", windowStateMap);
 }
 
@@ -107,6 +113,27 @@ Settings *Settings::instance() {
     s_pSetting = new Settings;
   }
   return s_pSetting;
+}
+
+void Settings::applySetting() {
+#define Apply(Var, SettingName, Signal)                                        \
+  auto Var = settings->option(SettingName);                                    \
+  emit Signal;
+
+  Apply(fontFamliy, "appearance.font.family",
+        sigAdjustFont(fontFamliy->value().toString()));
+  Apply(hexfontSize, "editor.font.size",
+        sigAdjustEditorFontSize(hexfontSize->value().toInt()));
+  Apply(infofontSize, "appearance.font.size",
+        sigAdjustInfoFontSize(infofontSize->value().toInt()));
+  Apply(showAddr, "editor.font.showaddr",
+        sigShowAddressNumber(showAddr->value().toBool()));
+  Apply(showCol, "editor.font.showcol",
+        sigShowColNumber(showCol->value().toBool()));
+  Apply(showText, "editor.font.showtext",
+        sigShowEncodingText(showText->value().toBool()));
+  Apply(windowstate, "appearance.window.windowstate",
+        sigChangeWindowState(windowstate->value().toString()));
 }
 
 DDialog *Settings::createDialog(const QString &title, const QString &content,

@@ -2,7 +2,7 @@
 #include <QMessageBox>
 #include <QStringList>
 
-TestPlugin::TestPlugin(QObject *parent) {}
+TestPlugin::TestPlugin(QObject *parent){Q_UNUSED(parent)}
 
 TestPlugin::~TestPlugin() {}
 
@@ -45,7 +45,7 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
   Q_UNUSED(msg)
   if (type == WingPluginMessage::PluginLoaded) {
     emit host2MessagePipe(this, WingPluginMessage::PluginCall,
-                          QList<QVariant>{CallTableIndex::NewFile});
+                          QList<QVariant>{int(CallTableIndex::NewFile)});
   }
 }
 
@@ -56,3 +56,5 @@ QDockWidget *TestPlugin::registerDockWidget() { return nullptr; }
 Qt::DockWidgetArea TestPlugin::registerDockWidgetDockArea() {
   return Qt::DockWidgetArea::NoDockWidgetArea;
 }
+
+HookIndex TestPlugin::getHookSubscribe() { return HookIndex::None; }

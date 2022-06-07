@@ -9,12 +9,6 @@
                     "name": "Font Style",
                     "options": [
                         {
-                            "key": "family",
-                            "name": "Font",
-                            "type": "fontcombobox",
-                            "default": "Noto Mono"
-                        },
-                        {
                             "key": "size",
                             "name": "Font Size",
                             "type": "spinbutton",
@@ -54,8 +48,8 @@
             ]
         },
         {
-            "key": "advance",
-            "name": "Advanced",
+            "key": "appearance",
+            "name": "Appearance",
             "groups": [
                 {
                     "key": "window",
@@ -79,6 +73,26 @@
                             "reset": false,
                             "default": 0.6
                         }
+                    ]
+                },
+                {
+                    "key": "font",
+                    "name": "Font Style",
+                    "options": [                    
+                        {
+                            "key": "family",
+                            "name": "Font",
+                            "type": "fontcombobox",
+                            "default": "Noto Mono"
+                        },
+                        {
+                            "key": "size",
+                            "name": "Info Font Size",
+                            "type": "spinbutton",
+                            "default": 12,
+                            "max": 50,
+                            "min": 8
+                        }        
                     ]
                 }
             ]

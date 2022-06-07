@@ -83,6 +83,7 @@ private:
   ErrFile openDriver(QString driver);
   ErrFile closeFile(int index, bool force = false);
   ErrFile saveFile(int index);
+  ErrFile exportFile(QString filename, int index);
   ErrFile saveasFile(QString filename, int index);
   ErrFile closeCurrentFile(bool force = false);
   ErrFile saveCurrentFile();
@@ -178,6 +179,15 @@ private:
   QTableWidgetItem *numsitem = nullptr;
   QTableWidgetItem (*findresitem)[3] = {nullptr};
   Logger *logger;
+
+private:
+  // hexview default setting
+  bool _showheader = true;
+  bool _showaddr = true;
+  bool _showascii = true;
+  QFont _font;
+  QFont _hexeditorfont;
+  QString _windowmode;
 };
 
 #endif // MAINWINDOW_H

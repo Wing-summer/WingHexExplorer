@@ -30,6 +30,7 @@
 #include <QScrollBar>
 #include <QShortcut>
 #include <QStorageInfo>
+#include <QThread>
 
 #define FILEMAXBUFFER 0x6400000 // 100MB
 
@@ -40,6 +41,7 @@
 MainWindow::MainWindow(DMainWindow *parent) {
   Q_UNUSED(parent)
 
+  // init mainwindow
   setMinimumSize(QSize(1200, 800));
 
   auto _title = titlebar();
@@ -68,6 +70,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   vlayout = new QVBoxLayout(w);
 
   auto menu = new DMenu(this);
+  toolmenu = menu;
 
 #define AddMenuAction(Icon, Title, Slot, Owner)                                \
   a = new QAction(Owner);                                                      \
@@ -243,6 +246,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   hexeditor = new QHexView(this);
   hexeditor->setVisible(false);
+  hexeditor->setAddressBase(_showaddr);
+  hexeditor->setHeaderVisible(_showheader);
+  hexeditor->setAsciiVisible(_showascii);
   vlayout->addWidget(hexeditor);
   hexeditor->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(hexeditor, &QHexView::customContextMenuRequested, this,
@@ -476,7 +482,48 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   logger->logMessage(INFOLOG(tr("Loading")));
 
+  // setting
+  _font = this->font();
+  _hexeditorfont = QHexView::getHexeditorFont();
   m_settings = new Settings(this);
+  connect(m_settings, &Settings::sigAdjustFont, [=](QString name) {
+    _font.setFamily(name);
+    numshowtable->setFont(_font);
+    findresult->setFont(_font);
+    pluginInfo->setFont(_font);
+  });
+  connect(m_settings, &Settings::sigShowColNumber,
+          [=](bool b) { _showheader = b; });
+  connect(m_settings, &Settings::sigAdjustEditorFontSize, [=](int fontsize) {
+    _hexeditorfont.setPointSize(fontsize);
+    hexeditor->setFont(_hexeditorfont);
+  });
+  connect(m_settings, &Settings::sigAdjustInfoFontSize, [=](int fontsize) {
+    _font.setPointSize(fontsize);
+    numshowtable->setFont(_font);
+    findresult->setFont(_font);
+  });
+  connect(m_settings, &Settings::sigShowEncodingText,
+          [=](bool b) { _showascii = b; });
+  connect(m_settings, &Settings::sigShowAddressNumber,
+          [=](bool b) { _showaddr = b; });
+  connect(m_settings, &Settings::sigChangeWindowState,
+          [=](QString mode) { _windowmode = mode; });
+
+  m_settings->applySetting();
+  hexeditor->setAddressVisible(_showaddr);
+  hexeditor->setHeaderVisible(_showheader);
+  hexeditor->setAsciiVisible(_showascii);
+
+  if (_windowmode == "window_normal") {
+    setWindowState(Qt::WindowState::WindowActive);
+  } else if (_windowmode == "window_maximum") {
+    setWindowState(Qt::WindowState::WindowMaximized);
+  } else if (_windowmode == "window_minimum") {
+    setWindowState(Qt::WindowState::WindowMinimized);
+  } else {
+    setWindowState(Qt::WindowState::WindowFullScreen);
+  }
 
   // init plugin system
   plgsys = new PluginSystem(this);
@@ -615,9 +662,12 @@ void MainWindow::newFile() {
   QString title = tr("Untitled") + QString("-%1").arg(defaultindex);
   hf.doc = p;
   hexeditor->setDocument(p);
+  hexeditor->setAddressVisible(_showaddr);
+  hexeditor->setAsciiVisible(_showascii);
+  hexeditor->setHeaderVisible(_showheader);
   hf.render = hexeditor->renderer();
   hf.vBarValue = -1;
-  hf.filename = "";
+  hf.filename = ":" + title;
   hexfiles.push_back(hf);
   tabs->addTab(QIcon::fromTheme("text-plain"), title);
   defaultindex++;
@@ -689,7 +739,7 @@ bool MainWindow::isModified(int index) {
   if (index < 0 || index >= hexfiles.count())
     return false;
   auto p = hexfiles.at(index);
-  return p.filename.isEmpty() || p.doc->isModfied();
+  return p.doc->isModfied();
 }
 
 ErrFile MainWindow::closeFile(int index, bool force) {
@@ -757,7 +807,18 @@ void MainWindow::on_openfile() {
   }
 }
 
-void MainWindow::on_tabCloseRequested(int index) { closeFile(index); }
+void MainWindow::on_tabCloseRequested(int index) {
+  auto res = closeFile(index);
+  if (res != ErrFile::Success) {
+    auto f = hexfiles.at(index).filename;
+
+    auto r = QMessageBox::question(this, tr("Close"),
+                                   tr("ConfirmSave") + f.remove(':'));
+    if (r == QMessageBox::Yes) {
+      closeFile(index, true);
+    }
+  }
+}
 
 void MainWindow::on_tabAddRequested() { newFile(); }
 
@@ -776,7 +837,12 @@ void MainWindow::on_opendriver() {
   }
 }
 
-void MainWindow::on_exportfile() {}
+void MainWindow::on_exportfile() {
+  auto filename = QFileDialog::getSaveFileName(this, tr("ChooseExportFile"));
+  if (filename.isEmpty())
+    return;
+  exportFile(filename, _currentfile);
+}
 
 void MainWindow::on_exit() {}
 
@@ -799,28 +865,31 @@ void MainWindow::on_saveasfile() {
 void MainWindow::on_findfile() {
   FindDialog *fd = new FindDialog();
   if (fd->exec()) {
-    auto res = fd->getResult();
-    auto d = hexeditor->document();
-    QList<quint64> results;
-    d->FindAllBytes(res, results);
-    if (findresitem) {
-      delete[] findresitem;
-      findresult->setRowCount(0);
-    }
-    auto len = results.length();
-    findresitem = new QTableWidgetItem[ulong(len)][3];
-    for (auto i = 0; i < len; i++) {
-      auto frow = findresitem[i];
-      findresult->insertRow(i);
-      frow[0].setText(hexfiles.at(_currentfile).filename);
-      frow[0].setData(Qt::UserRole, results.at(i));
-      frow[1].setText(
-          QString::number(results.at(i) + hexeditor->addressBase(), 16));
-      frow[2].setText(res.toHex(' '));
-      findresult->setItem(i, 0, frow);
-      findresult->setItem(i, 1, frow + 1);
-      findresult->setItem(i, 2, frow + 2);
-    }
+    auto th = QThread ::create([=]() {
+      auto res = fd->getResult();
+      auto d = hexeditor->document();
+      QList<quint64> results;
+      d->FindAllBytes(res, results);
+      if (findresitem) {
+        delete[] findresitem;
+        findresult->setRowCount(0);
+      }
+      auto len = results.length();
+      findresitem = new QTableWidgetItem[ulong(len)][3];
+      for (auto i = 0; i < len; i++) {
+        auto frow = findresitem[i];
+        findresult->insertRow(i);
+        frow[0].setText(hexfiles.at(_currentfile).filename);
+        frow[0].setData(Qt::UserRole, results.at(i));
+        frow[1].setText(
+            QString::number(results.at(i) + hexeditor->addressBase(), 16));
+        frow[2].setText(res.toHex(' '));
+        findresult->setItem(i, 0, frow);
+        findresult->setItem(i, 1, frow + 1);
+        findresult->setItem(i, 2, frow + 2);
+      }
+    });
+    th->start();
   }
 }
 void MainWindow::on_gotoline() {
@@ -944,7 +1013,7 @@ void MainWindow::on_documentStatusChanged() {
 ErrFile MainWindow::saveFile(int index) {
   if (index >= 0 && index < hexfiles.count()) {
     auto f = hexfiles.at(index);
-    if (f.filename.isEmpty())
+    if (f.filename.at(0) == ':')
       return ErrFile::IsNewFile;
     QFile file(f.filename);
     file.open(QFile::WriteOnly);
@@ -956,7 +1025,23 @@ ErrFile MainWindow::saveFile(int index) {
   return ErrFile::Error;
 }
 
+ErrFile MainWindow::exportFile(QString filename, int index) {
+  if (index >= 0 && index < hexfiles.count()) {
+    auto f = hexfiles.at(index);
+    QFile file(filename);
+    file.open(QFile::WriteOnly);
+    if (f.doc->saveTo(&file, false)) {
+      file.close();
+      return ErrFile::Success;
+    }
+    file.close();
+    return ErrFile::Permission;
+  }
+  return ErrFile::Error;
+}
+
 ErrFile MainWindow::saveasFile(QString filename, int index) {
+
   if (index >= 0 && index < hexfiles.count()) {
     auto f = hexfiles.at(index);
     QFile file(filename);

@@ -2,6 +2,7 @@
 #define GENERICPLUGIN_H
 
 #include "../WingHexExplorer/iwingplugin.h"
+#include <QList>
 #include <QObject>
 
 class TestPlugin : public IWingPlugin {
@@ -29,6 +30,7 @@ public:
   QList<QVariant> optionalInfos() override;
   void plugin2MessagePipe(WingPluginMessage type, QList<QVariant> msg) override;
   Qt::DockWidgetArea registerDockWidgetDockArea() override;
+  HookIndex getHookSubscribe() override;
 
 private:
   QMenu *testmenu;

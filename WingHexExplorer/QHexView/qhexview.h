@@ -47,6 +47,8 @@ public:
 
   bool isModified();
 
+  static QFont getHexeditorFont();
+
 signals:
   void cursorLocationChanged();
   void documentChanged();

@@ -101,6 +101,15 @@ void QHexView::setAddressBase(quint64 base) {
 
 bool QHexView::isModified() { return m_document->isModfied(); }
 
+QFont QHexView::getHexeditorFont() {
+  QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+  if (f.styleHint() != QFont::TypeWriter) {
+    f.setFamily("Monospace"); // Force Monospaced font
+    f.setStyleHint(QFont::TypeWriter);
+  }
+  return f;
+}
+
 /*======================*/
 
 QHexView::QHexView(QWidget *parent)

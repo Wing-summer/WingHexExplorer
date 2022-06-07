@@ -9,7 +9,7 @@
 #include <QWidget>
 #include <QtCore>
 
-enum WingPluginMessage {
+enum class WingPluginMessage {
   PluginLoading,
   PluginLoaded,
   PluginUnLoading,
@@ -18,7 +18,7 @@ enum WingPluginMessage {
   PluginCall
 };
 
-enum CallTableIndex {
+enum class CallTableIndex {
   NewFile,
   OpenFile,
   OpenFileGUI,
@@ -26,7 +26,9 @@ enum CallTableIndex {
   CloseFile,
   SaveFile,
   SaveAsFile,
+  SaveAsFileGUI,
   ExportFile,
+  ExportFileGUI,
   Undo,
   Redo,
   Copy,
@@ -40,6 +42,13 @@ enum CallTableIndex {
   HexMetadataAbs,
   HexMetadata,
   ClearMetadata,
+};
+
+enum HookIndex {
+  None = 0,
+  OpenFile = 1,
+  OpenDriver = 2,
+  CloseFile = 4,
 };
 
 #ifndef QHEXMETADATA_H
@@ -62,6 +71,8 @@ struct QHexMetadataItem {
 
 Q_DECLARE_METATYPE(QHexMetadataAbsoluteItem)
 Q_DECLARE_METATYPE(QHexMetadataItem)
+Q_DECLARE_METATYPE(WingPluginMessage)
+Q_DECLARE_METATYPE(CallTableIndex)
 
 class IWingPlugin : public QObject {
   Q_OBJECT
@@ -79,6 +90,7 @@ public:
   virtual QString signature() = 0;
   virtual QString comment() = 0;
   virtual QList<QVariant> optionalInfos() = 0;
+  virtual HookIndex getHookSubscribe() = 0;
   IWingPlugin *self;
 
 signals:
