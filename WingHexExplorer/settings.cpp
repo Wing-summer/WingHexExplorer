@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QFontDatabase>
+#include <QSettings>
 #include <QStandardPaths>
 #include <QStyleFactory>
 
@@ -33,6 +34,8 @@ Settings::Settings(QWidget *parent) : QObject(parent) {
 
   BindConfigSignal(fontFamliy, "appearance.font.family",
                    sigAdjustFont(value.toString()));
+  BindConfigSignal(plugin, "editor.plugin.enableplugin",
+                   sigChangePluginEnabled(value.toBool()));
   BindConfigSignal(hexfontSize, "editor.font.size",
                    sigAdjustEditorFontSize(value.toInt()));
   BindConfigSignal(infofontSize, "appearance.font.size",
@@ -47,7 +50,7 @@ Settings::Settings(QWidget *parent) : QObject(parent) {
                    sigChangeWindowState(value.toString()));
 
   // only used by new window
-  auto windowState = settings->option("appearance.window.windowstate");
+  auto windowState = settings->option("appearance.window.windowsize");
   QMap<QString, QVariant> windowStateMap;
   windowStateMap.insert("keys", QStringList() << "window_normal"
                                               << "window_maximum"
@@ -118,8 +121,11 @@ Settings *Settings::instance() {
 void Settings::applySetting() {
 #define Apply(Var, SettingName, Signal)                                        \
   auto Var = settings->option(SettingName);                                    \
-  emit Signal;
+  if (Var != nullptr)                                                          \
+    emit Signal;
 
+  Apply(plugin, "editor.plugin.enableplugin",
+        sigChangePluginEnabled(plugin->value().toBool()));
   Apply(fontFamliy, "appearance.font.family",
         sigAdjustFont(fontFamliy->value().toString()));
   Apply(hexfontSize, "editor.font.size",
@@ -132,7 +138,7 @@ void Settings::applySetting() {
         sigShowColNumber(showCol->value().toBool()));
   Apply(showText, "editor.font.showtext",
         sigShowEncodingText(showText->value().toBool()));
-  Apply(windowstate, "appearance.window.windowstate",
+  Apply(windowstate, "appearance.window.windowsize",
         sigChangeWindowState(windowstate->value().toString()));
 }
 
@@ -150,4 +156,22 @@ DDialog *Settings::createDialog(const QString &title, const QString &content,
   }
 
   return dialog;
+}
+
+void Settings::saveWindowState(DMainWindow *wnd, bool isorign) {
+  if (wnd != nullptr) {
+    QSettings settings(QApplication::organizationName(),
+                       QApplication::applicationName());
+    settings.setValue("geometry", wnd->saveGeometry());
+    settings.setValue("windowState", wnd->saveState(isorign ? 0 : 1));
+  }
+}
+
+void Settings::loadWindowState(DMainWindow *wnd) {
+  if (wnd != nullptr) {
+    QSettings settings(QApplication::organizationName(),
+                       QApplication::applicationName());
+    wnd->restoreGeometry(settings.value("geometry").toByteArray());
+    wnd->restoreState(settings.value("windowState").toByteArray(), 1);
+  }
 }

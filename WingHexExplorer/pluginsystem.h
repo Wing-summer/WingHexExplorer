@@ -2,6 +2,7 @@
 #define PLUGINSYSTEM_H
 
 #include "iwingplugin.h"
+#include "logger.h"
 #include <QDockWidget>
 #include <QList>
 #include <QMenu>
@@ -29,6 +30,7 @@ signals:
 
 private:
   QList<IWingPlugin *> loadedplgs;
+  Logger *logger;
 };
 
 #endif // PLUGINSYSTEM_H

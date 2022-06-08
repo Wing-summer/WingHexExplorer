@@ -1,7 +1,10 @@
 #include "./dialog/mainwindow.h"
+#include "appmanager.h"
+#include "winghexapplication.h"
 #include <DApplication>
 #include <DApplicationSettings>
 #include <DFontSizeManager>
+#include <DMessageBox>
 #include <DProgressBar>
 #include <DTitlebar>
 #include <DWidgetUtil>
@@ -9,22 +12,32 @@
 #include <QDBusConnection>
 #include <QDBusInterface>
 #include <QDate>
+#include <QFileInfo>
 #include <QLayout>
 #include <QUrl>
-#include <appmanager.h>
 
 DWIDGET_USE_NAMESPACE
 
 int main(int argc, char *argv[]) {
   QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-  DApplication a(argc, argv);
+  WingHexApplication a(argc, argv);
   QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
+
+  auto s = a.applicationDirPath() + "/lang/default.qm";
+  QTranslator translator;
+  if (!translator.load(s)) {
+    DMessageBox::critical(nullptr, "Error", "Error Loading Translation File!",
+                          DMessageBox::Ok);
+    return -1;
+  }
+  a.installTranslator(&translator);
+
   a.setOrganizationName("WingCloud");
-  a.setApplicationName(QT_TRANSLATE_NOOP("main", "WingHexExplorer"));
+  a.setApplicationName(QObject::tr("WingHexExplorer"));
   a.setApplicationVersion("1.0");
   a.setProductIcon(QIcon(":/images/icon.png"));
-  a.setProductName(QT_TRANSLATE_NOOP("main", "WingHexExplorer"));
-  a.setApplicationDescription(QT_TRANSLATE_NOOP("main", "AppDescription"));
+  a.setProductName(QObject::tr("WingHexExplorer"));
+  a.setApplicationDescription(QObject::tr("AppDescription"));
   a.setVisibleMenuShortcutText(true);
 
   a.loadTranslator();

@@ -4,6 +4,7 @@
 #include <DApplication>
 #include <DDialog>
 #include <DKeySequenceEdit>
+#include <DMainWindow>
 #include <DSettings>
 #include <DSettingsDialog>
 #include <QKeyEvent>
@@ -29,6 +30,8 @@ public:
 
   void setSettingDialog(DSettingsDialog *settingsDialog);
   void applySetting();
+  void saveWindowState(DMainWindow *wnd, bool isorign = false);
+  void loadWindowState(DMainWindow *wnd);
 
   int m_iDefaultFontSize = 12;
   int m_iMaxFontSize = 50;
@@ -45,6 +48,7 @@ signals:
   void sigShowEncodingText(bool enable);
   void sigChangeWindowSize(QString mode);
   void sigChangeWindowState(QString state);
+  void sigChangePluginEnabled(bool b);
 
 private:
   DDialog *createDialog(const QString &title, const QString &content,

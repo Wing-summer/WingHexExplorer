@@ -52,6 +52,8 @@ public:
 
 protected:
   void showEvent(QShowEvent *event) override;
+  void closeEvent(QCloseEvent *event) override;
+
 private slots:
   void on_hexeditor_customContextMenuRequested(const QPoint &pos);
   void on_tabs_currentChanged(int index);
@@ -131,7 +133,11 @@ private:
   void on_documentSwitched();
   void on_documentStatusChanged();
   void on_metadata();
+  void on_metadatadel();
+  void on_metadatacls();
   void on_bookmark();
+  void on_bookmarkdel();
+  void on_bookmarkcls();
   void on_about();
   void on_sponsor();
 
@@ -188,6 +194,8 @@ private:
   QFont _font;
   QFont _hexeditorfont;
   QString _windowmode;
+
+  bool _enableplugin = true;
 };
 
 #endif // MAINWINDOW_H

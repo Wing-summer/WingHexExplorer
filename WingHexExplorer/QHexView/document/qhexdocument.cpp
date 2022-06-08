@@ -32,14 +32,24 @@ bool QHexDocument::setKeepSize(bool b) {
 
 bool QHexDocument::isModfied() { return !m_undostack.isClean(); }
 
-void QHexDocument::getBookMarks(QList<bookMark> &bookmarks) {
+void QHexDocument::getBookMarks(QList<BookMarkStruct> &bookmarks) {
   bookmarks.clear();
   bookmarks.append(this->bookmarks);
 }
 
 void QHexDocument::addBookMark(QString comment) {
-  bookMark b{qulonglong(m_cursor->position().offset()), comment};
+  BookMarkStruct b{m_cursor->position().offset(), comment};
   bookmarks.append(b);
+}
+
+BookMarkStruct QHexDocument::bookMark(int index) {
+  if (index >= 0 && index < bookmarks.count()) {
+    return bookmarks.at(index);
+  } else {
+    BookMarkStruct b;
+    b.pos = -1;
+    return b;
+  }
 }
 
 void QHexDocument::removeBookMark(int index) {
@@ -47,6 +57,8 @@ void QHexDocument::removeBookMark(int index) {
     bookmarks.removeAt(index);
   }
 }
+
+void QHexDocument::clearBookMark() { bookmarks.clear(); }
 
 void QHexDocument::gotoBookMark(int index) {
   if (index >= 0 && index < bookmarks.count()) {
@@ -56,7 +68,7 @@ void QHexDocument::gotoBookMark(int index) {
 }
 
 bool QHexDocument::existBookMark(int &index) {
-  auto curpos = qulonglong(m_cursor->position().offset());
+  auto curpos = m_cursor->position().offset();
   int i = 0;
   for (auto item : bookmarks) {
     if (item.pos == curpos) {

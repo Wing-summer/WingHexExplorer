@@ -45,6 +45,10 @@
         <file>images/author.jpg</file>
         <file>images/bookmark.png</file>
         <file>images/export.png</file>
+        <file>images/bookmarkcls.png</file>
+        <file>images/bookmarkdel.png</file>
+        <file>images/metadatacls.png</file>
+        <file>images/metadatadel.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

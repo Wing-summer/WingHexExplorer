@@ -19,6 +19,13 @@ struct QHexMetadataAbsoluteItem {
   qint64 end;
   QColor foreground, background;
   QString comment;
+
+  // added by wingsummer
+  bool operator==(const QHexMetadataAbsoluteItem &item) {
+    return begin == item.begin && end == item.end &&
+           foreground == item.foreground && background == item.background &&
+           comment == item.comment;
+  }
 };
 
 struct QHexMetadataItem {
@@ -26,6 +33,13 @@ struct QHexMetadataItem {
   int start, length;
   QColor foreground, background;
   QString comment;
+
+  // added by wingsummer
+  bool operator==(const QHexMetadataItem &item) {
+    return line == item.line && start == item.start &&
+           foreground == item.foreground && background == item.background &&
+           comment == item.comment;
+  }
 };
 
 #endif
@@ -43,7 +57,10 @@ public:
   explicit QHexMetadata(QObject *parent = nullptr);
   const QHexLineMetadata &get(quint64 line) const;
   QString comments(quint64 line, int column) const;
-  bool hasMetadata(quint64 line) const;
+  bool lineHasMetadata(quint64 line) const;
+  bool removeMetadata(qint64 offset,
+                      QList<QHexMetadataItem> refer); // added by wingsummer
+  QList<QHexMetadataItem> gets(qint64 offset);    // added by wingsummer
 
   void
   clear(quint64 line); // this is transient till next call to setLineWidth()

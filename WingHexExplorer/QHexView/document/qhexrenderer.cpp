@@ -308,7 +308,7 @@ void QHexRenderer::applyMetadata(QTextCursor &textcursor, quint64 line,
                                  Factor factor) const {
   QHexMetadata *metadata = m_document->metadata();
 
-  if (!metadata->hasMetadata(line))
+  if (!metadata->lineHasMetadata(line))
     return;
 
   const QHexLineMetadata &linemetadata = metadata->get(line);

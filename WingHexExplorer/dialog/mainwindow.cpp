@@ -34,10 +34,6 @@
 
 #define FILEMAXBUFFER 0x6400000 // 100MB
 
-#define INFOLOG(msg) "<font color=\"green\">" + msg + "</font>"
-#define ERRLOG(msg) "<font color=\"red\">" + msg + "</font>"
-#define WARNLOG(msg) "<font color=\"yellow\">" + msg + "</font>"
-
 MainWindow::MainWindow(DMainWindow *parent) {
   Q_UNUSED(parent)
 
@@ -112,11 +108,23 @@ MainWindow::MainWindow(DMainWindow *parent) {
   auto keyplugin = QKeySequence(Qt::KeyboardModifier::ControlModifier |
                                 Qt::KeyboardModifier::AltModifier | Qt::Key_P);
   auto keymetadata =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_M);
+  auto keymetadatadel =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::AltModifier | Qt::Key_M);
-
+  auto keymetadatacls =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::ShiftModifier |
+                   Qt::KeyboardModifier::AltModifier | Qt::Key_M);
   auto keybookmark =
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_B);
+  auto keybookmarkdel =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::AltModifier | Qt::Key_B);
+  auto keybookmarkcls =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::ShiftModifier |
+                   Qt::KeyboardModifier::AltModifier | Qt::Key_B);
 
   AddToolSubMenuShortcutAction("opendriver", tr("OpenD"),
                                MainWindow::on_opendriver, keyOpenDriver);
@@ -155,8 +163,17 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm->addSeparator();
   AddToolSubMenuShortcutAction("metadata", tr("MetaData"),
                                MainWindow::on_metadata, keymetadata);
+  AddToolSubMenuShortcutAction("metadatadel", tr("DeleteMetaData"),
+                               MainWindow::on_metadatadel, keymetadatadel);
+  AddToolSubMenuShortcutAction("metadatacls", tr("ClearMetaData"),
+                               MainWindow::on_metadatacls, keymetadatacls);
+  tm->addSeparator();
   AddToolSubMenuShortcutAction("bookmark", tr("BookMark"),
                                MainWindow::on_bookmark, keybookmark);
+  AddToolSubMenuShortcutAction("bookmarkdel", tr("DeleteBookMark"),
+                               MainWindow::on_bookmarkdel, keybookmarkdel);
+  AddToolSubMenuShortcutAction("bookmarkcls", tr("ClearBookMark"),
+                               MainWindow::on_bookmarkcls, keybookmarkcls);
   menu->addMenu(tm);
 
   tm = new DMenu(this);
@@ -209,9 +226,17 @@ MainWindow::MainWindow(DMainWindow *parent) {
   contextMenu->addSeparator();
   AddContextMenuAction("metadata", tr("MetaData"), MainWindow::on_metadata,
                        keymetadata);
+  AddContextMenuAction("metadatadel", tr("DeleteMetaData"),
+                       MainWindow::on_metadatadel, keymetadatadel);
+  AddContextMenuAction("metadatacls", tr("ClearMetaData"),
+                       MainWindow::on_metadatacls, keymetadatacls);
+  contextMenu->addSeparator();
   AddContextMenuAction("bookmark", tr("BookMark"), MainWindow::on_bookmark,
                        keybookmark);
-
+  AddContextMenuAction("bookmarkdel", tr("DeleteBookMark"),
+                       MainWindow::on_bookmarkdel, keybookmarkdel);
+  AddContextMenuAction("bookmarkcls", tr("ClearBookMark"),
+                       MainWindow::on_bookmarkcls, keybookmarkcls);
   toolbar = new DToolBar(this);
 
 #define AddToolBarAction(Icon, Owner, Slot)                                    \
@@ -241,7 +266,12 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolBarTool("jmp", MainWindow::on_gotoline);
   toolbar->addSeparator();
   AddToolBarTool("metadata", MainWindow::on_metadata);
+  AddToolBarTool("metadatadel", MainWindow::on_metadatadel);
+  AddToolBarTool("metadatacls", MainWindow::on_metadatacls);
+  toolbar->addSeparator();
   AddToolBarTool("bookmark", MainWindow::on_bookmark);
+  AddToolBarTool("bookmarkdel", MainWindow::on_bookmarkdel);
+  AddToolBarTool("bookmarkcls", MainWindow::on_bookmarkcls);
   this->addToolBar(toolbar);
 
   hexeditor = new QHexView(this);
@@ -381,6 +411,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
       QAbstractItemView::SelectionBehavior::SelectRows);
   findresult->setHorizontalHeaderLabels(
       QStringList({tr("file"), tr("addr"), tr("value")}));
+  findresult->setColumnWidth(0, 600);
+  findresult->setColumnWidth(1, 250);
+  findresult->setColumnWidth(2, 350);
   connect(findresult, &QTableWidget::itemDoubleClicked, [=] {
     auto item = findresult->item(findresult->currentRow(), 0);
     auto filename = hexfiles.at(_currentfile).filename;
@@ -398,12 +431,14 @@ MainWindow::MainWindow(DMainWindow *parent) {
         item->data(Qt::UserRole).toLongLong());
   });
   dw->setWindowTitle(tr("FindResult"));
+  dw->setObjectName("FindResult");
   dw->setWidget(findresult);
   this->addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, dw);
 
   dw = new DDockWidget(this);
   pluginInfo = new QTextBrowser(this);
   dw->setWindowTitle(tr("Log"));
+  dw->setObjectName("Log");
   pluginInfo->setFocusPolicy(Qt::StrongFocus);
   pluginInfo->setOpenExternalLinks(true);
   dw->setWidget(pluginInfo);
@@ -412,6 +447,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   logger = new Logger(this);
   connect(logger, &Logger::log,
           [=](QString msg) { pluginInfo->insertHtml(msg); });
+  logger->logMessage(INFOLOG(tr("LoggerInitFinish")));
 
   auto dw2 = new DDockWidget(this);
   numshowtable = new DTableWidget(8, 1, this);
@@ -432,6 +468,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
     item->setTextAlignment(Qt::AlignCenter);
     numshowtable->setItem(i, 0, item);
   }
+  dw2->setObjectName("Number");
   dw2->setWindowTitle(tr("Number"));
   dw2->setMinimumWidth(450);
   dw2->setWidget(numshowtable);
@@ -445,6 +482,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
     hexeditor->document()->gotoBookMark(bookmarks->currentRow());
   });
   dw->setWidget(bookmarks);
+  dw->setObjectName("BookMark");
   dw->setWindowTitle(tr("BookMark"));
   this->addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, dw);
   this->tabifyDockWidget(dw2, dw);
@@ -480,7 +518,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keyOpenDriver, MainWindow::on_opendriver);
   ConnectShortCut(keymetadata, MainWindow::on_metadata);
 
-  logger->logMessage(INFOLOG(tr("Loading")));
+  logger->logMessage(INFOLOG(tr("SettingLoading")));
 
   // setting
   _font = this->font();
@@ -509,6 +547,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
           [=](bool b) { _showaddr = b; });
   connect(m_settings, &Settings::sigChangeWindowState,
           [=](QString mode) { _windowmode = mode; });
+  connect(m_settings, &Settings::sigChangePluginEnabled,
+          [=](bool b) { _enableplugin = b; });
 
   m_settings->applySetting();
   hexeditor->setAddressVisible(_showaddr);
@@ -525,14 +565,22 @@ MainWindow::MainWindow(DMainWindow *parent) {
     setWindowState(Qt::WindowState::WindowFullScreen);
   }
 
-  // init plugin system
-  plgsys = new PluginSystem(this);
-  connect(plgsys, &PluginSystem::PluginCall, this, &MainWindow::PluginCall);
-  connect(plgsys, &PluginSystem::PluginMenuNeedAdd, this,
-          &MainWindow::PluginMenuNeedAdd);
-  connect(plgsys, &PluginSystem::PluginDockWidgetAdd, this,
-          &MainWindow::PluginDockWidgetAdd);
-  plgsys->LoadPlugin();
+  if (_enableplugin) {
+    logger->logMessage(INFOLOG(tr("PluginLoading")));
+    // init plugin system
+    plgsys = new PluginSystem(this);
+    connect(plgsys, &PluginSystem::PluginCall, this, &MainWindow::PluginCall);
+    connect(plgsys, &PluginSystem::PluginMenuNeedAdd, this,
+            &MainWindow::PluginMenuNeedAdd);
+    connect(plgsys, &PluginSystem::PluginDockWidgetAdd, this,
+            &MainWindow::PluginDockWidgetAdd);
+    plgsys->LoadPlugin();
+  } else {
+    logger->logMessage(ERRLOG(tr("UnLoadPluginSetting")));
+  }
+
+  m_settings->saveWindowState(this, true);
+  m_settings->loadWindowState(this);
 }
 
 MainWindow::~MainWindow() {
@@ -545,12 +593,20 @@ MainWindow::~MainWindow() {
   }
 }
 
-void MainWindow::PluginMenuNeedAdd(QMenu *menu) { plgmenu->addMenu(menu); }
+void MainWindow::PluginMenuNeedAdd(QMenu *menu) {
+  if (menu != nullptr) {
+    logger->logMessage(WARNLOG(tr("MenuName :") + menu->title()));
+    plgmenu->addMenu(menu);
+  }
+}
 
 void MainWindow::PluginDockWidgetAdd(QDockWidget *dockw,
                                      Qt::DockWidgetArea align) {
-  dockw->setParent(this);
-  addDockWidget(align, dockw);
+  if (dockw != nullptr) {
+    logger->logMessage(WARNLOG(tr("DockWidgetName :") + dockw->windowTitle()));
+    dockw->setParent(this);
+    addDockWidget(align, dockw);
+  }
 }
 
 bool MainWindow::PluginCall(CallTableIndex index, QList<QVariant> params) {
@@ -639,6 +695,10 @@ void MainWindow::on_tabs_currentChanged(int index) { setFilePage(index); }
 void MainWindow::on_tabMoved(int from, int to) { hexfiles.move(from, to); }
 
 void MainWindow::setFilePage(int index) {
+  if (index < 0 && hexfiles.count() == 0) {
+    _currentfile = -1;
+    return;
+  }
   if (index >= 0 && index < hexfiles.count()) {
     if (_currentfile >= 0 && _currentfile < hexfiles.count()) {
       auto s = hexeditor->verticalScrollBar()->value();
@@ -740,6 +800,10 @@ bool MainWindow::isModified(int index) {
     return false;
   auto p = hexfiles.at(index);
   return p.doc->isModfied();
+}
+
+ErrFile MainWindow::closeCurrentFile(bool force) {
+  return closeFile(_currentfile, force);
 }
 
 ErrFile MainWindow::closeFile(int index, bool force) {
@@ -844,9 +908,31 @@ void MainWindow::on_exportfile() {
   exportFile(filename, _currentfile);
 }
 
-void MainWindow::on_exit() {}
+void MainWindow::on_exit() { close(); }
 
 void MainWindow::showEvent(QShowEvent *event) { Q_UNUSED(event); }
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+  while (hexfiles.count() > 0) {
+    auto res = closeFile(0);
+    if (res != ErrFile::Success) {
+      auto f = hexfiles.at(0).filename;
+      setFilePage(0);
+      auto r = QMessageBox::question(this, tr("Close"),
+                                     tr("ConfirmSave") + f.remove(':'));
+      if (r == QMessageBox::Yes) {
+        closeFile(0, true);
+        tabs->removeTab(0);
+      } else {
+        on_savefile();
+        event->ignore();
+        return;
+      }
+    }
+  }
+  m_settings->saveWindowState(this);
+  event->accept();
+}
 
 void MainWindow::on_savefile() {
   if (saveCurrentFile() == ErrFile::IsNewFile)
@@ -991,7 +1077,7 @@ void MainWindow::on_documentChanged() {
 }
 
 void MainWindow::on_documentSwitched() {
-  QList<bookMark> bookmaps;
+  QList<BookMarkStruct> bookmaps;
   bookmarks->clear();
   hexeditor->document()->getBookMarks(bookmaps);
   for (auto item : bookmaps) {
@@ -1062,6 +1148,7 @@ ErrFile MainWindow::saveCurrentFile() { return saveFile(_currentfile); }
 void MainWindow::on_metadata() {
   if (hexeditor->documentBytes() > 0) {
     MetaDialog m;
+
     if (m.exec()) {
       auto begin =
           qint64(hexeditor->document()->cursor()->selectionStart().offset());
@@ -1076,6 +1163,17 @@ void MainWindow::on_metadata() {
   }
 }
 
+void MainWindow::on_metadatadel() {
+  auto doc = hexeditor->document();
+  auto meta = doc->metadata();
+  auto pos = doc->cursor()->position().offset();
+  meta->removeMetadata(pos, meta->gets(pos));
+}
+
+void MainWindow::on_metadatacls() {
+  hexeditor->document()->metadata()->clear();
+}
+
 void MainWindow::on_setting_plugin() {
   PluginWindow pw(this);
   pw.setPluginSystem(plgsys);
@@ -1086,15 +1184,17 @@ void MainWindow::on_bookmark() {
   auto doc = hexeditor->document();
   int index = -1;
   if (doc->existBookMark(index)) {
-    doc->removeBookMark(index);
-    auto item = bookmarks->item(index);
-    bookmarks->removeItemWidget(item);
-    delete item; // make the removed item disapeared from the list widgets
+    auto b = doc->bookMark(index);
+    auto comment = DInputDialog::getText(
+        this, tr("BookMark"), tr("InputComment"), QLineEdit::Normal, b.comment);
+    if (!comment.isEmpty()) {
+      auto item = bookmarks->item(index);
+      item->setText(comment);
+    }
   } else {
     auto comment =
         DInputDialog ::getText(this, tr("BookMark"), tr("InputComment"));
-    if (comment.isEmpty()) {
-    } else {
+    if (!comment.isEmpty()) {
       hexeditor->document()->addBookMark(comment);
       QListWidgetItem *item = new QListWidgetItem;
       item->setIcon(ICONRES("bookmark"));
@@ -1104,6 +1204,22 @@ void MainWindow::on_bookmark() {
       bookmarks->addItem(item);
     }
   }
+}
+
+void MainWindow::on_bookmarkdel() {
+  auto doc = hexeditor->document();
+  int index = -1;
+  if (doc->existBookMark(index)) {
+    doc->removeBookMark(index);
+    auto item = bookmarks->item(index);
+    bookmarks->removeItemWidget(item);
+    delete item; // make the removed item disapeared from the list widgets
+  }
+}
+
+void MainWindow::on_bookmarkcls() {
+  hexeditor->document()->clearBookMark();
+  bookmarks->clear();
 }
 
 void MainWindow::on_sponsor() {

@@ -32,7 +32,9 @@ SOURCES += \
     QHexView/document/buffer/qhexbuffer.cpp \
     QHexView/document/buffer/qmemorybuffer.cpp \
     QHexView/document/buffer/qmemoryrefbuffer.cpp \
-    logger.cpp
+    logger.cpp \
+    winghexapplication.cpp \
+    settingdialog.cpp
 
 
 RESOURCES +=         resources.qrc
@@ -68,7 +70,8 @@ HEADERS += \
     QHexView/document/buffer/qhexbuffer.h \
     QHexView/document/buffer/qmemorybuffer.h \
     QHexView/document/buffer/qmemoryrefbuffer.h \
-    logger.h
+    logger.h \
+    winghexapplication.h
 
 
 TRANSLATIONS += \

@@ -7,8 +7,25 @@ const QHexLineMetadata &QHexMetadata::get(quint64 line) const {
   return it.value();
 }
 
+// added by wingsummer
+QList<QHexMetadataItem> QHexMetadata::gets(qint64 offset) {
+  QList<QHexMetadataItem> items;
+  auto res = lldiv(offset, m_lineWidth);
+  quint64 line = quint64(res.quot);
+  auto m = res.quot;
+  auto it = m_metadata.find(line);
+  if (it != m_metadata.end()) {
+    for (auto item : *it) {
+      if (item.start <= m && m <= item.start + item.length) {
+        items.push_back(item);
+      }
+    }
+  }
+  return items;
+}
+
 QString QHexMetadata::comments(quint64 line, int column) const {
-  if (!this->hasMetadata(line))
+  if (!this->lineHasMetadata(line))
     return QString();
 
   QString s;
@@ -30,8 +47,44 @@ QString QHexMetadata::comments(quint64 line, int column) const {
   return s;
 }
 
-bool QHexMetadata::hasMetadata(quint64 line) const {
+bool QHexMetadata::lineHasMetadata(quint64 line) const {
   return m_metadata.contains(line);
+}
+
+// added by wingsummer
+bool QHexMetadata::removeMetadata(qint64 offset,
+                                  QList<QHexMetadataItem> refer) {
+  QList<QHexMetadataAbsoluteItem> delneeded;
+  for (auto item : m_absoluteMetadata) {
+    if (offset >= item.begin && offset <= item.end) {
+      delneeded.push_back(item);
+    }
+  }
+  for (auto item : delneeded) {
+    m_absoluteMetadata.removeOne(item);
+    quint64 firstRow = quint64(item.begin / m_lineWidth);
+    quint64 lastRow = quint64(item.end / m_lineWidth);
+
+    for (auto i = firstRow; i <= lastRow; i++) {
+      QList<QHexMetadataItem> delmeta;
+      auto it = m_metadata.find(i);
+      if (it != m_metadata.end()) {
+        for (auto iitem : *it) {
+          for (auto ritem : refer) {
+            if (iitem.foreground == ritem.foreground &&
+                iitem.background == ritem.background &&
+                iitem.comment == ritem.comment) {
+              delmeta.push_back(iitem);
+            }
+          }
+        }
+      }
+      for (auto iitem : delmeta) {
+        it->remove(iitem);
+      }
+    }
+  }
+  return true;
 }
 
 void QHexMetadata::clear(quint64 line) {

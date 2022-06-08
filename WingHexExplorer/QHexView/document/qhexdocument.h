@@ -11,8 +11,8 @@
 /*=========================*/
 // added by wingsummer
 
-struct bookMark {
-  qulonglong pos;
+struct BookMarkStruct {
+  qlonglong pos;
   QString comment;
 };
 
@@ -49,8 +49,10 @@ public:
   bool isModfied();
 
   void addBookMark(QString comment);
+  BookMarkStruct bookMark(int index);
   void removeBookMark(int index);
-  void getBookMarks(QList<bookMark> &bookmarks);
+  void clearBookMark();
+  void getBookMarks(QList<BookMarkStruct> &bookmarks);
   void gotoBookMark(int index);
   bool existBookMark(int &index);
 
@@ -127,7 +129,7 @@ private:
   bool m_readonly;
   bool m_keepsize;
   bool m_islocked;
-  QList<bookMark> bookmarks;
+  QList<BookMarkStruct> bookmarks;
 
   /*======================*/
 };

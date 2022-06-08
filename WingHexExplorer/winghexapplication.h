@@ -1,11 +1,16 @@
 #ifndef WINGHEXAPPLICATION_H
 #define WINGHEXAPPLICATION_H
 
+#include <DApplication>
 
-class WingHexApplication
-{
+DWIDGET_USE_NAMESPACE
+
+class WingHexApplication : public DApplication {
 public:
-    WingHexApplication();
+  WingHexApplication(int &argc, char **argv);
+
+private:
+  bool notify(QObject *obj, QEvent *event) override;
 };
 
 #endif // WINGHEXAPPLICATION_H
