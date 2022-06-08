@@ -7,6 +7,19 @@
 
 PluginSystem::PluginSystem(QObject *parent) : QObject(parent) {
   logger = Logger::getInstance();
+
+  // init plugin dispathcer
+#define InitDispathcer(hookindex)                                              \
+  dispatcher.insert(hookindex, QList<IWingPlugin *>());
+
+  InitDispathcer(HookIndex::OpenFileBegin);
+  InitDispathcer(HookIndex::OpenFileEnd);
+  InitDispathcer(HookIndex::OpenDriverBegin);
+  InitDispathcer(HookIndex::OpenDriverEnd);
+  InitDispathcer(HookIndex::CloseFileBegin);
+  InitDispathcer(HookIndex::CloseFileEnd);
+  InitDispathcer(HookIndex::NewFileBegin);
+  InitDispathcer(HookIndex::NewFileEnd);
 }
 
 PluginSystem::~PluginSystem() {
@@ -17,6 +30,13 @@ PluginSystem::~PluginSystem() {
 }
 
 QList<IWingPlugin *> PluginSystem::plugins() { return loadedplgs; }
+
+void PluginSystem::raiseDispatch(HookIndex hookindex, QList<QVariant> params) {
+  auto dispatch = dispatcher[hookindex];
+  for (auto item : dispatch) {
+    item->plugin2MessagePipe(WingPluginMessage::HookMessage, params);
+  }
+}
 
 bool PluginSystem::LoadPlugin() {
   QDir plugindir(QCoreApplication::applicationDirPath() + "/plugin");

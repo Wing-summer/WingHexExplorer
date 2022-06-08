@@ -166,6 +166,9 @@ private:
   void on_restoreLayout();
   void on_about();
   void on_sponsor();
+  void on_fillnop();
+  void on_fillzero();
+  void on_fill();
 
 private:
   QList<HexFile> hexfiles;

@@ -130,6 +130,13 @@ MainWindow::MainWindow(DMainWindow *parent) {
                    Qt::KeyboardModifier::ShiftModifier |
                    Qt::KeyboardModifier::AltModifier | Qt::Key_B);
 
+  auto keyfillnop =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_9);
+  auto keyfillzero =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_0);
+  auto keyfill = QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                              Qt::KeyboardModifier::AltModifier | Qt::Key_V);
+
   AddToolSubMenuShortcutAction("opendriver", tr("OpenD"),
                                MainWindow::on_opendriver, keyOpenDriver);
   tm->addSeparator();
@@ -166,6 +173,13 @@ MainWindow::MainWindow(DMainWindow *parent) {
                                QKeySequence::Find);
   AddToolSubMenuShortcutAction("jmp", tr("Goto"), MainWindow::on_gotoline,
                                keygoto);
+  tm->addSeparator();
+  AddToolSubMenuShortcutAction("fill", tr("Fill"), MainWindow::on_fill,
+                               keyfill);
+  AddToolSubMenuShortcutAction("fillNop", tr("FillNop"), MainWindow::on_fillnop,
+                               keyfillnop);
+  AddToolSubMenuShortcutAction("fillZero", tr("FillZero"),
+                               MainWindow::on_fillzero, keyfillzero);
   tm->addSeparator();
   AddToolSubMenuShortcutAction("metadata", tr("MetaData"),
                                MainWindow::on_metadata, keymetadata);
@@ -550,6 +564,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keyGeneral, MainWindow::on_setting_general);
   ConnectShortCut(keyOpenDriver, MainWindow::on_opendriver);
   ConnectShortCut(keymetadata, MainWindow::on_metadata);
+  ConnectShortCut(keyfill, MainWindow::on_fill);
+  ConnectShortCut(keyfillnop, MainWindow::on_fillnop);
+  ConnectShortCut(keyfillzero, MainWindow::on_fillzero);
 
   logger->logMessage(INFOLOG(tr("SettingLoading")));
 
@@ -750,10 +767,16 @@ void MainWindow::setFilePage(int index) {
 void MainWindow::on_newfile() { newFile(); }
 
 void MainWindow::newFile() {
+  QList<QVariant> params;
+  QString title = tr("Untitled") + QString("-%1").arg(defaultindex);
+  if (_enableplugin) {
+    params << HookIndex::NewFileBegin << title;
+    plgsys->raiseDispatch(HookIndex::NewFileBegin, params);
+  }
+
   hexeditor->setVisible(true);
   auto p = QHexDocument::fromFile<QMemoryBuffer>(nullptr);
   HexFile hf;
-  QString title = tr("Untitled") + QString("-%1").arg(defaultindex);
   hf.doc = p;
   hexeditor->setDocument(p);
   hexeditor->setAddressVisible(_showaddr);
@@ -769,21 +792,49 @@ void MainWindow::newFile() {
   tabs->setCurrentIndex(curindex);
   tabs->setTabToolTip(curindex, title);
   setEditModeEnabled(true);
+
+  if (_enableplugin) {
+    params[0].setValue(HookIndex::NewFileEnd);
+    plgsys->raiseDispatch(HookIndex::NewFileEnd, params);
+  }
 }
 
 ErrFile MainWindow::openFile(QString filename, bool readonly) {
+  QList<QVariant> params;
+  if (_enableplugin) {
+    params << HookIndex::OpenFileBegin << filename << readonly;
+    plgsys->raiseDispatch(HookIndex::OpenFileBegin, params);
+  }
   QFileInfo info(filename);
   if (info.exists()) {
 
-    if (!info.permission(QFile::ReadUser))
+    if (!info.permission(QFile::ReadUser)) {
+      if (_enableplugin) {
+        params[0].setValue(HookIndex::OpenFileEnd);
+        params << ErrFile::Permission;
+        plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+      }
       return ErrFile::Permission;
+    }
 
-    if (!readonly && !info.permission(QFile::WriteUser))
+    if (!readonly && !info.permission(QFile::WriteUser)) {
+      if (_enableplugin) {
+        params[0].setValue(HookIndex::OpenFileEnd);
+        params << ErrFile::Permission;
+        plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+      }
       return ErrFile::Permission;
+    }
 
     for (auto item : hexfiles) {
-      if (item.filename == filename)
+      if (item.filename == filename) {
+        if (_enableplugin) {
+          params[0].setValue(HookIndex::OpenFileEnd);
+          params << ErrFile::AlreadyOpened;
+          plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+        }
         return ErrFile::AlreadyOpened;
+      }
     }
 
     hexeditor->setVisible(true);
@@ -794,8 +845,14 @@ ErrFile MainWindow::openFile(QString filename, bool readonly) {
             ? QHexDocument::fromLargeFile(filename, readonly, this)
             : QHexDocument::fromFile<QMemoryBuffer>(filename, readonly, this);
 
-    if (p == nullptr)
+    if (p == nullptr) {
+      if (_enableplugin) {
+        params[0].setValue(HookIndex::OpenFileEnd);
+        params << ErrFile::Error;
+        plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+      }
       return ErrFile::Error;
+    }
 
     hf.doc = p;
     hexeditor->setLockedFile(readonly);
@@ -815,19 +872,47 @@ ErrFile MainWindow::openFile(QString filename, bool readonly) {
     tabs->setCurrentIndex(index);
     tabs->setTabToolTip(index, filename);
     setEditModeEnabled(true);
+
+    if (_enableplugin) {
+      params[0].setValue(HookIndex::OpenFileEnd);
+      params << ErrFile::Success;
+      plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+    }
     return ErrFile::Success;
+  }
+
+  if (_enableplugin) {
+    params[0].setValue(HookIndex::OpenFileEnd);
+    params << ErrFile::NotExist;
+    plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
   }
   return ErrFile::NotExist;
 }
 
 ErrFile MainWindow::openDriver(QString driver) {
+  QList<QVariant> params;
+  if (_enableplugin) {
+    params << HookIndex::OpenDriverBegin << driver;
+    plgsys->raiseDispatch(HookIndex::OpenDriverBegin, params);
+  }
+
   if (Utilities::isRoot()) {
     openFile(driver);
     setEditModeEnabled(true);
     toolbartools[ToolBoxIndex::SaveAs]->setEnabled(false);
+    if (_enableplugin) {
+      params[0].setValue(HookIndex::OpenDriverEnd);
+      params << ErrFile::Success;
+      plgsys->raiseDispatch(HookIndex::OpenDriverEnd, params);
+    }
     return ErrFile::Success;
   } else {
     QMessageBox::critical(this, tr("Error"), tr("NoRoot"));
+    if (_enableplugin) {
+      params[0].setValue(HookIndex::OpenDriverEnd);
+      params << ErrFile::Permission;
+      plgsys->raiseDispatch(HookIndex::OpenDriverEnd, params);
+    }
     return ErrFile::Permission;
   }
 }
@@ -844,11 +929,23 @@ ErrFile MainWindow::closeCurrentFile(bool force) {
 }
 
 ErrFile MainWindow::closeFile(int index, bool force) {
+  QList<QVariant> params;
+  if (_enableplugin) {
+    params << HookIndex::CloseFileBegin << index << force;
+    plgsys->raiseDispatch(HookIndex::CloseFileBegin, params);
+  }
+
   if (index >= 0 && index < hexfiles.count()) {
     auto p = hexfiles.at(index);
     if (!force) {
-      if (isModified(index))
+      if (isModified(index)) {
+        if (_enableplugin) {
+          params[0].setValue(HookIndex::CloseFileEnd);
+          params << ErrFile::UnSaved;
+          plgsys->raiseDispatch(HookIndex::CloseFileEnd, params);
+        }
         return ErrFile::UnSaved;
+      }
     }
     tabs->removeTab(index);
     hexfiles.removeAt(index);
@@ -866,6 +963,12 @@ ErrFile MainWindow::closeFile(int index, bool force) {
   }
   if (hexfiles.count() == 0)
     setEditModeEnabled(false);
+
+  if (_enableplugin) {
+    params[0].setValue(HookIndex::CloseFileEnd);
+    params << ErrFile::Success;
+    plgsys->raiseDispatch(HookIndex::CloseFileEnd, params);
+  }
   return ErrFile::Success;
 }
 
@@ -1288,6 +1391,24 @@ void MainWindow::setEditModeEnabled(bool b) {
 }
 
 void MainWindow::on_restoreLayout() { m_settings->loadWindowState(this, true); }
+
+void MainWindow::on_fill() {
+  auto doc = hexeditor->document();
+  if (doc->isEmpty() || hexeditor->selectlength() == 0)
+    return;
+  auto pos = doc->cursor()->selectionStart().offset();
+  doc->replace(pos, QByteArray(int(hexeditor->selectlength()), char(0)));
+}
+
+void MainWindow::on_fillnop() {
+  auto doc = hexeditor->document();
+  if (doc->isEmpty() || hexeditor->selectlength() == 0)
+    return;
+  auto pos = doc->cursor()->selectionStart().offset();
+  doc->replace(pos, QByteArray(int(hexeditor->selectlength()), char(0x90)));
+}
+
+void MainWindow::on_fillzero() {}
 
 void MainWindow::on_sponsor() {
   SponsorDialog d;

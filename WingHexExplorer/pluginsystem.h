@@ -5,6 +5,7 @@
 #include "logger.h"
 #include <QDockWidget>
 #include <QList>
+#include <QMap>
 #include <QMenu>
 #include <QObject>
 #include <QVariant>
@@ -17,6 +18,7 @@ public:
   bool LoadPlugin();
   void UnloadPlugin();
   QList<IWingPlugin *> plugins();
+  void raiseDispatch(HookIndex hookindex, QList<QVariant> params);
 
 private:
   const QList<QVariant> emptyparam;
@@ -32,6 +34,7 @@ signals:
 
 private:
   QList<IWingPlugin *> loadedplgs;
+  QMap<HookIndex, QList<IWingPlugin *>> dispatcher;
   Logger *logger;
 };
 

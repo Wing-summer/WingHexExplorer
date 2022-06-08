@@ -19,6 +19,7 @@
 |昵称|方式|备注|
 |:--:|:--:|:--:|
 |神末shenmo|打赏捐助|Deepin 论坛|
+|lv36|打赏捐助|Deepin 论坛|
 
 ## WingHexExplorer
 

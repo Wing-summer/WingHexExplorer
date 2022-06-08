@@ -16,7 +16,8 @@ enum class WingPluginMessage {
   PluginUnLoaded,
   ErrorMessage,
   PluginCall,
-  MessageResponse
+  MessageResponse,
+  HookMessage
 };
 
 enum class ResponseMsg { UnImplement, Success, ErrorParams, Permission };
@@ -49,9 +50,14 @@ enum class CallTableIndex {
 
 enum HookIndex {
   None = 0,
-  OpenFile = 1,
-  OpenDriver = 2,
-  CloseFile = 4,
+  OpenFileBegin = 1,
+  OpenFileEnd = 2,
+  OpenDriverBegin = 4,
+  OpenDriverEnd = 8,
+  CloseFileBegin = 16,
+  CloseFileEnd = 32,
+  NewFileBegin = 64,
+  NewFileEnd = 128
 };
 
 #ifndef QHEXMETADATA_H
@@ -77,6 +83,7 @@ Q_DECLARE_METATYPE(QHexMetadataItem)
 Q_DECLARE_METATYPE(WingPluginMessage)
 Q_DECLARE_METATYPE(CallTableIndex)
 Q_DECLARE_METATYPE(ResponseMsg)
+Q_DECLARE_METATYPE(HookIndex)
 
 class IWingPlugin : public QObject {
   Q_OBJECT
