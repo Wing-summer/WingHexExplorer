@@ -1,4 +1,4 @@
-<h1 align="center"> WingSummer.WingCloudHexExplorer</h1>
+<h1 align="center"> WingSummer.WingHexExplorer</h1>
 
 <p align="center">
 <img alt="PEHexExplorer" src="WingHexExplorer/images/icon.png">
