@@ -155,13 +155,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 <p align="center">
 
-<img alt="支付宝" src="pics/支付宝捐助.jpg" height=50% width=50%>
+<img alt="支付宝" src="WingHexExplorer/支付宝捐助.jpg" height=50% width=50%>
 <p align="center">感谢支持</p>
 
 </p>
 
 <p align="center">
-<img alt="微信" src="pics/微信捐助.png" height=50% width=50%>
+<img alt="微信" src="WingHexExplorer/微信捐助.png" height=50% width=50%>
 <p align="center">感谢支持</p>
 
 </p>
