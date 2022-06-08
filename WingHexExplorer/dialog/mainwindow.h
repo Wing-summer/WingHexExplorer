@@ -46,6 +46,30 @@ class MainWindow : public DMainWindow {
     NumTableIndexCount
   };
 
+  enum class ToolBoxIndex {
+    New,
+    OpenFile,
+    OpenDriver,
+    Save,
+    SaveAs,
+    Export,
+    Undo,
+    Redo,
+    Cut,
+    Copy,
+    Paste,
+    Del,
+    Find,
+    Goto,
+    Meta,
+    DelMeta,
+    ClsMeta,
+    BookMark,
+    DelBookMark,
+    ClsBookMark,
+    MaxTool
+  };
+
 public:
   MainWindow(DMainWindow *parent = nullptr);
   ~MainWindow() override;
@@ -95,6 +119,7 @@ private:
   void gotoFileLine(int index, quint64 offset);
   void gotoCurrentLine(quint64 offset);
   void undoCurrent();
+  void setEditModeEnabled(bool b);
   void redoCurrent();
   void undoFile(int index);
   void redoFile(int index);
@@ -138,11 +163,15 @@ private:
   void on_bookmark();
   void on_bookmarkdel();
   void on_bookmarkcls();
+  void on_restoreLayout();
   void on_about();
   void on_sponsor();
 
 private:
   QList<HexFile> hexfiles;
+  QMap<ToolBoxIndex, QAction *> toolbartools;
+  QMap<ToolBoxIndex, QAction *> toolmenutools;
+  DMenu *editmenu;
 
   uint defaultindex = 1;
   int _currentfile = -1;
@@ -153,7 +182,7 @@ private:
 private:
   void PluginMenuNeedAdd(QMenu *menu);
   void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
-  bool PluginCall(CallTableIndex index, QList<QVariant> params);
+  ResponseMsg PluginCall(CallTableIndex index, QList<QVariant> params);
 
 private:
   DMenu *plgmenu;

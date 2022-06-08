@@ -34,6 +34,10 @@
 
 #define FILEMAXBUFFER 0x6400000 // 100MB
 
+#define CheckEnabled                                                           \
+  if (hexfiles.count() == 0)                                                   \
+    return;
+
 MainWindow::MainWindow(DMainWindow *parent) {
   Q_UNUSED(parent)
 
@@ -142,6 +146,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm = new DMenu(this);
   tm->setTitle(tr("Edit"));
   tm->setIcon(ICONRES("edit"));
+  tm->setEnabled(false);
+  editmenu = tm;
   AddToolSubMenuShortcutAction("undo", tr("Undo"), MainWindow::on_undofile,
                                QKeySequence::Undo);
   AddToolSubMenuShortcutAction("redo", tr("Redo"), MainWindow::on_redofile,
@@ -183,6 +189,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
                                MainWindow::on_setting_general, keyGeneral);
   AddToolSubMenuShortcutAction("settingplugin", tr("Plugin"),
                                MainWindow::on_setting_plugin, keyplugin);
+  AddToolSubMenuAction("layout", tr("RestoreLayout"),
+                       MainWindow::on_restoreLayout);
   menu->addMenu(tm);
 
   tm = new DMenu(this);
@@ -202,6 +210,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   titlebar()->setMenu(menu);
 
   contextMenu = new DMenu(this);
+  contextMenu->setEnabled(false);
 
 #define AddContextMenuAction(Icon, Title, Slot, ShortCut)                      \
   AddMenuShortcutAction(Icon, Title, Slot, contextMenu, ShortCut)
@@ -247,31 +256,52 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
 #define AddToolBarTool(Icon, Slot) AddToolBarAction(Icon, toolbar, Slot)
 
+#define AddToolsDB(index)                                                      \
+  a->setEnabled(false);                                                        \
+  toolbartools.insert(index, a);
+
   AddToolBarTool("new", MainWindow::on_newfile);
   AddToolBarTool("open", MainWindow::on_openfile);
   AddToolBarTool("opendriver", MainWindow::on_opendriver);
   toolbar->addSeparator();
   AddToolBarTool("save", MainWindow::on_savefile);
+  AddToolsDB(ToolBoxIndex::Save);
   AddToolBarTool("saveas", MainWindow::on_saveasfile);
+  AddToolsDB(ToolBoxIndex::SaveAs);
   AddToolBarTool("export", MainWindow::on_exportfile);
+  AddToolsDB(ToolBoxIndex::Export);
   toolbar->addSeparator();
   AddToolBarTool("undo", MainWindow::on_undofile);
+  AddToolsDB(ToolBoxIndex::Undo);
   AddToolBarTool("redo", MainWindow::on_redofile);
+  AddToolsDB(ToolBoxIndex::Redo);
   AddToolBarTool("cut", MainWindow::on_cutfile);
+  AddToolsDB(ToolBoxIndex::Cut);
   AddToolBarTool("copy", MainWindow::on_copyfile);
+  AddToolsDB(ToolBoxIndex::Copy);
   AddToolBarTool("paste", MainWindow::on_pastefile);
+  AddToolsDB(ToolBoxIndex::Paste);
   AddToolBarTool("del", MainWindow::on_delete);
+  AddToolsDB(ToolBoxIndex::Del);
   toolbar->addSeparator();
   AddToolBarTool("find", MainWindow::on_findfile);
+  AddToolsDB(ToolBoxIndex::Find);
   AddToolBarTool("jmp", MainWindow::on_gotoline);
+  AddToolsDB(ToolBoxIndex::Goto);
   toolbar->addSeparator();
   AddToolBarTool("metadata", MainWindow::on_metadata);
+  AddToolsDB(ToolBoxIndex::Meta);
   AddToolBarTool("metadatadel", MainWindow::on_metadatadel);
+  AddToolsDB(ToolBoxIndex::DelMeta);
   AddToolBarTool("metadatacls", MainWindow::on_metadatacls);
+  AddToolsDB(ToolBoxIndex::ClsMeta);
   toolbar->addSeparator();
   AddToolBarTool("bookmark", MainWindow::on_bookmark);
+  AddToolsDB(ToolBoxIndex::BookMark);
   AddToolBarTool("bookmarkdel", MainWindow::on_bookmarkdel);
+  AddToolsDB(ToolBoxIndex::DelBookMark);
   AddToolBarTool("bookmarkcls", MainWindow::on_bookmarkcls);
+  AddToolsDB(ToolBoxIndex::ClsBookMark);
   this->addToolBar(toolbar);
 
   hexeditor = new QHexView(this);
@@ -287,6 +317,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
           &MainWindow::on_documentSwitched);
 
   status = new DStatusBar(this);
+  status->setEnabled(false);
   this->setStatusBar(status);
 
 #define AddNamedStatusLabel(Var, Content)                                      \
@@ -320,8 +351,10 @@ MainWindow::MainWindow(DMainWindow *parent) {
     if (b) {
       hexeditor->setAddressBase(qnum);
     } else {
-      auto d = DMessageManager::instance();
-      d->sendMessage(this, ICONRES("mAddr"), tr("ErrBaseAddress"));
+      if (num.length() > 0) {
+        auto d = DMessageManager::instance();
+        d->sendMessage(this, ICONRES("mAddr"), tr("ErrBaseAddress"));
+      }
     }
   });
 
@@ -609,14 +642,15 @@ void MainWindow::PluginDockWidgetAdd(QDockWidget *dockw,
   }
 }
 
-bool MainWindow::PluginCall(CallTableIndex index, QList<QVariant> params) {
+ResponseMsg MainWindow::PluginCall(CallTableIndex index,
+                                   QList<QVariant> params) {
   switch (index) {
   case CallTableIndex::NewFile: {
     newFile();
   } break;
   case CallTableIndex::OpenFile: {
     if (params.count() == 0)
-      return false;
+      return ResponseMsg::ErrorParams;
 
     auto filename = params[0].toString();
     auto readonly = false;
@@ -635,10 +669,9 @@ bool MainWindow::PluginCall(CallTableIndex index, QList<QVariant> params) {
   case CallTableIndex::Undo:
     on_undofile();
     break;
-
   case CallTableIndex::HexMetadataAbs: {
     if (params.count() == 0 || hexfiles.count() == 0)
-      return false;
+      return ResponseMsg::ErrorParams;
 
     auto meta = hexeditor->document()->metadata();
     auto data = params[0].value<QHexMetadataAbsoluteItem>();
@@ -648,7 +681,7 @@ bool MainWindow::PluginCall(CallTableIndex index, QList<QVariant> params) {
   } break;
   case CallTableIndex::HexMetadata: {
     if (params.count() == 0 || hexfiles.count() == 0)
-      return false;
+      return ResponseMsg::ErrorParams;
 
     auto meta = hexeditor->document()->metadata();
     auto data = params[0].value<QHexMetadataItem>();
@@ -658,7 +691,7 @@ bool MainWindow::PluginCall(CallTableIndex index, QList<QVariant> params) {
   } break;
   case CallTableIndex::ClearMetadata: {
     if (hexfiles.count() == 0)
-      return false;
+      return ResponseMsg::ErrorParams;
     if (params.count() == 0) {
       hexeditor->document()->metadata()->clear();
     } else {
@@ -666,15 +699,16 @@ bool MainWindow::PluginCall(CallTableIndex index, QList<QVariant> params) {
       auto line = params[0].toULongLong(&b);
       if (b) {
         hexeditor->document()->metadata()->clear(line);
+        return ResponseMsg::Success;
       }
-      return b;
+      return ResponseMsg::ErrorParams;
     }
   } break;
   default:
-    return false;
+    return ResponseMsg::UnImplement;
     break;
   }
-  return true;
+  return ResponseMsg::Success;
 }
 
 void MainWindow::setTheme(DGuiApplicationHelper::ColorType theme) {
@@ -734,6 +768,7 @@ void MainWindow::newFile() {
   auto curindex = hexfiles.count() - 1;
   tabs->setCurrentIndex(curindex);
   tabs->setTabToolTip(curindex, title);
+  setEditModeEnabled(true);
 }
 
 ErrFile MainWindow::openFile(QString filename, bool readonly) {
@@ -779,7 +814,7 @@ ErrFile MainWindow::openFile(QString filename, bool readonly) {
     auto index = hexfiles.count() - 1;
     tabs->setCurrentIndex(index);
     tabs->setTabToolTip(index, filename);
-
+    setEditModeEnabled(true);
     return ErrFile::Success;
   }
   return ErrFile::NotExist;
@@ -788,6 +823,8 @@ ErrFile MainWindow::openFile(QString filename, bool readonly) {
 ErrFile MainWindow::openDriver(QString driver) {
   if (Utilities::isRoot()) {
     openFile(driver);
+    setEditModeEnabled(true);
+    toolbartools[ToolBoxIndex::SaveAs]->setEnabled(false);
     return ErrFile::Success;
   } else {
     QMessageBox::critical(this, tr("Error"), tr("NoRoot"));
@@ -827,6 +864,8 @@ ErrFile MainWindow::closeFile(int index, bool force) {
     p.doc->deleteLater();
     p.render->deleteLater();
   }
+  if (hexfiles.count() == 0)
+    setEditModeEnabled(false);
   return ErrFile::Success;
 }
 
@@ -935,13 +974,18 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 }
 
 void MainWindow::on_savefile() {
+  CheckEnabled;
   if (saveCurrentFile() == ErrFile::IsNewFile)
     on_saveasfile();
 }
 
-void MainWindow::on_delete() { hexeditor->document()->removeSelection(); }
+void MainWindow::on_delete() {
+  CheckEnabled;
+  hexeditor->document()->removeSelection();
+}
 
 void MainWindow::on_saveasfile() {
+  CheckEnabled;
   auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"));
   if (filename.isEmpty())
     return;
@@ -949,6 +993,7 @@ void MainWindow::on_saveasfile() {
 }
 
 void MainWindow::on_findfile() {
+  CheckEnabled;
   FindDialog *fd = new FindDialog();
   if (fd->exec()) {
     auto th = QThread ::create([=]() {
@@ -979,6 +1024,7 @@ void MainWindow::on_findfile() {
   }
 }
 void MainWindow::on_gotoline() {
+  CheckEnabled;
   gotobar->activeInput(int(hexeditor->currentRow()),
                        int(hexeditor->currentColumn()),
                        hexeditor->currentOffset(), hexeditor->documentBytes(),
@@ -986,6 +1032,7 @@ void MainWindow::on_gotoline() {
 }
 
 void MainWindow::on_gotobar(int pos, bool isline) {
+  CheckEnabled;
   if (hexfiles.count() > 0) {
     auto cur = hexeditor->document()->cursor();
     isline ? cur->moveTo(quint64(pos), 0) : cur->moveTo(pos);
@@ -993,6 +1040,7 @@ void MainWindow::on_gotobar(int pos, bool isline) {
 }
 
 void MainWindow::on_locChanged() {
+  CheckEnabled;
   lblloc->setText(QString("(%1,%2)")
                       .arg(hexeditor->currentRow())
                       .arg(hexeditor->currentColumn()));
@@ -1073,10 +1121,12 @@ void MainWindow::on_setting_general() {
 }
 
 void MainWindow::on_documentChanged() {
+  CheckEnabled;
   iSaved->setPixmap(isModified(_currentfile) ? infoUnsaved : infoSaved);
 }
 
 void MainWindow::on_documentSwitched() {
+  CheckEnabled;
   QList<BookMarkStruct> bookmaps;
   bookmarks->clear();
   hexeditor->document()->getBookMarks(bookmaps);
@@ -1090,6 +1140,7 @@ void MainWindow::on_documentSwitched() {
 }
 
 void MainWindow::on_documentStatusChanged() {
+  CheckEnabled;
   iSaved->setPixmap(hexeditor->isModified() ? infoUnsaved : infoSaved);
   iReadWrite->setPixmap(hexeditor->isReadOnly() ? infoReadonly : infoWriteable);
   iLocked->setIcon(hexeditor->isLocked() ? infoLock : infoUnLock);
@@ -1127,7 +1178,6 @@ ErrFile MainWindow::exportFile(QString filename, int index) {
 }
 
 ErrFile MainWindow::saveasFile(QString filename, int index) {
-
   if (index >= 0 && index < hexfiles.count()) {
     auto f = hexfiles.at(index);
     QFile file(filename);
@@ -1146,6 +1196,7 @@ ErrFile MainWindow::saveasFile(QString filename, int index) {
 ErrFile MainWindow::saveCurrentFile() { return saveFile(_currentfile); }
 
 void MainWindow::on_metadata() {
+  CheckEnabled;
   if (hexeditor->documentBytes() > 0) {
     MetaDialog m;
 
@@ -1164,6 +1215,7 @@ void MainWindow::on_metadata() {
 }
 
 void MainWindow::on_metadatadel() {
+  CheckEnabled;
   auto doc = hexeditor->document();
   auto meta = doc->metadata();
   auto pos = doc->cursor()->position().offset();
@@ -1171,6 +1223,7 @@ void MainWindow::on_metadatadel() {
 }
 
 void MainWindow::on_metadatacls() {
+  CheckEnabled;
   hexeditor->document()->metadata()->clear();
 }
 
@@ -1181,6 +1234,7 @@ void MainWindow::on_setting_plugin() {
 }
 
 void MainWindow::on_bookmark() {
+  CheckEnabled;
   auto doc = hexeditor->document();
   int index = -1;
   if (doc->existBookMark(index)) {
@@ -1207,6 +1261,7 @@ void MainWindow::on_bookmark() {
 }
 
 void MainWindow::on_bookmarkdel() {
+  CheckEnabled;
   auto doc = hexeditor->document();
   int index = -1;
   if (doc->existBookMark(index)) {
@@ -1218,9 +1273,21 @@ void MainWindow::on_bookmarkdel() {
 }
 
 void MainWindow::on_bookmarkcls() {
+  CheckEnabled;
   hexeditor->document()->clearBookMark();
   bookmarks->clear();
 }
+
+void MainWindow::setEditModeEnabled(bool b) {
+  for (auto item : toolbartools.values()) {
+    item->setEnabled(b);
+  }
+  contextMenu->setEnabled(b);
+  editmenu->setEnabled(b);
+  status->setEnabled(b);
+}
+
+void MainWindow::on_restoreLayout() { m_settings->loadWindowState(this, true); }
 
 void MainWindow::on_sponsor() {
   SponsorDialog d;

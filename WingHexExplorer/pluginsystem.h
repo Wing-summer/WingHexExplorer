@@ -20,13 +20,15 @@ public:
 
 private:
   const QList<QVariant> emptyparam;
+
+private slots:
   void messagePipe(IWingPlugin *sender, WingPluginMessage type,
                    QList<QVariant> msg);
 
 signals:
   void PluginMenuNeedAdd(QMenu *menu);
   void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
-  bool PluginCall(CallTableIndex index, QList<QVariant> params);
+  ResponseMsg PluginCall(CallTableIndex index, QList<QVariant> params);
 
 private:
   QList<IWingPlugin *> loadedplgs;

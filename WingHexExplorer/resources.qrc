@@ -49,6 +49,7 @@
         <file>images/bookmarkdel.png</file>
         <file>images/metadatacls.png</file>
         <file>images/metadatadel.png</file>
+        <file>images/layout.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

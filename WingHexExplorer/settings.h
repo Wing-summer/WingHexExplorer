@@ -31,7 +31,7 @@ public:
   void setSettingDialog(DSettingsDialog *settingsDialog);
   void applySetting();
   void saveWindowState(DMainWindow *wnd, bool isorign = false);
-  void loadWindowState(DMainWindow *wnd);
+  void loadWindowState(DMainWindow *wnd, bool isorign = false);
 
   int m_iDefaultFontSize = 12;
   int m_iMaxFontSize = 50;

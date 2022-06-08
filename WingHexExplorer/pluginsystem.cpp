@@ -89,7 +89,9 @@ void PluginSystem::messagePipe(IWingPlugin *sender, WingPluginMessage type,
 
       if (b) {
         CallTableIndex index = CallTableIndex(i);
-        emit PluginCall(index, msg);
+        auto res = emit PluginCall(index, msg);
+        sender->plugin2MessagePipe(WingPluginMessage::MessageResponse,
+                                   QList<QVariant>{int(res)});
       }
     }
     return;

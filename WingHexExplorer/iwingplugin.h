@@ -15,8 +15,11 @@ enum class WingPluginMessage {
   PluginUnLoading,
   PluginUnLoaded,
   ErrorMessage,
-  PluginCall
+  PluginCall,
+  MessageResponse
 };
+
+enum class ResponseMsg { UnImplement, Success, ErrorParams, Permission };
 
 enum class CallTableIndex {
   NewFile,
@@ -73,6 +76,7 @@ Q_DECLARE_METATYPE(QHexMetadataAbsoluteItem)
 Q_DECLARE_METATYPE(QHexMetadataItem)
 Q_DECLARE_METATYPE(WingPluginMessage)
 Q_DECLARE_METATYPE(CallTableIndex)
+Q_DECLARE_METATYPE(ResponseMsg)
 
 class IWingPlugin : public QObject {
   Q_OBJECT
