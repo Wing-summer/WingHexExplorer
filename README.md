@@ -1,6 +1,29 @@
+<h1 align="center"> WingSummer.WingCloudHexExplorer</h1>
+
+<p align="center">
+<img alt="PEHexExplorer" src="WingHexExplorer/images/icon.png">
+<p align="center">羽云十六进制浏览器</p>
+</p>
+
+<p align="center">
+<img alt="作者" src="https://img.shields.io/badge/Author-Wingsummer-green">
+<img alt="开源协议" src="https://img.shields.io/badge/License-AGPL--3.0-red">
+</p>
+
+* 开源不易，给个 [Star](https://gitee.com/wingsummer/be.-windows.-forms.-hex-box/star) 或者 [捐助](#捐助) 吧
+
 ## WingHexExplorer
 
 &emsp;&emsp;本软件是基于 QT 编写的十六进制编辑器，采用 C++ 进行开发，目的是让 Deepin 上具有强大而免费的十六进制编辑器。目前只有 010 Editor 具有强大的十六进制编辑功能，但它是商用的。关注我开发动态的应该知道我开发了在 Windows 上用 C# 开发的`WingSummer.WingCloudHexExplorer`，目的是方便专业人士修改分析 PE 文件，并可作为学习 PE 结构的重要辅助工具。该项目具有 31 个 Star 和 9 个 Fork ，我也不打算维护了，因为我主力系统不是 Windows ，也没有充分的资金支持，全是本人的一腔热血和一厢情愿。没有任何人参与该仓库任何形式的贡献，这或许就是在中国个人搞开源的现状吧。
+&emsp;&emsp;本项目从 2022/5/30 开始筹备，直到今天 2022/6/8 ，第一个开源可用的版本终于完成了，但还是有很多需要待完善的地方：
+
+1. 插件系统的消息类型并没有彻底完善起来，这个是插件执行与编辑器交互功能的基础
+2. 完成插件订阅钩子，插件关心哪些消息，在注册插件注册订阅，到时候通过信号槽机制发送
+3. 对驱动器的读写测试（本人不怎么用到，也不太会写相关代码，未经测试）
+4. 增加一些人性化的快捷功能
+5. ……
+
+&emsp;&emsp;最近几天我大概率没多少时间维护该项目，希望大家指出要改进的地方的同时，最好贡献一下代码或者给出参考示例，以便我快速完善。要不然你提出一个看似简单的功能，其实需要大量的代码进行实现，这或许是“产品经理”和“程序员”之间的矛盾所在。提建议的时候不要天马行空，注意本软件只提供最基本的十六进制编辑和浏览服务，比如 010 Editor 里面的模版和脚本等服务，还需大家一起通过插件来实现（插件系统还没有完全完成，只是能用）！希望大家不要只提需求，更要提出建设性建议和解决方案，共同维护开源社区。具体详情将会在后面进行介绍。
 
 ### 软件架构
 
@@ -118,3 +141,31 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
+## 效果图
+
+<p align="center">
+<img alt="效果图" src="screenshot.png">
+<p align="center">羽云十六进制浏览器</p>
+</p>
+
+## 捐助
+
+**<p align="center">您的每一份支持都将是本项目推进的强大动力，十分感谢您的支持</p>**
+
+<p align="center">
+
+<img alt="支付宝" src="pics/支付宝捐助.jpg" height=50% width=50%>
+<p align="center">感谢支持</p>
+
+</p>
+
+<p align="center">
+<img alt="微信" src="pics/微信捐助.png" height=50% width=50%>
+<p align="center">感谢支持</p>
+
+</p>
+
+## 鸣谢
+
+&emsp;&emsp;此程序的完成基本是我现学现卖，因为 QT 在此之前我虽然学过，但几乎没有写过一个完整的项目。DTK 也是我新接触的，但总的说来，文档还是有点差劲，一点都不全，不过，官方开源了文本编辑器的源码，我对此对我感兴趣需要实现的代码进行了研读，实现了我想要的功能，在此感谢。如果没有该项目，我无法独自完成这个项目。里面有一些地方会有深度文本编辑器的影子，这在所难免，因为这个是我学习在借鉴使用魔改形成的代码，比如单例且传参的实现、DTK 设置对话框的使用以及国际化，跳转条的样式和代码结构。
