@@ -20,6 +20,7 @@ bool TestPlugin::init(QList<IWingPlugin *> loadedplugins) {
   testmenu = new QMenu;
   testmenu->setTitle("TestPlugin");
   testmenu->addAction("Hello!");
+  return true;
 }
 
 void TestPlugin::unload() { testmenu->deleteLater(); }
