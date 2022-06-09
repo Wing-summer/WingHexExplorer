@@ -3,5 +3,7 @@ SOURCES += \
 
 HEADERS += \
     ../WingHexExplorer/iwingplugin.h \
+    ../WingHexExplorer/hexviewshadow.h\
     testplugin.h
-DISTFILES += TestPlugin.json 
+DISTFILES += TestPlugin.json
+DEFINES += WINGPLUGIN

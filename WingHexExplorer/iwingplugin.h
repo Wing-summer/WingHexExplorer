@@ -1,6 +1,7 @@
 #ifndef IWINGPLUGIN_H
 #define IWINGPLUGIN_H
 
+#include "hexviewshadow.h"
 #include <QCryptographicHash>
 #include <QDockWidget>
 #include <QList>
@@ -15,38 +16,12 @@ enum class WingPluginMessage {
   PluginUnLoading,
   PluginUnLoaded,
   ErrorMessage,
-  PluginCall,
+  GetHexViewShadow,
   MessageResponse,
   HookMessage
 };
 
 enum class ResponseMsg { UnImplement, Success, ErrorParams, Permission };
-
-enum class CallTableIndex {
-  NewFile,
-  OpenFile,
-  OpenFileGUI,
-  OpenDriver,
-  CloseFile,
-  SaveFile,
-  SaveAsFile,
-  SaveAsFileGUI,
-  ExportFile,
-  ExportFileGUI,
-  Undo,
-  Redo,
-  Copy,
-  Paste,
-  WriteFileBytes,
-  ReadFileBytes,
-  DeleteFileBytes,
-  FindFileBytes,
-  GotFileOffset,
-  GotoFileLine,
-  HexMetadataAbs,
-  HexMetadata,
-  ClearMetadata,
-};
 
 enum HookIndex {
   None = 0,
@@ -60,28 +35,7 @@ enum HookIndex {
   NewFileEnd = 128
 };
 
-#ifndef QHEXMETADATA_H
-
-struct QHexMetadataAbsoluteItem {
-  qint64 begin;
-  qint64 end;
-  QColor foreground, background;
-  QString comment;
-};
-
-struct QHexMetadataItem {
-  quint64 line;
-  int start, length;
-  QColor foreground, background;
-  QString comment;
-};
-
-#endif
-
-Q_DECLARE_METATYPE(QHexMetadataAbsoluteItem)
-Q_DECLARE_METATYPE(QHexMetadataItem)
 Q_DECLARE_METATYPE(WingPluginMessage)
-Q_DECLARE_METATYPE(CallTableIndex)
 Q_DECLARE_METATYPE(ResponseMsg)
 Q_DECLARE_METATYPE(HookIndex)
 

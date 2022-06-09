@@ -12,8 +12,6 @@
 #include <QHash>
 #include <QVector>
 
-#ifndef IWINGPLUGIN_H
-
 struct QHexMetadataAbsoluteItem {
   qint64 begin;
   qint64 end;
@@ -42,8 +40,6 @@ struct QHexMetadataItem {
   }
 };
 
-#endif
-
 #if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
 typedef QLinkedList<QHexMetadataItem> QHexLineMetadata;
 #else
@@ -60,7 +56,7 @@ public:
   bool lineHasMetadata(quint64 line) const;
   bool removeMetadata(qint64 offset,
                       QList<QHexMetadataItem> refer); // added by wingsummer
-  QList<QHexMetadataItem> gets(qint64 offset);    // added by wingsummer
+  QList<QHexMetadataItem> gets(qint64 offset);        // added by wingsummer
 
   void
   clear(quint64 line); // this is transient till next call to setLineWidth()

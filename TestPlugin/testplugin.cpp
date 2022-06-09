@@ -6,17 +6,15 @@ TestPlugin::TestPlugin(QObject *parent){Q_UNUSED(parent)}
 
 TestPlugin::~TestPlugin() {}
 
-#if QT_VERSION < 0x050000
-Q_EXPORT_PLUGIN2(TestPlugin, GenericPlugin)
-#endif // QT_VERSION < 0x050000
-
 bool TestPlugin::init(QList<IWingPlugin *> loadedplugins) {
-  QString ps;
-  for (auto item : loadedplugins) {
-    ps.append(item->pluginName());
-    ps.append('\n');
+  if (loadedplugins.length() > 0) {
+    QString ps;
+    for (auto item : loadedplugins) {
+      ps.append(item->pluginName());
+      ps.append('\n');
+    }
+    QMessageBox::information(nullptr, "Test", ps);
   }
-  QMessageBox::information(nullptr, "Test", ps);
   testmenu = new QMenu;
   testmenu->setTitle("TestPlugin");
   testmenu->addAction("Hello!");
@@ -45,8 +43,13 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
                                     QList<QVariant> msg) {
   Q_UNUSED(msg)
   if (type == WingPluginMessage::PluginLoaded) {
-    emit host2MessagePipe(this, WingPluginMessage::PluginCall,
-                          QList<QVariant>{int(CallTableIndex::NewFile)});
+    emit host2MessagePipe(this, WingPluginMessage::GetHexViewShadow,
+                          QList<QVariant>());
+    return;
+  }
+  if (type == WingPluginMessage::GetHexViewShadow) {
+    auto hvs = msg[0].value<HexViewShadow *>();
+    hvs->shadowControl(this, hvs);
   }
 }
 

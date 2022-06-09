@@ -181,8 +181,9 @@ private:
   QMap<ToolBoxIndex, QAction *> toolmenutools;
   DMenu *editmenu;
 
-  uint defaultindex = 1;
-  int _currentfile = -1;
+  uint defaultindex = 1; //表示新建使用的累计索引
+  int _currentfile = -1; //表示正在使用文件的索引，编辑器使用
+  int _pcurfile = -1;    //表示正在使用文件的索引，插件使用
   Settings *m_settings;
 
   PluginSystem *plgsys;
@@ -190,7 +191,13 @@ private:
 private:
   void PluginMenuNeedAdd(QMenu *menu);
   void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
-  ResponseMsg PluginCall(CallTableIndex index, QList<QVariant> params);
+  void connectShadow(HexViewShadow *shadow);
+
+  // shadow
+  bool shadowIsValid(IWingPlugin *plugin);
+  bool shadowControl(IWingPlugin *plugin, HexViewShadow *shadow);
+  bool shadowRelease(IWingPlugin *plugin, HexViewShadow *shadow);
+  void shadowDestory(IWingPlugin *plugin);
 
 private:
   DMenu *plgmenu;

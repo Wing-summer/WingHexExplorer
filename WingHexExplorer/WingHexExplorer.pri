@@ -14,7 +14,8 @@ SOURCES += \
     dialog/sponsordialog.cpp \
     logger.cpp \
     winghexapplication.cpp \
-    settingdialog.cpp
+    settingdialog.cpp \
+    $$PWD/hexviewshadow.cpp
 
 
 RESOURCES +=         resources.qrc
@@ -38,7 +39,8 @@ HEADERS += \
     dialog/aboutsoftwaredialog.h \
     dialog/sponsordialog.h \
     logger.h \
-    winghexapplication.h
+    winghexapplication.h \
+    $$PWD/hexviewshadow.h
 
 
 TRANSLATIONS += \

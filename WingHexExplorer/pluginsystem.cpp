@@ -87,6 +87,7 @@ bool PluginSystem::LoadPlugin() {
         emit p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
 
       } else {
+        logger->logMessage(ERRLOG(loader.errorString()));
         loader.unload();
       }
     }
@@ -97,23 +98,27 @@ bool PluginSystem::LoadPlugin() {
 
 void PluginSystem::messagePipe(IWingPlugin *sender, WingPluginMessage type,
                                QList<QVariant> msg) {
+  Q_UNUSED(msg)
 
   if (sender == nullptr)
     return;
 
-  if (type == WingPluginMessage::PluginCall) {
-    auto b = false;
-    if (msg.count() > 0) {
-      auto i = msg[0].toInt(&b);
-      msg.pop_front(); // remove the first member : CallTableIndex
-
-      if (b) {
-        CallTableIndex index = CallTableIndex(i);
-        auto res = emit PluginCall(index, msg);
-        sender->plugin2MessagePipe(WingPluginMessage::MessageResponse,
-                                   QList<QVariant>{int(res)});
-      }
+  if (type == WingPluginMessage::GetHexViewShadow) {
+    HexViewShadow *hvs;
+    if (hexshadows.contains(sender)) {
+      hvs = hexshadows[sender];
+    } else {
+      hvs = new HexViewShadow(this);
+      hexshadows.insert(sender, hvs);
+      emit this->ConnectShadow(hvs);
     }
-    return;
+    sender->plugin2MessagePipe(
+        WingPluginMessage::GetHexViewShadow,
+        QList<QVariant>({QVariant::fromValue(static_cast<void *>(hvs))}));
   }
 }
+
+void PluginSystem::shadowDestory(IWingPlugin *plugin) {}
+bool PluginSystem::shadowControl(IWingPlugin *plugin, HexViewShadow *shadow) {}
+bool PluginSystem::shadowIsValid(IWingPlugin *plugin) {}
+bool PluginSystem::shadowRelease(IWingPlugin *plugin, HexViewShadow *shadow) {}

@@ -3,6 +3,7 @@
 
 #include "QHexView/document/qhexdocument.h"
 #include "QHexView/document/qhexrenderer.h"
+#include "iwingplugin.h"
 #include <QDBusInterface>
 #include <QDBusReply>
 #include <QDebug>
@@ -11,21 +12,6 @@
 #include <unistd.h>
 
 #define ICONRES(name) QIcon(":/images/" name ".png")
-
-enum ErrFile {
-  Success,
-  Error,
-  UnSaved,
-  Permission,
-  NotExist,
-  AlreadyOpened,
-  IsNewFile,
-};
-
-struct FindResult {
-  int fid;
-  QList<int> indices;
-};
 
 struct HexFile {
   QHexDocument *doc;

@@ -1,6 +1,7 @@
 #ifndef GENERICPLUGIN_H
 #define GENERICPLUGIN_H
 
+#include "../WingHexExplorer/WingHexExplorer/hexviewshadow.h"
 #include "../WingHexExplorer/iwingplugin.h"
 #include <QList>
 #include <QObject>
@@ -10,6 +11,7 @@ class TestPlugin : public IWingPlugin {
   Q_OBJECT
 #if QT_VERSION >= 0x050000
   Q_PLUGIN_METADATA(IID IWINGPLUGIN_INTERFACE_IID FILE "TestPlugin.json")
+  // Q_PLUGIN_METADATA(IID IWINGPLUGIN_SHADOWINTERFACE_IID)
 #endif // QT_VERSION >= 0x050000
 
   Q_INTERFACES(IWingPlugin)
