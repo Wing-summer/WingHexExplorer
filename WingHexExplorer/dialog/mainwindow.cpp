@@ -105,7 +105,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::ShiftModifier | Qt::Key_O);
   auto keygoto =
-      QKeySequence(Qt::KeyboardModifier::ControlModifier + Qt::Key_G);
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_G);
   auto keyGeneral =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::ShiftModifier | Qt::Key_G);
@@ -135,7 +135,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   auto keyfillzero =
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_0);
   auto keyfill = QKeySequence(Qt::KeyboardModifier::ControlModifier |
-                              Qt::KeyboardModifier::AltModifier | Qt::Key_V);
+                              Qt::KeyboardModifier::AltModifier | Qt::Key_F);
 
   AddToolSubMenuShortcutAction("opendriver", tr("OpenD"),
                                MainWindow::on_opendriver, keyOpenDriver);
@@ -223,17 +223,17 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   titlebar()->setMenu(menu);
 
-  contextMenu = new DMenu(this);
-  contextMenu->setEnabled(false);
+  hexeditorMenu = new DMenu(this);
+  hexeditorMenu->setEnabled(false);
 
 #define AddContextMenuAction(Icon, Title, Slot, ShortCut)                      \
-  AddMenuShortcutAction(Icon, Title, Slot, contextMenu, ShortCut)
+  AddMenuShortcutAction(Icon, Title, Slot, hexeditorMenu, ShortCut)
 
   AddContextMenuAction("undo", tr("Undo"), MainWindow::on_undofile,
                        QKeySequence::Undo);
   AddContextMenuAction("redo", tr("Redo"), MainWindow::on_redofile,
                        QKeySequence::Redo);
-  contextMenu->addSeparator();
+  hexeditorMenu->addSeparator();
   AddContextMenuAction("cut", tr("Cut"), MainWindow::on_cutfile,
                        QKeySequence::Cut);
   AddContextMenuAction("copy", tr("Copy"), MainWindow::on_copyfile,
@@ -242,18 +242,24 @@ MainWindow::MainWindow(DMainWindow *parent) {
                        QKeySequence::Paste);
   AddContextMenuAction("del", tr("Delete"), MainWindow::on_delete,
                        QKeySequence::Delete);
-  contextMenu->addSeparator();
+  hexeditorMenu->addSeparator();
   AddContextMenuAction("find", tr("Find"), MainWindow::on_findfile,
                        QKeySequence::Find);
   AddContextMenuAction("jmp", tr("Goto"), MainWindow::on_gotoline, keygoto);
-  contextMenu->addSeparator();
+  hexeditorMenu->addSeparator();
+  AddContextMenuAction("fill", tr("Fill"), MainWindow::on_fill, keyfill);
+  AddContextMenuAction("fillNop", tr("FillNop"), MainWindow::on_fillnop,
+                       keyfillnop);
+  AddContextMenuAction("fillZero", tr("FillZero"), MainWindow::on_fillzero,
+                       keyfillzero);
+  hexeditorMenu->addSeparator();
   AddContextMenuAction("metadata", tr("MetaData"), MainWindow::on_metadata,
                        keymetadata);
   AddContextMenuAction("metadatadel", tr("DeleteMetaData"),
                        MainWindow::on_metadatadel, keymetadatadel);
   AddContextMenuAction("metadatacls", tr("ClearMetaData"),
                        MainWindow::on_metadatacls, keymetadatacls);
-  contextMenu->addSeparator();
+  hexeditorMenu->addSeparator();
   AddContextMenuAction("bookmark", tr("BookMark"), MainWindow::on_bookmark,
                        keybookmark);
   AddContextMenuAction("bookmarkdel", tr("DeleteBookMark"),
@@ -302,6 +308,13 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolsDB(ToolBoxIndex::Find);
   AddToolBarTool("jmp", MainWindow::on_gotoline);
   AddToolsDB(ToolBoxIndex::Goto);
+  toolbar->addSeparator();
+  AddToolBarTool("fill", MainWindow::on_fill);
+  AddToolsDB(ToolBoxIndex::Fill);
+  AddToolBarTool("fillNop", MainWindow::on_fillnop);
+  AddToolsDB(ToolBoxIndex::FillNop);
+  AddToolBarTool("fillZero", MainWindow::on_fillzero);
+  AddToolsDB(ToolBoxIndex::FillZero);
   toolbar->addSeparator();
   AddToolBarTool("metadata", MainWindow::on_metadata);
   AddToolsDB(ToolBoxIndex::Meta);
@@ -450,6 +463,10 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   setDockNestingEnabled(true);
 
+  findresultMenu = new DMenu(this);
+  AddMenuAction("del", tr("ClearFindResult"), MainWindow::on_clearfindresult,
+                findresultMenu);
+
   // dockwidgets init
   auto dw = new DDockWidget(this);
   findresult = new DTableWidget(0, 3, this);
@@ -461,6 +478,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   findresult->setColumnWidth(0, 600);
   findresult->setColumnWidth(1, 250);
   findresult->setColumnWidth(2, 350);
+  findresult->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+  connect(findresult, &QTableWidget::customContextMenuRequested,
+          [=]() { findresultMenu->popup(cursor().pos()); });
   connect(findresult, &QTableWidget::itemDoubleClicked, [=] {
     auto item = findresult->item(findresult->currentRow(), 0);
     auto filename = hexfiles.at(_currentfile).filename;
@@ -738,7 +758,7 @@ void MainWindow::setTheme(DGuiApplicationHelper::ColorType theme) {
 
 void MainWindow::on_hexeditor_customContextMenuRequested(const QPoint &pos) {
   Q_UNUSED(pos)
-  contextMenu->popup(QCursor::pos());
+  hexeditorMenu->popup(QCursor::pos());
 }
 
 void MainWindow::on_tabs_currentChanged(int index) { setFilePage(index); }
@@ -1385,7 +1405,7 @@ void MainWindow::setEditModeEnabled(bool b) {
   for (auto item : toolbartools.values()) {
     item->setEnabled(b);
   }
-  contextMenu->setEnabled(b);
+  hexeditorMenu->setEnabled(b);
   editmenu->setEnabled(b);
   status->setEnabled(b);
 }
@@ -1393,11 +1413,21 @@ void MainWindow::setEditModeEnabled(bool b) {
 void MainWindow::on_restoreLayout() { m_settings->loadWindowState(this, true); }
 
 void MainWindow::on_fill() {
-  auto doc = hexeditor->document();
-  if (doc->isEmpty() || hexeditor->selectlength() == 0)
-    return;
-  auto pos = doc->cursor()->selectionStart().offset();
-  doc->replace(pos, QByteArray(int(hexeditor->selectlength()), char(0)));
+  auto in = DInputDialog::getText(this, tr("Fill"), tr("PleaseInputFill"));
+  if (in.length() != 0) {
+    bool b = false;
+    auto ch = char(in.toULongLong(&b, 0));
+    if (b) {
+      auto doc = hexeditor->document();
+      if (doc->isEmpty() || hexeditor->selectlength() == 0)
+        return;
+      auto pos = doc->cursor()->selectionStart().offset();
+      doc->replace(pos, QByteArray(int(hexeditor->selectlength()), char(ch)));
+    } else {
+      DMessageManager::instance()->sendMessage(this, ICONRES("fill"),
+                                               tr("FillInputError"));
+    }
+  }
 }
 
 void MainWindow::on_fillnop() {
@@ -1408,7 +1438,19 @@ void MainWindow::on_fillnop() {
   doc->replace(pos, QByteArray(int(hexeditor->selectlength()), char(0x90)));
 }
 
-void MainWindow::on_fillzero() {}
+void MainWindow::on_fillzero() {
+  auto doc = hexeditor->document();
+  if (doc->isEmpty() || hexeditor->selectlength() == 0)
+    return;
+  auto pos = doc->cursor()->selectionStart().offset();
+  doc->replace(pos, QByteArray(int(hexeditor->selectlength()), char(0)));
+}
+
+void MainWindow::on_clearfindresult() {
+  delete[] findresitem;
+  findresitem = nullptr;
+  findresult->setRowCount(0);
+}
 
 void MainWindow::on_sponsor() {
   SponsorDialog d;

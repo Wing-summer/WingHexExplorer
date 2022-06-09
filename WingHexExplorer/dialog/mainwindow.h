@@ -61,6 +61,9 @@ class MainWindow : public DMainWindow {
     Del,
     Find,
     Goto,
+    Fill,
+    FillNop,
+    FillZero,
     Meta,
     DelMeta,
     ClsMeta,
@@ -91,7 +94,8 @@ private:
   DLabel *lblloc;
   DLabel *lblsellen;
   // DDockWidget *dw;
-  DMenu *contextMenu;
+  DMenu *hexeditorMenu;
+  DMenu *findresultMenu;
 
 private:
   QHexView *hexeditor;
@@ -169,6 +173,7 @@ private:
   void on_fillnop();
   void on_fillzero();
   void on_fill();
+  void on_clearfindresult();
 
 private:
   QList<HexFile> hexfiles;
