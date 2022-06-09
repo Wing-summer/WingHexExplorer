@@ -1,3 +1,4 @@
 *.json
 !settings.json
 !TestPlugin.json
+**/*.pro.user
