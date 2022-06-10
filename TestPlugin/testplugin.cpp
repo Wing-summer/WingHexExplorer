@@ -48,8 +48,9 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
     return;
   }
   if (type == WingPluginMessage::GetHexViewShadow) {
-    auto hvs = msg[0].value<HexViewShadow *>();
-    hvs->shadowControl(this, hvs);
+    auto hvs = static_cast<HexViewShadow *>(msg[0].value<QObject *>());
+    if (hvs)
+      hvs->shadowControl(this);
   }
 }
 

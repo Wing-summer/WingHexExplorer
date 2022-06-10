@@ -7,6 +7,7 @@
 #include <QList>
 #include <QMap>
 #include <QMenu>
+#include <QMutex>
 #include <QObject>
 #include <QTimer>
 #include <QTimerEvent>
@@ -24,8 +25,10 @@ public:
 
   void shadowDestory(IWingPlugin *plugin);
   bool shadowIsValid(IWingPlugin *plugin);
-  bool shadowControl(IWingPlugin *plugin, HexViewShadow *shadow);
-  bool shadowRelease(IWingPlugin *plugin, HexViewShadow *shadow);
+  bool shadowControl(IWingPlugin *plugin);
+  bool shadowRelease(IWingPlugin *plugin);
+
+  void initShadowControl(IWingPlugin *plugin);
 
 private:
   const QList<QVariant> emptyparam;
@@ -38,15 +41,18 @@ signals:
   void PluginMenuNeedAdd(QMenu *menu);
   void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
   void ConnectShadow(HexViewShadow *shadow);
+  void ConnectShadowSlot(HexViewShadow *shadow);
+  void DisConnectShadowSlot(HexViewShadow *shadow);
 
 private:
   QList<IWingPlugin *> loadedplgs;
   QMap<IWingPlugin *, HexViewShadow *> hexshadows;
-  QMap<IWingPlugin *, int> hexshadowcount;
-  QMap<IWingPlugin *, QTimer *> hexshadowtimer;
+  QMap<HexViewShadow *, bool> hexshadowtimeout;
+  QMap<HexViewShadow *, QTimer *> hexshadowtimer;
   HexViewShadow *curhexshadow;
   QMap<HookIndex, QList<IWingPlugin *>> dispatcher;
   Logger *logger;
+  QMutex mutex;
 };
 
 #endif // PLUGINSYSTEM_H

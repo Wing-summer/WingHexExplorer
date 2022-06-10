@@ -17,6 +17,7 @@ enum class WingPluginMessage {
   PluginUnLoaded,
   ErrorMessage,
   GetHexViewShadow,
+  HexViewShadowTimeout,
   MessageResponse,
   HookMessage
 };

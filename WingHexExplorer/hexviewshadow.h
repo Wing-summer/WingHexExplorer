@@ -50,10 +50,10 @@ class HexViewShadow : public QObject {
   Q_OBJECT
 
 public:
-  HexViewShadow(QObject *parent = nullptr) : QObject(parent) {}
+  HexViewShadow(QObject *parent = nullptr);
 signals:
   // document
-  void switchDocument(int index);
+  void switchDocument(int index, bool gui = false);
   bool setLockedFile(bool b);
   bool setKeepSize(bool b);
   void setAsciiVisible(bool b);
@@ -133,8 +133,8 @@ signals:
 
   // shadow
   bool shadowIsValid(IWingPlugin *plugin);
-  bool shadowControl(IWingPlugin *plugin, HexViewShadow *shadow);
-  bool shadowRelease(IWingPlugin *plugin, HexViewShadow *shadow);
+  bool shadowControl(IWingPlugin *plugin);
+  bool shadowRelease(IWingPlugin *plugin);
   void shadowDestory(IWingPlugin *plugin);
 
   // mainwindow
@@ -151,8 +151,5 @@ signals:
   void openFileGUI();
   void openDriverGUI();
 };
-
-//#define IWINGPLUGIN_SHADOWINTERFACE_IID "wingsummer.iwingplugin.shadow"
-// Q_DECLARE_INTERFACE(HexViewShadow, IWINGPLUGIN_SHADOWINTERFACE_IID)
 
 #endif // HEXVIEWSHADOW_H

@@ -99,7 +99,7 @@ void QHexView::setAddressBase(quint64 base) {
   m_document->setBaseAddress(base);
 }
 
-bool QHexView::isModified() { return m_document->isModfied(); }
+bool QHexView::isModified() { return m_document->isModified(); }
 
 QFont QHexView::getHexeditorFont() {
   QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);

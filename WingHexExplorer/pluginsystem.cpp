@@ -39,8 +39,15 @@ void PluginSystem::raiseDispatch(HookIndex hookindex, QList<QVariant> params) {
 }
 
 bool PluginSystem::LoadPlugin() {
+#ifdef QT_DEBUG
+  QDir plugindir("/home/wingsummer/QT Project/build-TestPlugin-unknown-Debug");
+  //这是我的插件调试目录，如果调试插件，请更换路径
+
+  plugindir.setNameFilters(QStringList("*.so"));
+#else
   QDir plugindir(QCoreApplication::applicationDirPath() + "/plugin");
   plugindir.setNameFilters(QStringList("*.wingplg"));
+#endif
   auto plgs = plugindir.entryInfoList();
   logger->logMessage(
       INFOLOG(tr("FoundPluginCount") + QString::number(plgs.count())));
@@ -84,6 +91,9 @@ bool PluginSystem::LoadPlugin() {
         connect(p, &IWingPlugin::host2MessagePipe, this,
                 &PluginSystem::messagePipe);
 
+        auto hvs = new HexViewShadow(this);
+        hexshadows.insert(p, hvs);
+        emit ConnectShadow(hvs);
         emit p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
 
       } else {
@@ -112,13 +122,81 @@ void PluginSystem::messagePipe(IWingPlugin *sender, WingPluginMessage type,
       hexshadows.insert(sender, hvs);
       emit this->ConnectShadow(hvs);
     }
-    sender->plugin2MessagePipe(
-        WingPluginMessage::GetHexViewShadow,
-        QList<QVariant>({QVariant::fromValue(static_cast<void *>(hvs))}));
+    sender->plugin2MessagePipe(WingPluginMessage::GetHexViewShadow,
+                               QList<QVariant>({QVariant::fromValue(hvs)}));
   }
 }
 
-void PluginSystem::shadowDestory(IWingPlugin *plugin) {}
-bool PluginSystem::shadowControl(IWingPlugin *plugin, HexViewShadow *shadow) {}
-bool PluginSystem::shadowIsValid(IWingPlugin *plugin) {}
-bool PluginSystem::shadowRelease(IWingPlugin *plugin, HexViewShadow *shadow) {}
+void PluginSystem::shadowDestory(IWingPlugin *plugin) {
+  if (shadowRelease(plugin)) {
+    auto shv = hexshadows[plugin];
+    hexshadowtimeout.remove(shv);
+    hexshadowtimer.remove(shv);
+    shv->deleteLater();
+  }
+}
+bool PluginSystem::shadowControl(IWingPlugin *plugin) {
+  if (plugin == nullptr)
+    return false;
+  auto res = mutex.tryLock(1500);
+  if (!res)
+    return false;
+  if (hexshadows.contains(plugin)) {
+    if (curhexshadow) {
+      if (hexshadowtimeout[curhexshadow]) {
+        plugin->plugin2MessagePipe(
+            WingPluginMessage::HexViewShadowTimeout,
+            QList<QVariant>({plugin->pluginName(), plugin->puid()}));
+      }
+      initShadowControl(plugin);
+    }
+    return true;
+  } else {
+    return false;
+  }
+  mutex.unlock();
+}
+
+bool PluginSystem::shadowIsValid(IWingPlugin *plugin) {
+  if (plugin == nullptr)
+    return false;
+  if (hexshadows.contains(plugin)) {
+    return curhexshadow == hexshadows[plugin];
+  }
+  return false;
+}
+bool PluginSystem::shadowRelease(IWingPlugin *plugin) {
+  if (plugin == nullptr)
+    return false;
+  if (hexshadows.contains(plugin)) {
+    auto shadow = hexshadows[plugin];
+    shadow->disconnect();
+    hexshadowtimer[shadow]->stop();
+    hexshadowtimeout[shadow] = false;
+    curhexshadow = nullptr;
+  }
+  return true;
+}
+
+void PluginSystem::initShadowControl(IWingPlugin *plugin) {
+  if (!hexshadows.contains(plugin))
+    return;
+  auto shadow = hexshadows[plugin];
+  if (!hexshadowtimer.contains(shadow)) {
+    auto timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, [=] {
+      hexshadowtimeout[shadow] = true;
+      timer->stop();
+    });
+  }
+  if (hexshadowtimeout.contains(shadow)) {
+    hexshadowtimeout[shadow] = false;
+  } else {
+    hexshadowtimeout.insert(shadow, false);
+  }
+  if (curhexshadow)
+    shadowRelease(plugin);
+  emit ConnectShadowSlot(shadow);
+  curhexshadow = shadow;
+  hexshadowtimer[shadow]->start(5000);
+}

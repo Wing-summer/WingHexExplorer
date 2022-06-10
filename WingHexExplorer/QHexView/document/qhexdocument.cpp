@@ -30,7 +30,7 @@ bool QHexDocument::setKeepSize(bool b) {
   return true;
 }
 
-bool QHexDocument::isModfied() { return !m_undostack.isClean(); }
+bool QHexDocument::isModified() { return !m_undostack.isClean(); }
 
 void QHexDocument::getBookMarks(QList<BookMarkStruct> &bookmarks) {
   bookmarks.clear();

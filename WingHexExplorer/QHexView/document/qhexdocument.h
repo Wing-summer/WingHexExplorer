@@ -46,7 +46,7 @@ public:
   bool isReadOnly();
   bool isKeepSize();
   bool isLocked();
-  bool isModfied();
+  bool isModified();
 
   void addBookMark(QString comment);
   BookMarkStruct bookMark(int index);

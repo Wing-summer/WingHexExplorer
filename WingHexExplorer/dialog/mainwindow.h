@@ -192,11 +192,11 @@ private:
   void PluginMenuNeedAdd(QMenu *menu);
   void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
   void connectShadow(HexViewShadow *shadow);
-
+  void connectShadowSlot(HexViewShadow *shadow);
   // shadow
   bool shadowIsValid(IWingPlugin *plugin);
-  bool shadowControl(IWingPlugin *plugin, HexViewShadow *shadow);
-  bool shadowRelease(IWingPlugin *plugin, HexViewShadow *shadow);
+  bool shadowControl(IWingPlugin *plugin);
+  bool shadowRelease(IWingPlugin *plugin);
   void shadowDestory(IWingPlugin *plugin);
 
 private:

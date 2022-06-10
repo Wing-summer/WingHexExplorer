@@ -644,7 +644,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
     connect(plgsys, &PluginSystem::ConnectShadow, this,
             &MainWindow::connectShadow);
-
+    connect(plgsys, &PluginSystem::ConnectShadowSlot, this,
+            &MainWindow::connectShadowSlot);
     connect(plgsys, &PluginSystem::PluginMenuNeedAdd, this,
             &MainWindow::PluginMenuNeedAdd);
     connect(plgsys, &PluginSystem::PluginDockWidgetAdd, this,
@@ -688,48 +689,52 @@ void MainWindow::connectShadow(HexViewShadow *shadow) {
   if (shadow == nullptr)
     return;
 
-#define ConnectShadowSlot(Signal, Slot) connect(shadow, &Signal, this, &Slot)
+#define ConnectShadows(Signal, Slot) connect(shadow, &Signal, this, &Slot)
 #define ConnectShadowLamba(Signal, Function) connect(shadow, &Signal, Function)
 
   // connect neccessary signal-slot
-  ConnectShadowSlot(HexViewShadow::shadowControl, MainWindow::shadowControl);
-  ConnectShadowSlot(HexViewShadow::shadowIsValid, MainWindow::shadowIsValid);
-  ConnectShadowSlot(HexViewShadow::shadowDestory, MainWindow::shadowDestory);
-  ConnectShadowSlot(HexViewShadow::shadowRelease, MainWindow::shadowRelease);
+  ConnectShadows(HexViewShadow::shadowControl, MainWindow::shadowControl);
+  ConnectShadows(HexViewShadow::shadowIsValid, MainWindow::shadowIsValid);
+  ConnectShadows(HexViewShadow::shadowDestory, MainWindow::shadowDestory);
+  ConnectShadows(HexViewShadow::shadowRelease, MainWindow::shadowRelease);
 
 #define PCHECK(T, F)                                                           \
-  if (hexfiles.count() > 0)                                                    \
+  if (hexfiles.count() > 0 && _pcurfile >= 0)                                  \
     T;                                                                         \
   F;
 
 #define PCHECKRETURN(T, F)                                                     \
-  if (hexfiles.count() > 0)                                                    \
+  if (hexfiles.count() > 0 && _pcurfile >= 0)                                  \
     return T;                                                                  \
   return F;
 
   // connect property-get signal-slot
-  ConnectShadowLamba(HexViewShadow::isLocked,
-                     [=] { PCHECKRETURN(hexeditor->isLocked(), true); });
+  ConnectShadowLamba(HexViewShadow::isLocked, [=] {
+    PCHECKRETURN(hexfiles[_pcurfile].doc->isLocked(), true);
+  });
   ConnectShadowLamba(HexViewShadow::isEmpty, [=] {
     PCHECKRETURN(hexeditor->document()->isEmpty(), true);
   });
-  ConnectShadowLamba(HexViewShadow::isKeepSize,
-                     [=] { PCHECKRETURN(hexeditor->isKeepSize(), true); });
-  ConnectShadowLamba(HexViewShadow::isModified,
-                     [=] { PCHECKRETURN(hexeditor->isModified(), false); });
-  ConnectShadowLamba(HexViewShadow::isReadOnly,
-                     [=] { PCHECKRETURN(hexeditor->isReadOnly(), true); });
+  ConnectShadowLamba(HexViewShadow::isKeepSize, [=] {
+    PCHECKRETURN(hexfiles[_pcurfile].doc->isKeepSize(), true);
+  });
+  ConnectShadowLamba(HexViewShadow::isModified, [=] {
+    PCHECKRETURN(hexfiles[_pcurfile].doc->isModified(), false);
+  });
+  ConnectShadowLamba(HexViewShadow::isReadOnly, [=] {
+    PCHECKRETURN(hexfiles[_pcurfile].doc->isReadOnly(), true);
+  });
   ConnectShadowLamba(HexViewShadow::documentLines, [=] {
-    PCHECKRETURN(hexeditor->documentLines(), quint64(0));
+    PCHECKRETURN(hexfiles[_pcurfile].render->documentLines(), quint64(0));
   });
   ConnectShadowLamba(HexViewShadow::documentBytes, [=] {
-    PCHECKRETURN(hexeditor->documentBytes(), quint64(0));
+    PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->length()), quint64(0));
   });
   ConnectShadowLamba(HexViewShadow::currentPos, [=] {
     HexPosition pos;
     PCHECK(
         {
-          auto qpos = hexeditor->document()->cursor()->position();
+          auto qpos = hexfiles[_pcurfile].doc->cursor()->position();
           pos.line = qpos.line;
           pos.column = qpos.column;
           pos.lineWidth = qpos.lineWidth;
@@ -741,7 +746,7 @@ void MainWindow::connectShadow(HexViewShadow *shadow) {
     HexPosition pos;
     PCHECK(
         {
-          auto cur = hexeditor->document()->cursor();
+          auto cur = hexfiles[_pcurfile].doc->cursor();
           pos.line = cur->selectionLine();
           pos.column = cur->selectionColumn();
           pos.nibbleindex = cur->selectionNibble();
@@ -750,95 +755,257 @@ void MainWindow::connectShadow(HexViewShadow *shadow) {
         return pos);
   });
   ConnectShadowLamba(HexViewShadow::currentRow, [=] {
-    PCHECKRETURN(hexeditor->currentRow(), quint64(0));
+    PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->cursor()->currentLine()),
+                 quint64(0));
   });
   ConnectShadowLamba(HexViewShadow::currentColumn, [=] {
-    PCHECKRETURN(hexeditor->currentColumn(), quint64(0));
+    PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->cursor()->currentColumn()),
+                 quint64(0));
   });
   ConnectShadowLamba(HexViewShadow::currentOffset, [=] {
-    PCHECKRETURN(hexeditor->currentOffset(), quint64(0));
+    PCHECKRETURN(
+        quint64(hexfiles[_pcurfile].doc->cursor()->position().offset()),
+        quint64(0));
   });
   ConnectShadowLamba(HexViewShadow::selectlength, [=] {
-    PCHECKRETURN(hexeditor->selectlength(), quint64(0));
+    PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->cursor()->selectionLength()),
+                 quint64(0));
   });
-  ConnectShadowLamba(HexViewShadow::asciiVisible,
-                     [=] { PCHECKRETURN(hexeditor->asciiVisible(), true); });
-  ConnectShadowLamba(HexViewShadow::headerVisible,
-                     [=] { PCHECKRETURN(hexeditor->headerVisible(), true); });
-  ConnectShadowLamba(HexViewShadow::addressVisible,
-                     [=] { PCHECKRETURN(hexeditor->addressVisible(), true); });
+  ConnectShadowLamba(HexViewShadow::asciiVisible, [=] {
+    PCHECKRETURN(hexfiles[_pcurfile].render->asciiVisible(), true);
+  });
+  ConnectShadowLamba(HexViewShadow::headerVisible, [=] {
+    PCHECKRETURN(hexfiles[_pcurfile].render->headerVisible(), true);
+  });
+  ConnectShadowLamba(HexViewShadow::addressVisible, [=] {
+    PCHECKRETURN(hexfiles[_pcurfile].render->addressVisible(), true);
+  });
   ConnectShadowLamba(HexViewShadow::addressBase, [=] {
-    PCHECKRETURN(hexeditor->addressBase(), quint64(0));
+    PCHECKRETURN(hexfiles[_pcurfile].doc->baseAddress(), quint64(0));
   });
   ConnectShadowLamba(HexViewShadow::atEnd, [=] {
-    PCHECKRETURN(hexeditor->document()->atEnd(), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->atEnd(), false);
   });
   ConnectShadowLamba(HexViewShadow::canUndo, [=] {
-    PCHECKRETURN(hexeditor->document()->canUndo(), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->canUndo(), false);
   });
   ConnectShadowLamba(HexViewShadow::canRedo, [=] {
-    PCHECKRETURN(hexeditor->document()->canRedo(), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->canRedo(), false);
   });
   ConnectShadowLamba(HexViewShadow::areaIndent, [=] {
-    PCHECKRETURN(hexeditor->document()->areaIndent(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->areaIndent(), 0);
   });
   ConnectShadowLamba(HexViewShadow::hexLineWidth, [=] {
-    PCHECKRETURN(hexeditor->document()->hexLineWidth(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->hexLineWidth(), 0);
   });
   ConnectShadowLamba(HexViewShadow::editableArea, [=](int area) {
-    PCHECKRETURN(hexeditor->renderer()->editableArea(area), false);
+    PCHECKRETURN(hexfiles[_pcurfile].render->editableArea(area), false);
   });
   ConnectShadowLamba(HexViewShadow::documentLastLine, [=] {
-    PCHECKRETURN(hexeditor->renderer()->documentLastLine(), quint64(0));
+    PCHECKRETURN(hexfiles[_pcurfile].render->documentLastLine(), quint64(0));
   });
   ConnectShadowLamba(HexViewShadow::documentLastColumn, [=] {
-    PCHECKRETURN(hexeditor->renderer()->documentLastColumn(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].render->documentLastColumn(), 0);
   });
   ConnectShadowLamba(HexViewShadow::documentWidth, [=] {
-    PCHECKRETURN(hexeditor->renderer()->documentWidth(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].render->documentWidth(), 0);
   });
   ConnectShadowLamba(HexViewShadow::lineHeight, [=] {
-    PCHECKRETURN(hexeditor->renderer()->lineHeight(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].render->lineHeight(), 0);
   });
-  ConnectShadowLamba(HexViewShadow::getLineRect, [=](quint64 line,
-                                                     quint64 firstline) {
-    PCHECKRETURN(hexeditor->renderer()->getLineRect(line, firstline), QRect());
-  });
+  ConnectShadowLamba(
+      HexViewShadow::getLineRect, [=](quint64 line, quint64 firstline) {
+        PCHECKRETURN(hexfiles[_pcurfile].render->getLineRect(line, firstline),
+                     QRect());
+      });
   ConnectShadowLamba(HexViewShadow::headerLineCount, [=] {
-    PCHECKRETURN(hexeditor->renderer()->headerLineCount(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].render->headerLineCount(), 0);
   });
   ConnectShadowLamba(HexViewShadow::borderSize, [=] {
-    PCHECKRETURN(hexeditor->renderer()->borderSize(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].render->borderSize(), 0);
   });
   ConnectShadowLamba(HexViewShadow::copy, [=](bool hex) {
-    PCHECK(hexeditor->document()->copy(hex), );
+    PCHECK(hexfiles[_pcurfile].doc->copy(hex), );
   });
   ConnectShadowLamba(HexViewShadow::read, [=](qint64 offset, int len) {
-    PCHECKRETURN(hexeditor->document()->read(offset, len), QByteArray());
+    PCHECKRETURN(hexfiles[_pcurfile].doc->read(offset, len), QByteArray());
   });
   ConnectShadowLamba(
       HexViewShadow::FindAllBytes, [=](QByteArray b, QList<quint64> &results) {
-        PCHECK(hexeditor->document()->FindAllBytes(b, results), );
+        PCHECK(hexfiles[_pcurfile].doc->FindAllBytes(b, results), );
       });
   ConnectShadowLamba(HexViewShadow::searchForward, [=](const QByteArray &ba) {
-    PCHECKRETURN(hexeditor->document()->searchForward(ba), qint64(-1));
+    PCHECKRETURN(hexfiles[_pcurfile].doc->searchForward(ba), qint64(-1));
   });
   ConnectShadowLamba(HexViewShadow::searchBackward, [=](const QByteArray &ba) {
-    PCHECKRETURN(hexeditor->document()->searchBackward(ba), qint64(-1));
+    PCHECKRETURN(hexfiles[_pcurfile].doc->searchBackward(ba), qint64(-1));
   });
 }
 
+void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
+  ConnectShadowLamba(HexViewShadow::switchDocument, [=](int index, bool gui) {
+    PCHECK({
+      if (gui) {
+        setFilePage(index);
+        _pcurfile = index;
+      } else {
+        if (index >= 0 && index < hexfiles.count())
+          _pcurfile = index;
+      }
+    }, )
+  });
+  ConnectShadowLamba(HexViewShadow::setLockedFile, [=](bool b) {
+    hexfiles[_pcurfile].doc->setLockedFile(b);
+  });
+  ConnectShadowLamba(HexViewShadow::setKeepSize,
+                     [=](bool b) { hexfiles[_pcurfile].doc->setKeepSize(b); });
+  ConnectShadowLamba(HexViewShadow::setAsciiVisible, [=](bool b) {
+    hexfiles[_pcurfile].render->setAsciiVisible(b);
+  });
+  ConnectShadowLamba(HexViewShadow::setHeaderVisible, [=](bool b) {
+    hexfiles[_pcurfile].render->setHeaderVisible(b);
+  });
+  ConnectShadowLamba(HexViewShadow::setAddressVisible, [=](bool b) {
+    hexfiles[_pcurfile].render->setAddressVisible(b);
+  });
+  ConnectShadowLamba(HexViewShadow::setAddressBase, [=](quint64 base) {
+    hexfiles[_pcurfile].doc->setBaseAddress(base);
+  });
+  ConnectShadowLamba(HexViewShadow::setAreaIndent, [=](quint8 value) {
+    hexfiles[_pcurfile].doc->setAreaIndent(value);
+  });
+  ConnectShadowLamba(HexViewShadow::setHexLineWidth, [=](quint8 value) {
+    hexfiles[_pcurfile].doc->setHexLineWidth(value);
+  });
+  ConnectShadowLamba(HexViewShadow::undo,
+                     [=] { hexfiles[_pcurfile].doc->undo(); });
+  ConnectShadowLamba(HexViewShadow::redo,
+                     [=] { hexfiles[_pcurfile].doc->redo(); });
+  ConnectShadowLamba(HexViewShadow::cut,
+                     [=](bool hex) { hexfiles[_pcurfile].doc->cut(hex); });
+  ConnectShadowLamba(HexViewShadow::paste,
+                     [=](bool hex) { hexfiles[_pcurfile].doc->paste(hex); });
+
+#define ConnectShadowLamba2(Signal, Function) connect(shadow, Signal, Function)
+
+  void (HexViewShadow::*insertchar)(qint64 offset, uchar b) =
+      &HexViewShadow::insert;
+  void (HexViewShadow::*insertarr)(qint64 offset, const QByteArray &data) =
+      &HexViewShadow::insert;
+  ConnectShadowLamba2(insertchar, [=](qint64 offset, uchar b) {
+    hexfiles[_pcurfile].doc->insert(offset, b);
+  });
+  ConnectShadowLamba2(insertarr, [=](qint64 offset, const QByteArray &data) {
+    hexfiles[_pcurfile].doc->insert(offset, data);
+  });
+
+  void (HexViewShadow::*replacechar)(qint64 offset, uchar b) =
+      &HexViewShadow::replace;
+  void (HexViewShadow::*replacearr)(qint64 offset, const QByteArray &data) =
+      &HexViewShadow::replace;
+  ConnectShadowLamba2(replacechar, [=](qint64 offset, uchar b) {
+    hexfiles[_pcurfile].doc->insert(offset, b);
+  });
+  ConnectShadowLamba2(replacearr, [=](qint64 offset, const QByteArray &data) {
+    hexfiles[_pcurfile].doc->insert(offset, data);
+  });
+  ConnectShadowLamba(HexViewShadow::remove, [=](qint64 offset, int len) {
+    hexfiles[_pcurfile].doc->remove(offset, len);
+  });
+
+  void (HexViewShadow::*moveToHP)(const HexPosition &pos);
+  void (HexViewShadow::*moveTo)(quint64 line, int column, int nibbleindex);
+  void (HexViewShadow::*moveToOff)(qint64 offset);
+  ConnectShadowLamba2(moveToHP, [=](const HexPosition &pos) {
+    QHexPosition p;
+    p.line = pos.line;
+    p.column = pos.column;
+    p.lineWidth = pos.lineWidth;
+    p.nibbleindex = pos.nibbleindex;
+    hexfiles[_pcurfile].doc->cursor()->moveTo(p);
+  });
+  ConnectShadowLamba2(moveTo, [=](quint64 line, int column, int nibbleindex) {
+    hexfiles[_pcurfile].doc->cursor()->moveTo(line, column, nibbleindex);
+  });
+  ConnectShadowLamba2(moveToOff, [=](qint64 offset) {
+    hexfiles[_pcurfile].doc->cursor()->moveTo(offset);
+  });
+
+  void (HexViewShadow::*selectHP)(const HexPosition &pos);
+  void (HexViewShadow::*select)(quint64 line, int column, int nibbleindex);
+  void (HexViewShadow::*selectL)(int length);
+  ConnectShadowLamba2(selectHP, [=](const HexPosition &pos) {
+    QHexPosition p;
+    p.line = pos.line;
+    p.column = pos.column;
+    p.lineWidth = pos.lineWidth;
+    p.nibbleindex = pos.nibbleindex;
+    hexfiles[_pcurfile].doc->cursor()->select(p);
+  });
+  ConnectShadowLamba2(select, [=](quint64 line, int column, int nibbleindex) {
+    hexfiles[_pcurfile].doc->cursor()->select(line, column, nibbleindex);
+  });
+  ConnectShadowLamba2(selectL, [=](int length) {
+    hexfiles[_pcurfile].doc->cursor()->select(length);
+  });
+
+  ConnectShadowLamba(
+      HexViewShadow::selectOffset, [=](qint64 offset, int length) {
+        hexfiles[_pcurfile].doc->cursor()->selectOffset(offset, length);
+      });
+  ConnectShadowLamba(HexViewShadow::setInsertionMode, [=](bool isinsert) {
+    hexfiles[_pcurfile].doc->cursor()->setInsertionMode(
+        isinsert ? QHexCursor::InsertMode : QHexCursor::OverwriteMode);
+  });
+  ConnectShadowLamba(HexViewShadow::setLineWidth, [=](quint8 width) {
+    hexfiles[_pcurfile].doc->cursor()->setLineWidth(width);
+  });
+
+  void (HexViewShadow::*metadata)(qint64 begin, qint64 end,
+                                  const QColor &fgcolor, const QColor &bgcolor,
+                                  const QString &comment);
+
+  void (HexViewShadow::*metadataL)(quint64 line, int start, int length,
+                                   const QColor &fgcolor, const QColor &bgcolor,
+                                   const QString &comment);
+  ConnectShadowLamba2(metadata,
+                      [=](qint64 begin, qint64 end, const QColor &fgcolor,
+                          const QColor &bgcolor, const QString &comment) {
+                        hexfiles[_pcurfile].doc->metadata()->metadata(
+                            begin, end, fgcolor, bgcolor, comment);
+                      });
+  ConnectShadowLamba2(
+      metadataL, [=](quint64 line, int start, int length, const QColor &fgcolor,
+                     const QColor &bgcolor, const QString &comment) {
+        hexfiles[_pcurfile].doc->metadata()->metadata(
+            line, start, length, fgcolor, bgcolor, comment);
+      });
+  ConnectShadows(HexViewShadow::openFile, MainWindow::openFile);
+  ConnectShadows(HexViewShadow::openDriver, MainWindow::openDriver);
+  ConnectShadows(HexViewShadow::closeFile, MainWindow::closeFile);
+  ConnectShadows(HexViewShadow::saveFile, MainWindow::saveFile);
+  ConnectShadows(HexViewShadow::exportFile, MainWindow::exportFile);
+  ConnectShadows(HexViewShadow::exportFileGUI, MainWindow::on_exportfile);
+  ConnectShadows(HexViewShadow::saveasFile, MainWindow::saveasFile);
+  ConnectShadows(HexViewShadow::saveasFileGUI, MainWindow::on_saveasfile);
+  ConnectShadows(HexViewShadow::closeCurrentFile, MainWindow::closeCurrentFile);
+  ConnectShadows(HexViewShadow::saveCurrentFile, MainWindow::saveCurrentFile);
+  ConnectShadows(HexViewShadow::openFileGUI, MainWindow::on_openfile);
+  ConnectShadows(HexViewShadow::openDriverGUI, MainWindow::on_opendriver);
+}
+
 void MainWindow::shadowDestory(IWingPlugin *plugin) {
+  _pcurfile = -1;
   plgsys->shadowDestory(plugin);
 }
 bool MainWindow::shadowIsValid(IWingPlugin *plugin) {
   return plgsys->shadowIsValid(plugin);
 }
-bool MainWindow::shadowControl(IWingPlugin *plugin, HexViewShadow *shadow) {
-  return plgsys->shadowControl(plugin, shadow);
+bool MainWindow::shadowControl(IWingPlugin *plugin) {
+  return plgsys->shadowControl(plugin);
 }
-bool MainWindow::shadowRelease(IWingPlugin *plugin, HexViewShadow *shadow) {
-  return plgsys->shadowRelease(plugin, shadow);
+bool MainWindow::shadowRelease(IWingPlugin *plugin) {
+  return plgsys->shadowRelease(plugin);
 }
 
 void MainWindow::setTheme(DGuiApplicationHelper::ColorType theme) {
@@ -861,6 +1028,7 @@ void MainWindow::on_tabMoved(int from, int to) { hexfiles.move(from, to); }
 void MainWindow::setFilePage(int index) {
   if (index < 0 && hexfiles.count() == 0) {
     _currentfile = -1;
+    _pcurfile = -1;
     return;
   }
   if (index >= 0 && index < hexfiles.count()) {
@@ -874,6 +1042,11 @@ void MainWindow::setFilePage(int index) {
       return;
     hexeditor->switchDocument(d.doc, d.render, d.vBarValue);
     tabs->setCurrentIndex(index);
+  }
+
+  // check the plugin file index validation
+  if (_pcurfile >= hexfiles.count()) {
+    _pcurfile = -1;
   }
 }
 
@@ -1034,7 +1207,7 @@ bool MainWindow::isModified(int index) {
   if (index < 0 || index >= hexfiles.count())
     return false;
   auto p = hexfiles.at(index);
-  return p.doc->isModfied();
+  return p.doc->isModified();
 }
 
 ErrFile MainWindow::closeCurrentFile(bool force) {
