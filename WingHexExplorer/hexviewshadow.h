@@ -50,8 +50,7 @@ class HexViewShadow : public QObject {
   Q_OBJECT
 
 public:
-  HexViewShadow(QObject *parent = nullptr);
-  ~HexViewShadow();
+  HexViewShadow(QObject *parent = nullptr) : QObject(parent) {}
 signals:
   // document
   void switchDocument(int index);
