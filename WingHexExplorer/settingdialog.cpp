@@ -12,6 +12,7 @@ void GenerateSettingTranslate() {
   auto app_font = QObject::tr("Font");
   auto app_fontsize = QObject::tr("Info Font Size");
   auto editor_plugin = QObject::tr("Plugin");
+  auto editor_rootplugin = QObject::tr("EnablePluginOnRoot");
   auto editor_eplugin = QObject::tr("Enable Plugin");
   auto window = QObject::tr("Window");
 }

@@ -17,7 +17,11 @@ bool TestPlugin::init(QList<IWingPlugin *> loadedplugins) {
   }
   testmenu = new QMenu;
   testmenu->setTitle("TestPlugin");
-  testmenu->addAction("Hello!");
+  auto action = new QAction("ClickMe!", this);
+  connect(action, &QAction::triggered, [=] {
+    QMessageBox::information(nullptr, "戳我", "经典：Hello World!");
+  });
+  testmenu->addAction(action);
   return true;
 }
 

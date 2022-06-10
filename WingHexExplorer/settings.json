@@ -14,6 +14,13 @@
                             "type": "checkbox",
                             "text": "Enable Plugin",
                             "default": true
+                        },
+                        {
+                            "key": "rootenableplugin",
+                            "name": "EnablePluginOnRoot",
+                            "type": "checkbox",
+                            "text": "EnablePluginOnRoot",
+                            "default": false
                         }
                     ]
                 },

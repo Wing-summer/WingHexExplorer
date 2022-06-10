@@ -619,6 +619,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
           [=](QString mode) { _windowmode = mode; });
   connect(m_settings, &Settings::sigChangePluginEnabled,
           [=](bool b) { _enableplugin = b; });
+  connect(m_settings, &Settings::sigChangeRootPluginEnabled,
+          [=](bool b) { _rootenableplugin = b; });
 
   m_settings->applySetting();
   hexeditor->setAddressVisible(_showaddr);
@@ -635,13 +637,16 @@ MainWindow::MainWindow(DMainWindow *parent) {
     setWindowState(Qt::WindowState::WindowFullScreen);
   }
 
+  auto enplugin = _enableplugin;
   if (_enableplugin) {
+    if (!_rootenableplugin && Utilities::isRoot())
+      enplugin = false;
+  }
+
+  if (enplugin) {
     logger->logMessage(INFOLOG(tr("PluginLoading")));
     // init plugin system
     plgsys = new PluginSystem(this);
-    // connect(plgsys, &PluginSystem::PluginCall, this,
-    // &MainWindow::PluginCall);
-
     connect(plgsys, &PluginSystem::ConnectShadow, this,
             &MainWindow::connectShadow);
     connect(plgsys, &PluginSystem::ConnectShadowSlot, this,
@@ -1267,15 +1272,22 @@ ErrFile MainWindow::openDriver(QString driver) {
   }
 
   if (Utilities::isRoot()) {
-    openFile(driver);
-    setEditModeEnabled(true);
-    toolbartools[ToolBoxIndex::SaveAs]->setEnabled(false);
-    if (_enableplugin) {
-      params[0].setValue(HookIndex::OpenDriverEnd);
-      params << ErrFile::Success;
-      plgsys->raiseDispatch(HookIndex::OpenDriverEnd, params);
+    auto res = openFile(driver);
+    auto d = DMessageManager::instance();
+    if (res == ErrFile::Success) {
+      hexeditor->setLockedFile(true);
+      d->sendMessage(this, ICONRES("opendriver"), tr("DriverOpenedTip"));
+      setEditModeEnabled(true);
+      toolbartools[ToolBoxIndex::SaveAs]->setEnabled(false);
+      if (_enableplugin) {
+        params[0].setValue(HookIndex::OpenDriverEnd);
+        params << ErrFile::Success;
+        plgsys->raiseDispatch(HookIndex::OpenDriverEnd, params);
+      }
+    } else {
+      d->sendMessage(this, ICONRES("opendriver"), tr("DriverOpenErrorTip"));
     }
-    return ErrFile::Success;
+    return res;
   } else {
     QMessageBox::critical(this, tr("Error"), tr("NoRoot"));
     if (_enableplugin) {
@@ -1431,7 +1443,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
       auto f = hexfiles.at(0).filename;
       setFilePage(0);
       auto r = QMessageBox::question(this, tr("Close"),
-                                     tr("ConfirmSave") + f.remove(':'));
+                                     tr("ConfirmSave") + "\n" + f.remove(':'));
       if (r == QMessageBox::Yes) {
         closeFile(0, true);
         tabs->removeTab(0);
@@ -1582,13 +1594,9 @@ void MainWindow::on_setting_general() {
   DSettingsDialog *dialog = new DSettingsDialog(this);
   dialog->widgetFactory()->registerWidget("fontcombobox",
                                           Settings::createFontComBoBoxHandle);
-
   m_settings->setSettingDialog(dialog);
-
   dialog->updateSettings(m_settings->settings);
-
   dialog->exec();
-
   delete dialog;
   m_settings->settings->sync();
 }

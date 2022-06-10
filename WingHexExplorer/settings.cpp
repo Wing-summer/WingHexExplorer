@@ -1,6 +1,7 @@
 #include "settings.h"
-
 #include "dthememanager.h"
+#include "utilities.h"
+#include <DMessageManager>
 #include <DSettings>
 #include <DSettingsGroup>
 #include <DSettingsOption>
@@ -10,6 +11,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QFontDatabase>
+#include <QMessageBox>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QStyleFactory>
@@ -36,6 +38,19 @@ Settings::Settings(QWidget *parent) : QObject(parent) {
                    sigAdjustFont(value.toString()));
   BindConfigSignal(plugin, "editor.plugin.enableplugin",
                    sigChangePluginEnabled(value.toBool()));
+
+  auto rootplugin = settings->option("editor.plugin.rootenableplugin");
+  connect(rootplugin, &Dtk::Core::DSettingsOption::valueChanged, this,
+          [=](QVariant value) {
+            auto v = value.toBool();
+            if (v) {
+              DMessageManager::instance()->sendMessage(m_pSettingsDialog,
+                                                       ICONRES("setting"),
+                                                       tr("EnabledRootPlugin"));
+            }
+            emit sigChangeRootPluginEnabled(v);
+          });
+
   BindConfigSignal(hexfontSize, "editor.font.size",
                    sigAdjustEditorFontSize(value.toInt()));
   BindConfigSignal(infofontSize, "appearance.font.size",
@@ -126,6 +141,8 @@ void Settings::applySetting() {
 
   Apply(plugin, "editor.plugin.enableplugin",
         sigChangePluginEnabled(plugin->value().toBool()));
+  Apply(rootplugin, "editor.plugin.rootenableplugin",
+        sigChangeRootPluginEnabled(rootplugin->value().toBool()));
   Apply(fontFamliy, "appearance.font.family",
         sigAdjustFont(fontFamliy->value().toString()));
   Apply(hexfontSize, "editor.font.size",

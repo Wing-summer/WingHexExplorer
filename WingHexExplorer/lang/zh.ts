@@ -9,43 +9,43 @@
         <translation>打开驱动器</translation>
     </message>
     <message>
-        <location filename="../dialog/driverselectordialog.cpp" line="24"/>
+        <location filename="../dialog/driverselectordialog.cpp" line="27"/>
         <source>DriverTips</source>
         <translation>提示：如果处于编辑模式，请慎重编辑，否则会易导致磁盘数据丢失。如果因此导致的问题本软件概不负责！（*_*）</translation>
     </message>
     <message>
-        <location filename="../dialog/driverselectordialog.cpp" line="43"/>
+        <location filename="../dialog/driverselectordialog.cpp" line="46"/>
         <source>device</source>
         <translation>驱动器</translation>
     </message>
     <message>
-        <location filename="../dialog/driverselectordialog.cpp" line="44"/>
+        <location filename="../dialog/driverselectordialog.cpp" line="47"/>
         <source>displayName</source>
         <translation>显示名称</translation>
     </message>
     <message>
-        <location filename="../dialog/driverselectordialog.cpp" line="45"/>
+        <location filename="../dialog/driverselectordialog.cpp" line="48"/>
         <source>fileSystemType</source>
         <translation>文件系统类型</translation>
     </message>
     <message>
-        <location filename="../dialog/driverselectordialog.cpp" line="46"/>
+        <location filename="../dialog/driverselectordialog.cpp" line="49"/>
         <source>name</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="../dialog/driverselectordialog.cpp" line="49"/>
-        <location filename="../dialog/driverselectordialog.cpp" line="54"/>
+        <location filename="../dialog/driverselectordialog.cpp" line="52"/>
+        <location filename="../dialog/driverselectordialog.cpp" line="57"/>
         <source>isReady</source>
         <translation>就绪</translation>
     </message>
     <message>
-        <location filename="../dialog/driverselectordialog.cpp" line="50"/>
+        <location filename="../dialog/driverselectordialog.cpp" line="53"/>
         <source>bytesAvailable</source>
         <translation>可用空间</translation>
     </message>
     <message>
-        <location filename="../dialog/driverselectordialog.cpp" line="52"/>
+        <location filename="../dialog/driverselectordialog.cpp" line="55"/>
         <source>bytesTotal</source>
         <translation>总空间</translation>
     </message>
@@ -189,7 +189,7 @@
     <message>
         <location filename="../dialog/mainwindow.cpp" line="177"/>
         <location filename="../dialog/mainwindow.cpp" line="250"/>
-        <location filename="../dialog/mainwindow.cpp" line="1416"/>
+        <location filename="../dialog/mainwindow.cpp" line="1774"/>
         <source>Fill</source>
         <translation>填充</translation>
     </message>
@@ -227,8 +227,8 @@
         <location filename="../dialog/mainwindow.cpp" line="191"/>
         <location filename="../dialog/mainwindow.cpp" line="263"/>
         <location filename="../dialog/mainwindow.cpp" line="553"/>
-        <location filename="../dialog/mainwindow.cpp" line="1366"/>
-        <location filename="../dialog/mainwindow.cpp" line="1373"/>
+        <location filename="../dialog/mainwindow.cpp" line="1724"/>
+        <location filename="../dialog/mainwindow.cpp" line="1731"/>
         <source>BookMark</source>
         <translation>书签</translation>
     </message>
@@ -371,103 +371,113 @@
         <translation>设置加载中……</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="639"/>
+        <location filename="../dialog/mainwindow.cpp" line="647"/>
         <source>PluginLoading</source>
         <translation>正在加载插件……</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="649"/>
+        <location filename="../dialog/mainwindow.cpp" line="660"/>
         <source>UnLoadPluginSetting</source>
         <translation>因在设置中禁用插件导致无法加载！</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="668"/>
+        <location filename="../dialog/mainwindow.cpp" line="679"/>
         <source>MenuName :</source>
         <translation>菜单名称：</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="676"/>
+        <location filename="../dialog/mainwindow.cpp" line="687"/>
         <source>DockWidgetName :</source>
         <translation>停靠组件名：</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="791"/>
+        <location filename="../dialog/mainwindow.cpp" line="1146"/>
         <source>Untitled</source>
         <translation>未命名</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="930"/>
-        <location filename="../dialog/mainwindow.cpp" line="1015"/>
-        <location filename="../dialog/mainwindow.cpp" line="1030"/>
+        <location filename="../dialog/mainwindow.cpp" line="1279"/>
+        <source>DriverOpenedTip</source>
+        <translation>由于你目前处于 ROOT 状态，故默认锁定文件！请为自己的修改负责！</translation>
+    </message>
+    <message>
+        <location filename="../dialog/mainwindow.cpp" line="1288"/>
+        <source>DriverOpenErrorTip</source>
+        <translation>打开驱动器失败</translation>
+    </message>
+    <message>
+        <location filename="../dialog/mainwindow.cpp" line="1292"/>
+        <location filename="../dialog/mainwindow.cpp" line="1377"/>
+        <location filename="../dialog/mainwindow.cpp" line="1392"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="930"/>
+        <location filename="../dialog/mainwindow.cpp" line="1292"/>
         <source>NoRoot</source>
         <translation>无 root 权限，无法继续的操作！</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="1011"/>
+        <location filename="../dialog/mainwindow.cpp" line="1373"/>
         <source>ChooseFile</source>
         <translation>选择文件</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="1015"/>
+        <location filename="../dialog/mainwindow.cpp" line="1377"/>
         <source>FileNotExist</source>
         <translation>文件不存在！</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="1030"/>
+        <location filename="../dialog/mainwindow.cpp" line="1392"/>
         <source>FilePermission</source>
         <translation>因文件权限无法继续！</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="1041"/>
-        <location filename="../dialog/mainwindow.cpp" line="1083"/>
+        <location filename="../dialog/mainwindow.cpp" line="1403"/>
+        <location filename="../dialog/mainwindow.cpp" line="1445"/>
         <source>Close</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="1042"/>
-        <location filename="../dialog/mainwindow.cpp" line="1084"/>
+        <location filename="../dialog/mainwindow.cpp" line="1404"/>
+        <location filename="../dialog/mainwindow.cpp" line="1446"/>
         <source>ConfirmSave</source>
         <translation>正在关闭未保存的文件，你确定抛弃继续吗？</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="1067"/>
+        <location filename="../dialog/mainwindow.cpp" line="1429"/>
         <source>ChooseExportFile</source>
         <translation>请选择导出文件路径：</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="1112"/>
+        <location filename="../dialog/mainwindow.cpp" line="1474"/>
         <source>ChooseSaveFile</source>
         <translation>请选择保存文件路径：</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="1260"/>
-        <location filename="../dialog/mainwindow.cpp" line="1379"/>
+        <location filename="../dialog/mainwindow.cpp" line="1618"/>
+        <location filename="../dialog/mainwindow.cpp" line="1737"/>
         <source>Addr : 0x%1</source>
         <translation>地址：0x%1</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="1336"/>
+        <location filename="../dialog/mainwindow.cpp" line="1694"/>
         <source>NoSelection</source>
         <translation>没有选区，无法继续的操作！</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="1366"/>
-        <location filename="../dialog/mainwindow.cpp" line="1373"/>
+        <location filename="../dialog/mainwindow.cpp" line="1724"/>
+        <location filename="../dialog/mainwindow.cpp" line="1731"/>
         <source>InputComment</source>
         <translation>请输入评语：</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="1416"/>
+        <location filename="../dialog/mainwindow.cpp" line="1774"/>
         <source>PleaseInputFill</source>
         <translation>请输入填充字节值</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="1428"/>
+        <location filename="../dialog/mainwindow.cpp" line="1786"/>
         <source>FillInputError</source>
         <translation>填充字节输入错误</translation>
     </message>
@@ -500,27 +510,27 @@
 <context>
     <name>PluginSystem</name>
     <message>
-        <location filename="../pluginsystem.cpp" line="46"/>
+        <location filename="../pluginsystem.cpp" line="54"/>
         <source>FoundPluginCount</source>
         <translation>总计发现插件数目：</translation>
     </message>
     <message>
-        <location filename="../pluginsystem.cpp" line="51"/>
+        <location filename="../pluginsystem.cpp" line="59"/>
         <source>LoadingPlugin</source>
         <translation>正在加载插件：</translation>
     </message>
     <message>
-        <location filename="../pluginsystem.cpp" line="55"/>
+        <location filename="../pluginsystem.cpp" line="63"/>
         <source>ErrLoadPluginSign</source>
         <translation>插件加载失败：非法插件签名！</translation>
     </message>
     <message>
-        <location filename="../pluginsystem.cpp" line="60"/>
+        <location filename="../pluginsystem.cpp" line="68"/>
         <source>ErrLoadPluginPUID</source>
         <translation>插件加载失败：非法插件 ID ！</translation>
     </message>
     <message>
-        <location filename="../pluginsystem.cpp" line="72"/>
+        <location filename="../pluginsystem.cpp" line="80"/>
         <source>PluginWidgetRegister</source>
         <translation>注册插件对象中……</translation>
     </message>
@@ -622,11 +632,16 @@
     </message>
     <message>
         <location filename="../settingdialog.cpp" line="15"/>
+        <source>EnablePluginOnRoot</source>
+        <translation>是否在 Root 启用插件</translation>
+    </message>
+    <message>
+        <location filename="../settingdialog.cpp" line="16"/>
         <source>Enable Plugin</source>
         <translation>是否启用插件</translation>
     </message>
     <message>
-        <location filename="../settingdialog.cpp" line="16"/>
+        <location filename="../settingdialog.cpp" line="17"/>
         <source>Window</source>
         <translation>窗体</translation>
     </message>
@@ -645,37 +660,42 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../settings.cpp" line="60"/>
+        <location filename="../settings.cpp" line="49"/>
+        <source>EnabledRootPlugin</source>
+        <translation>你在启用了 ROOT 插件加载，如果里面含有恶意代码，很可能会威胁你的计算机安全，建议取消！</translation>
+    </message>
+    <message>
+        <location filename="../settings.cpp" line="75"/>
         <source>Normal</source>
         <translation>正常</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="60"/>
+        <location filename="../settings.cpp" line="75"/>
         <source>Maximum</source>
         <translation>最大化</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="61"/>
+        <location filename="../settings.cpp" line="76"/>
         <source>Minimum</source>
         <translation>最小化</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="61"/>
+        <location filename="../settings.cpp" line="76"/>
         <source>Fullscreen</source>
         <translation>全屏</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="152"/>
+        <location filename="../settings.cpp" line="169"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="153"/>
+        <location filename="../settings.cpp" line="170"/>
         <source>Replace</source>
         <translation>替换</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="155"/>
+        <location filename="../settings.cpp" line="172"/>
         <source>OK</source>
         <translation>确认</translation>
     </message>

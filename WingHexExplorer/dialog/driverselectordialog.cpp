@@ -10,11 +10,14 @@ DriverSelectorDialog::DriverSelectorDialog(DMainWindow *parent)
   drivers->setSortingEnabled(false);
   QStorageInfo si;
   auto ico = ICONRES("opendriver");
-  m_infos = si.mountedVolumes();
+  auto infos = si.mountedVolumes();
   addContent(new DLabel("PleaseChooseDriver", this));
   addSpacing(5);
-  for (auto item : m_infos) {
-    drivers->addItem(new QListWidgetItem(ico, item.device()));
+  for (auto item : infos) {
+    if (item.device()[0] == '/') {
+      drivers->addItem(new QListWidgetItem(ico, item.device()));
+      m_infos.push_back(item);
+    }
   }
   addContent(drivers);
   addSpacing(5);

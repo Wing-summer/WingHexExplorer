@@ -240,6 +240,7 @@ private:
   QString _windowmode;
 
   bool _enableplugin = true;
+  bool _rootenableplugin = false;
 };
 
 #endif // MAINWINDOW_H
