@@ -10,6 +10,9 @@
 #include <QWidget>
 #include <QtCore>
 
+#define extractHexViewShadow(shadowWrapper)                                    \
+  static_cast<HexViewShadow *>(shadowWrapper[0].value<QObject *>())
+
 enum class WingPluginMessage {
   PluginLoading,
   PluginLoaded,

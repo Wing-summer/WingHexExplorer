@@ -1,7 +1,6 @@
 #ifndef GENERICPLUGIN_H
 #define GENERICPLUGIN_H
 
-#include "../WingHexExplorer/WingHexExplorer/hexviewshadow.h"
 #include "../WingHexExplorer/iwingplugin.h"
 #include <QList>
 #include <QObject>

@@ -5,7 +5,8 @@
 #include <QPluginLoader>
 #include <QtCore>
 
-PluginSystem::PluginSystem(QObject *parent) : QObject(parent) {
+PluginSystem::PluginSystem(QObject *parent)
+    : QObject(parent), curhexshadow(nullptr) {
   logger = Logger::getInstance();
 
   // init plugin dispathcer
@@ -148,8 +149,8 @@ bool PluginSystem::shadowControl(IWingPlugin *plugin) {
             WingPluginMessage::HexViewShadowTimeout,
             QList<QVariant>({plugin->pluginName(), plugin->puid()}));
       }
-      initShadowControl(plugin);
     }
+    initShadowControl(plugin);
     return true;
   } else {
     return false;
@@ -184,6 +185,7 @@ void PluginSystem::initShadowControl(IWingPlugin *plugin) {
   auto shadow = hexshadows[plugin];
   if (!hexshadowtimer.contains(shadow)) {
     auto timer = new QTimer(this);
+    hexshadowtimer.insert(shadow, timer);
     connect(timer, &QTimer::timeout, [=] {
       hexshadowtimeout[shadow] = true;
       timer->stop();

@@ -46,6 +46,59 @@ struct HexPosition {
   }
 };
 
+struct HexMetadataAbsoluteItem {
+  qint64 begin;
+  qint64 end;
+  QColor foreground, background;
+  QString comment;
+
+  // added by wingsummer
+  bool operator==(const HexMetadataAbsoluteItem &item) {
+    return begin == item.begin && end == item.end &&
+           foreground == item.foreground && background == item.background &&
+           comment == item.comment;
+  }
+
+  HexMetadataAbsoluteItem(qint64 begin, qint64 end, QColor foreground,
+                          QColor background, QString comment) {
+    this->begin = begin;
+    this->end = end;
+    this->foreground = foreground;
+    this->background = background;
+    this->comment = comment;
+  }
+};
+
+struct HexMetadataItem {
+  quint64 line;
+  int start, length;
+  QColor foreground, background;
+  QString comment;
+
+  // added by wingsummer
+  bool operator==(const HexMetadataItem &item) {
+    return line == item.line && start == item.start &&
+           foreground == item.foreground && background == item.background &&
+           comment == item.comment;
+  }
+
+  HexMetadataItem(quint64 line, int start, int length, QColor foreground,
+                  QColor background, QString comment) {
+    this->line = line;
+    this->start = start;
+    this->length = length;
+    this->foreground = foreground;
+    this->background = background;
+    this->comment = comment;
+  }
+};
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
+typedef QLinkedList<HexMetadataItem> HexLineMetadata;
+#else
+typedef QList<HexMetadataItem> HexLineMetadata;
+#endif
+
 class HexViewShadow : public QObject {
   Q_OBJECT
 
@@ -127,9 +180,19 @@ signals:
   // metadata
   void metadata(qint64 begin, qint64 end, const QColor &fgcolor,
                 const QColor &bgcolor, const QString &comment);
-
   void metadata(quint64 line, int start, int length, const QColor &fgcolor,
                 const QColor &bgcolor, const QString &comment);
+  bool lineHasMetadata(quint64 line) const;
+  bool removeMetadata(qint64 offset, QList<HexMetadataItem> refer);
+  QList<HexMetadataItem> getMetadatas(qint64 offset);
+  void clear(quint64 line);
+  void clear();
+  HexLineMetadata getMetaLine(quint64 line) const;
+  void color(quint64 line, int start, int length, const QColor &fgcolor,
+             const QColor &bgcolor);
+  void foreground(quint64 line, int start, int length, const QColor &fgcolor);
+  void background(quint64 line, int start, int length, const QColor &bgcolor);
+  void comment(quint64 line, int start, int length, const QString &comment);
 
   // shadow
   bool shadowIsValid(IWingPlugin *plugin);
@@ -138,6 +201,7 @@ signals:
   void shadowDestory(IWingPlugin *plugin);
 
   // mainwindow
+  void newFile();
   ErrFile openFile(QString filename, bool readonly = false);
   ErrFile openDriver(QString driver);
   ErrFile closeFile(int index, bool force = false);
@@ -150,6 +214,14 @@ signals:
   ErrFile saveCurrentFile();
   void openFileGUI();
   void openDriverGUI();
+  void findGUI();
+  void gotoGUI();
+  void fillGUI();
+  void fillzeroGUI();
+  void fillnopGUI();
+
+  // extension
+  QList<QString> getOpenFiles();
 };
 
 #endif // HEXVIEWSHADOW_H

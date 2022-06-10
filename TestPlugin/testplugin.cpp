@@ -48,9 +48,18 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
     return;
   }
   if (type == WingPluginMessage::GetHexViewShadow) {
-    auto hvs = static_cast<HexViewShadow *>(msg[0].value<QObject *>());
-    if (hvs)
-      hvs->shadowControl(this);
+    auto hvs = extractHexViewShadow(msg);
+    if (hvs) {
+      if (hvs->shadowControl(this)) {
+        QMessageBox::information(nullptr, "信息",
+                                 "获取组件控制权，下面开始表演！");
+        hvs->newFile();
+        hvs->switchDocument(0);
+        auto str = QString("HelloWorld!").toUtf8();
+        hvs->insert(0, str);
+        hvs->shadowRelease(this);
+      }
+    }
   }
 }
 

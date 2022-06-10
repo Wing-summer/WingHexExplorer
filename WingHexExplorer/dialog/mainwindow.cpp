@@ -840,19 +840,47 @@ void MainWindow::connectShadow(HexViewShadow *shadow) {
   ConnectShadowLamba(HexViewShadow::searchBackward, [=](const QByteArray &ba) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->searchBackward(ba), qint64(-1));
   });
+  ConnectShadowLamba(HexViewShadow::getMetaLine, [=](quint64 line) {
+    auto ometas = hexfiles[_pcurfile].doc->metadata()->get(line);
+    HexLineMetadata metas;
+    for (auto item : ometas) {
+      metas.push_back(HexMetadataItem(item.line, item.start, item.length,
+                                      item.foreground, item.background,
+                                      item.comment));
+    }
+    return metas;
+  });
+  ConnectShadowLamba(HexViewShadow::getMetadatas, [=](qint64 offset) {
+    auto ometaline = hexfiles[_pcurfile].doc->metadata()->gets(offset);
+    QList<HexMetadataItem> metaline;
+    for (auto item : ometaline) {
+      metaline.push_back(HexMetadataItem(item.line, item.start, item.length,
+                                         item.foreground, item.background,
+                                         item.comment));
+    }
+    return metaline;
+  });
+  ConnectShadowLamba(HexViewShadow::lineHasMetadata, [=](quint64 line) {
+    return hexfiles[_pcurfile].doc->metadata()->lineHasMetadata(line);
+  });
+  ConnectShadowLamba(HexViewShadow::getOpenFiles, [=] {
+    QList<QString> files;
+    for (auto item : hexfiles) {
+      files.push_back(item.filename);
+    }
+    return files;
+  });
 }
 
 void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
   ConnectShadowLamba(HexViewShadow::switchDocument, [=](int index, bool gui) {
-    PCHECK({
-      if (gui) {
-        setFilePage(index);
+    if (gui) {
+      setFilePage(index);
+      _pcurfile = _currentfile;
+    } else {
+      if (index >= 0 && index < hexfiles.count())
         _pcurfile = index;
-      } else {
-        if (index >= 0 && index < hexfiles.count())
-          _pcurfile = index;
-      }
-    }, )
+    }
   });
   ConnectShadowLamba(HexViewShadow::setLockedFile, [=](bool b) {
     hexfiles[_pcurfile].doc->setLockedFile(b);
@@ -980,6 +1008,57 @@ void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
         hexfiles[_pcurfile].doc->metadata()->metadata(
             line, start, length, fgcolor, bgcolor, comment);
       });
+
+  ConnectShadowLamba(HexViewShadow::removeMetadata,
+                     [=](qint64 offset, QList<HexMetadataItem> refer) {
+                       QList<QHexMetadataItem> nrefer;
+                       for (auto item : refer) {
+                         QHexMetadataItem m;
+                         m.line = item.line;
+                         m.start = item.start;
+                         m.length = item.length;
+                         m.comment = item.comment;
+                         m.background = item.background;
+                         m.foreground = item.foreground;
+                         nrefer.push_back(m);
+                       }
+                       hexfiles[_pcurfile].doc->metadata()->removeMetadata(
+                           offset, nrefer);
+                     });
+
+  void (HexViewShadow::*clear)() = &HexViewShadow::clear;
+  void (HexViewShadow::*clearl)(quint64 line) = &HexViewShadow::clear;
+  ConnectShadowLamba2(clear,
+                      [=]() { hexfiles[_pcurfile].doc->metadata()->clear(); });
+  ConnectShadowLamba2(clearl, [=](quint64 line) {
+    hexfiles[_pcurfile].doc->metadata()->clear(line);
+  });
+
+  ConnectShadowLamba(HexViewShadow::color,
+                     [=](quint64 line, int start, int length,
+                         const QColor &fgcolor, const QColor &bgcolor) {
+                       hexfiles[_pcurfile].doc->metadata()->color(
+                           line, start, length, fgcolor, bgcolor);
+                     });
+  ConnectShadowLamba(HexViewShadow::comment, [=](quint64 line, int start,
+                                                 int length,
+                                                 const QString &comment) {
+    hexfiles[_pcurfile].doc->metadata()->comment(line, start, length, comment);
+  });
+  ConnectShadowLamba(
+      HexViewShadow::foreground,
+      [=](quint64 line, int start, int length, const QColor &fgcolor) {
+        hexfiles[_pcurfile].doc->metadata()->foreground(line, start, length,
+                                                        fgcolor);
+      });
+  ConnectShadowLamba(
+      HexViewShadow::background,
+      [=](quint64 line, int start, int length, const QColor &bgcolor) {
+        hexfiles[_pcurfile].doc->metadata()->background(line, start, length,
+                                                        bgcolor);
+      });
+
+  ConnectShadows(HexViewShadow::newFile, MainWindow::newFile);
   ConnectShadows(HexViewShadow::openFile, MainWindow::openFile);
   ConnectShadows(HexViewShadow::openDriver, MainWindow::openDriver);
   ConnectShadows(HexViewShadow::closeFile, MainWindow::closeFile);
@@ -992,6 +1071,11 @@ void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
   ConnectShadows(HexViewShadow::saveCurrentFile, MainWindow::saveCurrentFile);
   ConnectShadows(HexViewShadow::openFileGUI, MainWindow::on_openfile);
   ConnectShadows(HexViewShadow::openDriverGUI, MainWindow::on_opendriver);
+  ConnectShadows(HexViewShadow::gotoGUI, MainWindow::on_gotoline);
+  ConnectShadows(HexViewShadow::findGUI, MainWindow::on_findfile);
+  ConnectShadows(HexViewShadow::fillGUI, MainWindow::on_fill);
+  ConnectShadows(HexViewShadow::fillzeroGUI, MainWindow::on_fillzero);
+  ConnectShadows(HexViewShadow::fillnopGUI, MainWindow::on_fillnop);
 }
 
 void MainWindow::shadowDestory(IWingPlugin *plugin) {
@@ -1697,6 +1781,7 @@ void MainWindow::on_fill() {
 }
 
 void MainWindow::on_fillnop() {
+  CheckEnabled;
   auto doc = hexeditor->document();
   if (doc->isEmpty() || hexeditor->selectlength() == 0)
     return;
@@ -1705,6 +1790,7 @@ void MainWindow::on_fillnop() {
 }
 
 void MainWindow::on_fillzero() {
+  CheckEnabled;
   auto doc = hexeditor->document();
   if (doc->isEmpty() || hexeditor->selectlength() == 0)
     return;
