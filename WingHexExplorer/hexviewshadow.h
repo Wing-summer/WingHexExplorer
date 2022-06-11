@@ -14,6 +14,7 @@ enum ErrFile {
   NotExist,
   AlreadyOpened,
   IsNewFile,
+  IsDirver
 };
 
 struct FindResult {

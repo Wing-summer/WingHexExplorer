@@ -123,7 +123,7 @@ private:
   void gotoFileLine(int index, quint64 offset);
   void gotoCurrentLine(quint64 offset);
   void undoCurrent();
-  void setEditModeEnabled(bool b);
+  void setEditModeEnabled(bool b, bool isdriver = false);
   void redoCurrent();
   void undoFile(int index);
   void redoFile(int index);
@@ -179,7 +179,6 @@ private:
   QList<HexFile> hexfiles;
   QMap<ToolBoxIndex, QAction *> toolbartools;
   QMap<ToolBoxIndex, QAction *> toolmenutools;
-  DMenu *editmenu;
 
   uint defaultindex = 1; //表示新建使用的累计索引
   int _currentfile = -1; //表示正在使用文件的索引，编辑器使用
@@ -198,6 +197,8 @@ private:
   bool shadowControl(IWingPlugin *plugin);
   bool shadowRelease(IWingPlugin *plugin);
   void shadowDestory(IWingPlugin *plugin);
+
+  void enableDirverLimit(bool b);
 
 private:
   DMenu *plgmenu;

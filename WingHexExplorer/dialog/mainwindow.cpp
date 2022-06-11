@@ -137,6 +137,10 @@ MainWindow::MainWindow(DMainWindow *parent) {
   auto keyfill = QKeySequence(Qt::KeyboardModifier::ControlModifier |
                               Qt::KeyboardModifier::AltModifier | Qt::Key_F);
 
+#define AddMenuDB(index)                                                       \
+  a->setEnabled(false);                                                        \
+  toolmenutools.insert(index, a);
+
   AddToolSubMenuShortcutAction("opendriver", tr("OpenD"),
                                MainWindow::on_opendriver, keyOpenDriver);
   tm->addSeparator();
@@ -144,7 +148,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
                                QKeySequence::Save);
   AddToolSubMenuShortcutAction("saveas", tr("SaveAs"),
                                MainWindow::on_saveasfile, QKeySequence::SaveAs);
+  AddMenuDB(ToolBoxIndex::SaveAs);
   AddToolSubMenuAction("export", tr("Export"), MainWindow::on_exportfile);
+  AddMenuDB(ToolBoxIndex::Export);
   tm->addSeparator();
   AddToolSubMenuShortcutAction("exit", tr("Exit"), MainWindow::on_exit,
                                QKeySequence::Quit);
@@ -153,47 +159,62 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm = new DMenu(this);
   tm->setTitle(tr("Edit"));
   tm->setIcon(ICONRES("edit"));
-  tm->setEnabled(false);
-  editmenu = tm;
   AddToolSubMenuShortcutAction("undo", tr("Undo"), MainWindow::on_undofile,
                                QKeySequence::Undo);
+  AddMenuDB(ToolBoxIndex::Undo);
   AddToolSubMenuShortcutAction("redo", tr("Redo"), MainWindow::on_redofile,
                                QKeySequence::Redo);
+  AddMenuDB(ToolBoxIndex::Redo);
   tm->addSeparator();
   AddToolSubMenuShortcutAction("cut", tr("Cut"), MainWindow::on_cutfile,
                                QKeySequence::Cut);
+  AddMenuDB(ToolBoxIndex::Cut);
   AddToolSubMenuShortcutAction("copy", tr("Copy"), MainWindow::on_copyfile,
                                QKeySequence::Copy);
+  AddMenuDB(ToolBoxIndex::Copy);
   AddToolSubMenuShortcutAction("paste", tr("Paste"), MainWindow::on_pastefile,
                                QKeySequence::Paste);
+  AddMenuDB(ToolBoxIndex::Paste);
   AddToolSubMenuShortcutAction("del", tr("Delete"), MainWindow::on_delete,
                                QKeySequence::Delete);
+  AddMenuDB(ToolBoxIndex::Del);
   tm->addSeparator();
   AddToolSubMenuShortcutAction("find", tr("Find"), MainWindow::on_findfile,
                                QKeySequence::Find);
+  AddMenuDB(ToolBoxIndex::Find);
   AddToolSubMenuShortcutAction("jmp", tr("Goto"), MainWindow::on_gotoline,
                                keygoto);
+  AddMenuDB(ToolBoxIndex::Goto);
   tm->addSeparator();
   AddToolSubMenuShortcutAction("fill", tr("Fill"), MainWindow::on_fill,
                                keyfill);
+  AddMenuDB(ToolBoxIndex::Fill);
   AddToolSubMenuShortcutAction("fillNop", tr("FillNop"), MainWindow::on_fillnop,
                                keyfillnop);
+  AddMenuDB(ToolBoxIndex::FillNop);
   AddToolSubMenuShortcutAction("fillZero", tr("FillZero"),
                                MainWindow::on_fillzero, keyfillzero);
+  AddMenuDB(ToolBoxIndex::FillZero);
   tm->addSeparator();
   AddToolSubMenuShortcutAction("metadata", tr("MetaData"),
                                MainWindow::on_metadata, keymetadata);
+  AddMenuDB(ToolBoxIndex::Meta);
   AddToolSubMenuShortcutAction("metadatadel", tr("DeleteMetaData"),
                                MainWindow::on_metadatadel, keymetadatadel);
+  AddMenuDB(ToolBoxIndex::DelMeta);
   AddToolSubMenuShortcutAction("metadatacls", tr("ClearMetaData"),
                                MainWindow::on_metadatacls, keymetadatacls);
+  AddMenuDB(ToolBoxIndex::ClsMeta);
   tm->addSeparator();
   AddToolSubMenuShortcutAction("bookmark", tr("BookMark"),
                                MainWindow::on_bookmark, keybookmark);
+  AddMenuDB(ToolBoxIndex::BookMark);
   AddToolSubMenuShortcutAction("bookmarkdel", tr("DeleteBookMark"),
                                MainWindow::on_bookmarkdel, keybookmarkdel);
+  AddMenuDB(ToolBoxIndex::DelBookMark);
   AddToolSubMenuShortcutAction("bookmarkcls", tr("ClearBookMark"),
                                MainWindow::on_bookmarkcls, keybookmarkcls);
+  AddMenuDB(ToolBoxIndex::ClsBookMark);
   menu->addMenu(tm);
 
   tm = new DMenu(this);
@@ -1130,6 +1151,7 @@ void MainWindow::setFilePage(int index) {
     if (d.doc == hexeditor->document())
       return;
     hexeditor->switchDocument(d.doc, d.render, d.vBarValue);
+    enableDirverLimit(d.isdriver);
     tabs->setCurrentIndex(index);
   }
 
@@ -1160,6 +1182,7 @@ void MainWindow::newFile() {
   hf.render = hexeditor->renderer();
   hf.vBarValue = -1;
   hf.filename = ":" + title;
+  hf.isdriver = false;
   hexfiles.push_back(hf);
   tabs->addTab(QIcon::fromTheme("text-plain"), title);
   defaultindex++;
@@ -1233,7 +1256,7 @@ ErrFile MainWindow::openFile(QString filename, bool readonly) {
     hexeditor->setLockedFile(readonly);
     hexeditor->setDocument(p);
     hexeditor->setKeepSize(true);
-
+    hf.isdriver = false;
     hf.render = hexeditor->renderer();
     hf.vBarValue = -1;
     hf.filename = filename;
@@ -1272,22 +1295,91 @@ ErrFile MainWindow::openDriver(QString driver) {
   }
 
   if (Utilities::isRoot()) {
-    auto res = openFile(driver);
-    auto d = DMessageManager::instance();
-    if (res == ErrFile::Success) {
-      hexeditor->setLockedFile(true);
-      d->sendMessage(this, ICONRES("opendriver"), tr("DriverOpenedTip"));
+    QFileInfo info(driver);
+
+    if (info.exists()) {
+      if (!info.permission(QFile::ReadUser)) {
+        if (_enableplugin) {
+          params[0].setValue(HookIndex::OpenFileEnd);
+          params << ErrFile::Permission;
+          plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+        }
+        return ErrFile::Permission;
+      }
+
+      if (!info.permission(QFile::WriteUser)) {
+        if (_enableplugin) {
+          params[0].setValue(HookIndex::OpenFileEnd);
+          params << ErrFile::Permission;
+          plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+        }
+        return ErrFile::Permission;
+      }
+
+      for (auto item : hexfiles) {
+        if (item.filename == driver) {
+          if (_enableplugin) {
+            params[0].setValue(HookIndex::OpenFileEnd);
+            params << ErrFile::AlreadyOpened;
+            plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+          }
+          return ErrFile::AlreadyOpened;
+        }
+      }
+
+      hexeditor->setVisible(true);
+
+      HexFile hf;
+      auto *p = QHexDocument::fromLargeFile(driver, false, this);
+      if (p == nullptr) {
+        if (_enableplugin) {
+          params[0].setValue(HookIndex::OpenFileEnd);
+          params << ErrFile::Error;
+          plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+        }
+        return ErrFile::Error;
+      }
+
+      hf.doc = p;
+      hexeditor->setDocument(p);
+      hexeditor->setKeepSize(true);
+      hf.isdriver = true;
+      hf.render = hexeditor->renderer();
+      hf.vBarValue = -1;
+      hf.filename = driver;
+      hexfiles.push_back(hf);
+
+      QMimeDatabase db;
+      auto t = db.mimeTypeForFile(driver);
+      auto ico = t.iconName();
+      tabs->addTab(QIcon::fromTheme(ico, QIcon(ico)), info.fileName());
+      auto index = hexfiles.count() - 1;
+      tabs->setCurrentIndex(index);
+      tabs->setTabToolTip(index, driver);
       setEditModeEnabled(true);
-      toolbartools[ToolBoxIndex::SaveAs]->setEnabled(false);
+
+      if (_enableplugin) {
+        params[0].setValue(HookIndex::OpenFileEnd);
+        params << ErrFile::Success;
+        plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+      }
+
+      hexeditor->setLockedFile(true);
+      setEditModeEnabled(true, true);
       if (_enableplugin) {
         params[0].setValue(HookIndex::OpenDriverEnd);
         params << ErrFile::Success;
         plgsys->raiseDispatch(HookIndex::OpenDriverEnd, params);
       }
-    } else {
-      d->sendMessage(this, ICONRES("opendriver"), tr("DriverOpenErrorTip"));
+      return ErrFile::Success;
     }
-    return res;
+
+    if (_enableplugin) {
+      params[0].setValue(HookIndex::OpenFileEnd);
+      params << ErrFile::NotExist;
+      plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+    }
+    return ErrFile::NotExist;
   } else {
     QMessageBox::critical(this, tr("Error"), tr("NoRoot"));
     if (_enableplugin) {
@@ -1401,7 +1493,7 @@ void MainWindow::on_tabCloseRequested(int index) {
     auto f = hexfiles.at(index).filename;
 
     auto r = QMessageBox::question(this, tr("Close"),
-                                   tr("ConfirmSave") + f.remove(':'));
+                                   tr("ConfirmSave") + "\n" + f.remove(':'));
     if (r == QMessageBox::Yes) {
       closeFile(index, true);
     }
@@ -1421,7 +1513,9 @@ void MainWindow::on_pastefile() { hexeditor->document()->paste(); }
 void MainWindow::on_opendriver() {
   DriverSelectorDialog ds;
   if (ds.exec()) {
-    openDriver(ds.GetResult().device());
+    auto d = DMessageManager::instance();
+    if (openDriver(ds.GetResult().device()) != ErrFile::Success)
+      d->sendMessage(this, ICONRES("opendriver"), tr("DriverOpenErrorTip"));
   }
 }
 
@@ -1631,6 +1725,8 @@ void MainWindow::on_documentStatusChanged() {
 ErrFile MainWindow::saveFile(int index) {
   if (index >= 0 && index < hexfiles.count()) {
     auto f = hexfiles.at(index);
+    if (f.isdriver)
+      return ErrFile::IsDirver;
     if (f.filename.at(0) == ':')
       return ErrFile::IsNewFile;
     QFile file(f.filename);
@@ -1646,6 +1742,8 @@ ErrFile MainWindow::saveFile(int index) {
 ErrFile MainWindow::exportFile(QString filename, int index) {
   if (index >= 0 && index < hexfiles.count()) {
     auto f = hexfiles.at(index);
+    if (f.isdriver)
+      return ErrFile::IsDirver;
     QFile file(filename);
     file.open(QFile::WriteOnly);
     if (f.doc->saveTo(&file, false)) {
@@ -1661,6 +1759,8 @@ ErrFile MainWindow::exportFile(QString filename, int index) {
 ErrFile MainWindow::saveasFile(QString filename, int index) {
   if (index >= 0 && index < hexfiles.count()) {
     auto f = hexfiles.at(index);
+    if (f.isdriver)
+      return ErrFile::IsDirver;
     QFile file(filename);
     file.open(QFile::WriteOnly);
     if (f.doc->saveTo(&file, true)) {
@@ -1759,13 +1859,24 @@ void MainWindow::on_bookmarkcls() {
   bookmarks->clear();
 }
 
-void MainWindow::setEditModeEnabled(bool b) {
+void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
   for (auto item : toolbartools.values()) {
     item->setEnabled(b);
   }
   hexeditorMenu->setEnabled(b);
-  editmenu->setEnabled(b);
+  for (auto item : toolmenutools.values()) {
+    item->setEnabled(b);
+  }
+  enableDirverLimit(isdriver);
   status->setEnabled(b);
+}
+
+void MainWindow::enableDirverLimit(bool b) {
+  auto e = !b;
+  toolbartools[ToolBoxIndex::SaveAs]->setEnabled(e);
+  toolbartools[ToolBoxIndex::Export]->setEnabled(e);
+  toolmenutools[ToolBoxIndex::SaveAs]->setEnabled(e);
+  toolmenutools[ToolBoxIndex::Export]->setEnabled(e);
 }
 
 void MainWindow::on_restoreLayout() { m_settings->loadWindowState(this, true); }

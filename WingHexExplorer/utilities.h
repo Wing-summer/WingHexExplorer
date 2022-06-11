@@ -18,6 +18,7 @@ struct HexFile {
   QHexRenderer *render;
   QString filename;
   int vBarValue;
+  bool isdriver;
 };
 
 class Utilities {
