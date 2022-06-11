@@ -179,3 +179,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ## 其他下载方式
 
 &emsp;&emsp;鉴于 Gitee 下载发行版必须登录注册，这对于用户体验来说极差，于是乎我给了个蓝奏云的，之后所有的发行版本都会同步上传上去：https://wwu.lanzoul.com/b021fkd5c -- 密码:ewtv 。
+
+## 应用商店
+
+&emsp;&emsp;目前我已把安装包投递到星火商店，欢迎大家下载安装：
+
+<p align="center">
+
+<img alt="星火商店" src="spark-store.png">
+<p align="center">星火商店</p>
+
+</p>
+
+&emsp;&emsp;Spk分享链接：spk://store/store/com.wingsummer.winghexexplorer
