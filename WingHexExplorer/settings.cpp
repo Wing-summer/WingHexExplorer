@@ -31,38 +31,49 @@ Settings::Settings(QWidget *parent) : QObject(parent) {
 
 #define BindConfigSignal(Var, SettingName, Signal)                             \
   auto Var = settings->option(SettingName);                                    \
-  connect(Var, &Dtk::Core::DSettingsOption::valueChanged, this,                \
-          [=](QVariant value) { emit Signal; });
+  connect(Var, &Dtk::Core::DSettingsOption::valueChanged,                      \
+          this, [=](QVariant value) Signal);
 
   BindConfigSignal(fontFamliy, "appearance.font.family",
-                   sigAdjustFont(value.toString()));
-  BindConfigSignal(plugin, "editor.plugin.enableplugin",
-                   sigChangePluginEnabled(value.toBool()));
-
-  auto rootplugin = settings->option("editor.plugin.rootenableplugin");
-  connect(rootplugin, &Dtk::Core::DSettingsOption::valueChanged, this,
-          [=](QVariant value) {
-            auto v = value.toBool();
-            if (v) {
-              DMessageManager::instance()->sendMessage(m_pSettingsDialog,
-                                                       ICONRES("setting"),
-                                                       tr("EnabledRootPlugin"));
-            }
-            emit sigChangeRootPluginEnabled(v);
-          });
+                   { emit sigAdjustFont(value.toString()); });
+  BindConfigSignal(plugin, "editor.plugin.enableplugin", {
+    emit sigChangePluginEnabled(value.toBool());
+    DMessageManager::instance()->sendMessage(
+        m_pSettingsDialog, ICONRES("setting"), tr("RestartTakeEffect"));
+  });
+  BindConfigSignal(rootplugin, "editor.plugin.rootenableplugin", {
+    auto v = value.toBool();
+    if (v) {
+      DMessageManager::instance()->sendMessage(
+          m_pSettingsDialog, ICONRES("setting"), tr("EnabledRootPlugin"));
+    }
+    emit sigChangeRootPluginEnabled(v);
+  });
 
   BindConfigSignal(hexfontSize, "editor.font.size",
-                   sigAdjustEditorFontSize(value.toInt()));
+                   { emit sigAdjustEditorFontSize(value.toInt()); });
   BindConfigSignal(infofontSize, "appearance.font.size",
-                   sigAdjustInfoFontSize(value.toInt()));
-  BindConfigSignal(showAddr, "editor.font.showaddr",
-                   sigShowAddressNumber(value.toBool()));
-  BindConfigSignal(showCol, "editor.font.showcol",
-                   sigShowColNumber(value.toBool()));
-  BindConfigSignal(showText, "editor.font.showtext",
-                   sigShowEncodingText(value.toBool()));
-  BindConfigSignal(windowstate, "appearance.window.windowstate",
-                   sigChangeWindowState(value.toString()));
+                   { emit sigAdjustInfoFontSize(value.toInt()); });
+  BindConfigSignal(showAddr, "editor.font.showaddr", {
+    emit sigShowAddressNumber(value.toBool());
+    DMessageManager::instance()->sendMessage(
+        m_pSettingsDialog, ICONRES("setting"), tr("OpenNextTakeEffect"));
+  });
+  BindConfigSignal(showCol, "editor.font.showcol", {
+    emit sigShowColNumber(value.toBool());
+    DMessageManager::instance()->sendMessage(
+        m_pSettingsDialog, ICONRES("setting"), tr("OpenNextTakeEffect"));
+  });
+  BindConfigSignal(showText, "editor.font.showtext", {
+    emit sigShowEncodingText(value.toBool());
+    DMessageManager::instance()->sendMessage(
+        m_pSettingsDialog, ICONRES("setting"), tr("OpenNextTakeEffect"));
+  });
+  BindConfigSignal(windowstate, "appearance.window.windowstate", {
+    emit sigChangeWindowState(value.toString());
+    DMessageManager::instance()->sendMessage(
+        m_pSettingsDialog, ICONRES("setting"), tr("RestartTakeEffect"));
+  });
 
   // only used by new window
   auto windowState = settings->option("appearance.window.windowsize");

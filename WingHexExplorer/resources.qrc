@@ -50,6 +50,12 @@
         <file>images/metadatacls.png</file>
         <file>images/metadatadel.png</file>
         <file>images/layout.png</file>
+        <file>images/overg.png</file>
+        <file>images/rwg.png</file>
+        <file>images/saveg.png</file>
+        <file>images/lockg.png</file>
+        <file>images/savesel.png</file>
+        <file>images/loadplg.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

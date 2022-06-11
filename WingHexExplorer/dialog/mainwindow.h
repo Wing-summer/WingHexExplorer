@@ -52,6 +52,7 @@ class MainWindow : public DMainWindow {
     OpenDriver,
     Save,
     SaveAs,
+    SaveSel,
     Export,
     Undo,
     Redo,
@@ -143,6 +144,7 @@ private:
   void on_copyfile();
   void on_exportfile();
   void on_cutfile();
+  void on_savesel();
   void on_delete();
   void on_pastefile();
   void on_gotoline();
@@ -174,6 +176,7 @@ private:
   void on_fillzero();
   void on_fill();
   void on_clearfindresult();
+  void on_loadplg();
 
 private:
   QList<HexFile> hexfiles;
@@ -216,12 +219,16 @@ private:
 
   QPixmap infoSaved;
   QPixmap infoUnsaved;
+  QPixmap infoSaveg;
   QPixmap infoReadonly;
   QPixmap infoWriteable;
+  QPixmap inforwg;
   QIcon infoCanOver;
   QIcon infoCannotOver;
+  QIcon infoOverg;
   QIcon infoLock;
   QIcon infoUnLock;
+  QIcon infoLockg;
 
   QTextBrowser *pluginInfo;
   DTableWidget *numshowtable;

@@ -101,6 +101,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolSubMenuShortcutAction("open", tr("OpenF"), MainWindow::on_openfile,
                                QKeySequence::Open);
 
+  auto keysaveas =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::ShiftModifier | Qt::Key_S);
   auto keyOpenDriver =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::ShiftModifier | Qt::Key_O);
@@ -129,6 +132,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::ShiftModifier |
                    Qt::KeyboardModifier::AltModifier | Qt::Key_B);
+  auto keyexport =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::ShiftModifier | Qt::Key_E);
 
   auto keyfillnop =
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_9);
@@ -136,6 +142,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_0);
   auto keyfill = QKeySequence(Qt::KeyboardModifier::ControlModifier |
                               Qt::KeyboardModifier::AltModifier | Qt::Key_F);
+  auto keyloadplg = QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                                 Qt::KeyboardModifier::AltModifier | Qt::Key_L);
 
 #define AddMenuDB(index)                                                       \
   a->setEnabled(false);                                                        \
@@ -147,10 +155,13 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolSubMenuShortcutAction("save", tr("Save"), MainWindow::on_savefile,
                                QKeySequence::Save);
   AddToolSubMenuShortcutAction("saveas", tr("SaveAs"),
-                               MainWindow::on_saveasfile, QKeySequence::SaveAs);
+                               MainWindow::on_saveasfile, keysaveas);
   AddMenuDB(ToolBoxIndex::SaveAs);
-  AddToolSubMenuAction("export", tr("Export"), MainWindow::on_exportfile);
+  AddToolSubMenuShortcutAction("export", tr("Export"),
+                               MainWindow::on_exportfile, keyexport);
   AddMenuDB(ToolBoxIndex::Export);
+  AddToolSubMenuAction("savesel", tr("SaveSel"), MainWindow::on_savesel);
+  AddMenuDB(ToolBoxIndex::SaveSel);
   tm->addSeparator();
   AddToolSubMenuShortcutAction("exit", tr("Exit"), MainWindow::on_exit,
                                QKeySequence::Quit);
@@ -231,6 +242,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm = new DMenu(this);
   tm->setTitle(tr("Plugin"));
   tm->setIcon(ICONRES("plugin"));
+  AddToolSubMenuShortcutAction("loadplg", tr("LoadPlugin"),
+                               MainWindow::on_loadplg, keyloadplg);
+  tm->addSeparator();
   plgmenu = tm;
   menu->addMenu(tm);
 
@@ -289,67 +303,76 @@ MainWindow::MainWindow(DMainWindow *parent) {
                        MainWindow::on_bookmarkcls, keybookmarkcls);
   toolbar = new DToolBar(this);
 
-#define AddToolBarAction(Icon, Owner, Slot)                                    \
+#define AddToolBarAction(Icon, Owner, Slot, ToolTip)                           \
   a = new QAction(Owner);                                                      \
   a->setIcon(ICONRES(Icon));                                                   \
   connect(a, &QAction::triggered, this, &Slot);                                \
+  a->setToolTip(ToolTip);                                                      \
   Owner->addAction(a);
 
-#define AddToolBarTool(Icon, Slot) AddToolBarAction(Icon, toolbar, Slot)
+#define AddToolBarTool(Icon, Slot, ToolTip)                                    \
+  AddToolBarAction(Icon, toolbar, Slot, ToolTip)
 
 #define AddToolsDB(index)                                                      \
   a->setEnabled(false);                                                        \
   toolbartools.insert(index, a);
 
-  AddToolBarTool("new", MainWindow::on_newfile);
-  AddToolBarTool("open", MainWindow::on_openfile);
-  AddToolBarTool("opendriver", MainWindow::on_opendriver);
+  AddToolBarTool("new", MainWindow::on_newfile, tr("New"));
+  AddToolBarTool("open", MainWindow::on_openfile, tr("OpenF"));
+  AddToolBarTool("opendriver", MainWindow::on_opendriver, tr("OpenD"));
   toolbar->addSeparator();
-  AddToolBarTool("save", MainWindow::on_savefile);
+  AddToolBarTool("save", MainWindow::on_savefile, tr("Save"));
   AddToolsDB(ToolBoxIndex::Save);
-  AddToolBarTool("saveas", MainWindow::on_saveasfile);
+  AddToolBarTool("saveas", MainWindow::on_saveasfile, tr("SaveAs"));
   AddToolsDB(ToolBoxIndex::SaveAs);
-  AddToolBarTool("export", MainWindow::on_exportfile);
+  AddToolBarTool("export", MainWindow::on_exportfile, tr("Export"));
   AddToolsDB(ToolBoxIndex::Export);
   toolbar->addSeparator();
-  AddToolBarTool("undo", MainWindow::on_undofile);
+  AddToolBarTool("undo", MainWindow::on_undofile, tr("Undo"));
   AddToolsDB(ToolBoxIndex::Undo);
-  AddToolBarTool("redo", MainWindow::on_redofile);
+  AddToolBarTool("redo", MainWindow::on_redofile, tr("Redo"));
   AddToolsDB(ToolBoxIndex::Redo);
-  AddToolBarTool("cut", MainWindow::on_cutfile);
+  AddToolBarTool("cut", MainWindow::on_cutfile, tr("Cut"));
   AddToolsDB(ToolBoxIndex::Cut);
-  AddToolBarTool("copy", MainWindow::on_copyfile);
+  AddToolBarTool("copy", MainWindow::on_copyfile, tr("Copy"));
   AddToolsDB(ToolBoxIndex::Copy);
-  AddToolBarTool("paste", MainWindow::on_pastefile);
+  AddToolBarTool("paste", MainWindow::on_pastefile, tr("Paste"));
   AddToolsDB(ToolBoxIndex::Paste);
-  AddToolBarTool("del", MainWindow::on_delete);
+  AddToolBarTool("del", MainWindow::on_delete, tr("Delete"));
   AddToolsDB(ToolBoxIndex::Del);
   toolbar->addSeparator();
-  AddToolBarTool("find", MainWindow::on_findfile);
+  AddToolBarTool("find", MainWindow::on_findfile, tr("Find"));
   AddToolsDB(ToolBoxIndex::Find);
-  AddToolBarTool("jmp", MainWindow::on_gotoline);
+  AddToolBarTool("jmp", MainWindow::on_gotoline, tr("Goto"));
   AddToolsDB(ToolBoxIndex::Goto);
   toolbar->addSeparator();
-  AddToolBarTool("fill", MainWindow::on_fill);
+  AddToolBarTool("fill", MainWindow::on_fill, tr("Fill"));
   AddToolsDB(ToolBoxIndex::Fill);
-  AddToolBarTool("fillNop", MainWindow::on_fillnop);
+  AddToolBarTool("fillNop", MainWindow::on_fillnop, tr("FillNop"));
   AddToolsDB(ToolBoxIndex::FillNop);
-  AddToolBarTool("fillZero", MainWindow::on_fillzero);
+  AddToolBarTool("fillZero", MainWindow::on_fillzero, tr("FillZero"));
   AddToolsDB(ToolBoxIndex::FillZero);
   toolbar->addSeparator();
-  AddToolBarTool("metadata", MainWindow::on_metadata);
+  AddToolBarTool("metadata", MainWindow::on_metadata, tr("MetaData"));
   AddToolsDB(ToolBoxIndex::Meta);
-  AddToolBarTool("metadatadel", MainWindow::on_metadatadel);
+  AddToolBarTool("metadatadel", MainWindow::on_metadatadel,
+                 tr("DeleteMetaData"));
   AddToolsDB(ToolBoxIndex::DelMeta);
-  AddToolBarTool("metadatacls", MainWindow::on_metadatacls);
+  AddToolBarTool("metadatacls", MainWindow::on_metadatacls,
+                 tr("ClearMetaData"));
   AddToolsDB(ToolBoxIndex::ClsMeta);
   toolbar->addSeparator();
-  AddToolBarTool("bookmark", MainWindow::on_bookmark);
+  AddToolBarTool("bookmark", MainWindow::on_bookmark, tr("BookMark"));
   AddToolsDB(ToolBoxIndex::BookMark);
-  AddToolBarTool("bookmarkdel", MainWindow::on_bookmarkdel);
+  AddToolBarTool("bookmarkdel", MainWindow::on_bookmarkdel,
+                 tr("DeleteBookMark"));
   AddToolsDB(ToolBoxIndex::DelBookMark);
-  AddToolBarTool("bookmarkcls", MainWindow::on_bookmarkcls);
+  AddToolBarTool("bookmarkcls", MainWindow::on_bookmarkcls,
+                 tr("ClearBookMark"));
   AddToolsDB(ToolBoxIndex::ClsBookMark);
+  toolbar->addSeparator();
+  AddToolBarTool("general", MainWindow::on_setting_general, tr("General"));
+  AddToolBarTool("soft", MainWindow::on_about, tr("About"));
   this->addToolBar(toolbar);
 
   hexeditor = new QHexView(this);
@@ -391,6 +414,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   DLabel *l;
 
   AddFunctionIconButton(iSetBaseAddr, "mAddr");
+  iSetBaseAddr->setToolTip(tr("SetaddressBase"));
   connect(iSetBaseAddr, &DIconButton::clicked, [=] {
     DInputDialog d;
     auto num = d.getText(this, tr("addressBase"), tr("inputAddressBase"));
@@ -407,12 +431,15 @@ MainWindow::MainWindow(DMainWindow *parent) {
   });
 
   AddFunctionIconButton(iColInfo, "mColInfo");
+  iColInfo->setToolTip(tr("SetColInfo"));
   connect(iColInfo, &DIconButton::clicked,
           [=] { hexeditor->setAddressVisible(!hexeditor->addressVisible()); });
   AddFunctionIconButton(iHeaderInfo, "mLineInfo");
+  iHeaderInfo->setToolTip(tr("SetHeaderInfo"));
   connect(iHeaderInfo, &DIconButton::clicked,
           [=] { hexeditor->setHeaderVisible(!hexeditor->headerVisible()); });
   AddFunctionIconButton(iAsciiString, "mStr");
+  iAsciiString->setToolTip(tr("SetAsciiString"));
   connect(iAsciiString, &DIconButton::clicked,
           [=] { hexeditor->setAsciiVisible(!hexeditor->asciiVisible()); });
 
@@ -438,10 +465,10 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
 #define LoadPixMap(Var, Icon) Var.load(":/images/" Icon ".png");
 
-#define AddStausILable(PixMap, Icon, Label, OPixMap, OIcon)                    \
+#define AddStausILable(PixMap, Icon, Label, OPixMap, OIcon, GPixMap, GIcon)    \
   LoadPixMap(PixMap, Icon);                                                    \
   LoadPixMap(OPixMap, OIcon);                                                  \
-  Label = new DLabel(this);                                                    \
+  LoadPixMap(GPixMap, GIcon) Label = new DLabel(this);                         \
   Label->setPixmap(PixMap);                                                    \
   Label->setScaledContents(true);                                              \
   Label->setFixedSize(20, 20);                                                 \
@@ -449,21 +476,26 @@ MainWindow::MainWindow(DMainWindow *parent) {
   status->addWidget(Label);                                                    \
   AddStatusLabel(QString(' '));
 
-  AddStausILable(infoSaved, "saved", iSaved, infoUnsaved, "unsaved");
+  AddStausILable(infoSaved, "saved", iSaved, infoUnsaved, "unsaved", infoSaveg,
+                 "saveg");
   AddStausILable(infoWriteable, "writable", iReadWrite, infoReadonly,
-                 "readonly");
+                 "readonly", inforwg, "rwg");
 
   infoUnLock = ICONRES("unlock");
   infoLock = ICONRES("lock");
   infoCanOver = ICONRES("canover");
   infoCannotOver = ICONRES("unover");
+  infoLockg = ICONRES("lockg");
+  infoOverg = ICONRES("overg");
 
   iLocked = new DIconButton(this);
   iLocked->setIcon(infoUnLock);
   iLocked->setIconSize(QSize(20, 20));
+  iLocked->setToolTip(tr("SetLocked"));
   iOver = new DIconButton(this);
   iOver->setIcon(infoCanOver);
   iOver->setIconSize(QSize(20, 20));
+  iOver->setToolTip(tr("SetOver"));
 
   connect(iLocked, &DIconButton::clicked, [=]() {
     if (!hexeditor->setLockedFile(!hexeditor->isLocked())) {
@@ -593,7 +625,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(QKeySequence::New, MainWindow::on_newfile);
   ConnectShortCut(QKeySequence::Open, MainWindow::on_openfile);
   ConnectShortCut(QKeySequence::Save, MainWindow::on_savefile);
-  ConnectShortCut(QKeySequence::SaveAs, MainWindow::on_saveasfile);
+  ConnectShortCut(keysaveas, MainWindow::on_saveasfile);
   ConnectShortCut(QKeySequence::Undo, MainWindow::on_undofile);
   ConnectShortCut(QKeySequence::Redo, MainWindow::on_redofile);
   ConnectShortCut(QKeySequence::Cut, MainWindow::on_cutfile);
@@ -608,6 +640,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keyfill, MainWindow::on_fill);
   ConnectShortCut(keyfillnop, MainWindow::on_fillnop);
   ConnectShortCut(keyfillzero, MainWindow::on_fillzero);
+  ConnectShortCut(keyexport, MainWindow::on_exportfile);
+  ConnectShortCut(keyloadplg, MainWindow::on_loadplg);
 
   logger->logMessage(INFOLOG(tr("SettingLoading")));
 
@@ -678,6 +712,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
             &MainWindow::PluginDockWidgetAdd);
     plgsys->LoadPlugin();
   } else {
+    plgmenu->setEnabled(false);
     logger->logMessage(ERRLOG(tr("UnLoadPluginSetting")));
   }
 
@@ -1602,6 +1637,7 @@ void MainWindow::on_findfile() {
     th->start();
   }
 }
+
 void MainWindow::on_gotoline() {
   CheckEnabled;
   gotobar->activeInput(int(hexeditor->currentRow()),
@@ -1698,6 +1734,22 @@ void MainWindow::on_setting_general() {
 void MainWindow::on_documentChanged() {
   CheckEnabled;
   iSaved->setPixmap(isModified(_currentfile) ? infoUnsaved : infoSaved);
+}
+
+void MainWindow::on_savesel() {
+  CheckEnabled;
+  auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"));
+  if (filename.isEmpty())
+    return;
+  QFile qfile(filename);
+  if (qfile.open(QFile::WriteOnly)) {
+    auto buffer = hexeditor->document()->selectedBytes();
+    qfile.write(buffer);
+    qfile.close();
+  } else {
+    DMessageManager::instance()->sendMessage(this, ICONRES("savesel"),
+                                             tr("SaveSelError"));
+  }
 }
 
 void MainWindow::on_documentSwitched() {
@@ -1869,6 +1921,14 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
   }
   enableDirverLimit(isdriver);
   status->setEnabled(b);
+  if (b) {
+    on_documentStatusChanged();
+  } else {
+    iSaved->setPixmap(infoSaveg);
+    iReadWrite->setPixmap(inforwg);
+    iLocked->setIcon(infoLockg);
+    iOver->setIcon(infoOverg);
+  }
 }
 
 void MainWindow::enableDirverLimit(bool b) {
@@ -1915,6 +1975,14 @@ void MainWindow::on_fillzero() {
     return;
   auto pos = doc->cursor()->selectionStart().offset();
   doc->replace(pos, QByteArray(int(hexeditor->selectlength()), char(0)));
+}
+
+void MainWindow::on_loadplg() {
+  auto filename = QFileDialog::getOpenFileName(
+      this, tr("ChoosePlugin"), QString(), tr("PluginFile (*.wingplg)"));
+  if (!filename.isEmpty()) {
+    plgsys->loadPlugin(QFileInfo(filename));
+  }
 }
 
 void MainWindow::on_clearfindresult() {

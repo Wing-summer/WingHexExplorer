@@ -29,6 +29,7 @@ public:
   bool shadowRelease(IWingPlugin *plugin);
 
   void initShadowControl(IWingPlugin *plugin);
+  void loadPlugin(QFileInfo filename);
 
 private:
   const QList<QVariant> emptyparam;

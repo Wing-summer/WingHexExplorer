@@ -7,7 +7,6 @@ FindDialog::FindDialog(DMainWindow *parent) : DDialog(parent) {
 
   m_string = new DRadioButton(this);
   m_string->setText(tr("findstring"));
-  m_string->setChecked(true);
   addContent(m_string);
   addSpacing(3);
 
@@ -19,6 +18,7 @@ FindDialog::FindDialog(DMainWindow *parent) : DDialog(parent) {
 
   m_hex = new DRadioButton(this);
   m_hex->setText(tr("findhex"));
+  m_hex->setEnabled(true);
   addContent(m_hex);
   addSpacing(3);
 

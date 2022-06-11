@@ -39,6 +39,56 @@ void PluginSystem::raiseDispatch(HookIndex hookindex, QList<QVariant> params) {
   }
 }
 
+void PluginSystem::loadPlugin(QFileInfo fileinfo) {
+  if (fileinfo.exists()) {
+    QPluginLoader loader(fileinfo.absoluteFilePath());
+    logger->logMessage(
+        INFOLOG(QString(">> ") + tr("LoadingPlugin") + fileinfo.fileName()));
+    auto p = qobject_cast<IWingPlugin *>(loader.instance());
+    if (p) {
+      if (p->signature() != sign) {
+        logger->logMessage(ERRLOG(tr("ErrLoadPluginSign")));
+        loader.unload();
+      }
+      auto puid = PluginUtils::GetPUID(p);
+      if (puid != p->puid()) {
+        logger->logMessage(ERRLOG(tr("ErrLoadPluginPUID")));
+        loader.unload();
+      }
+      p->self = p;
+
+      emit p->plugin2MessagePipe(WingPluginMessage::PluginLoading, emptyparam);
+
+      p->init(loadedplgs);
+
+      loadedplgs.push_back(p);
+
+      logger->logMessage(WARNLOG(tr("PluginWidgetRegister")));
+      auto menu = p->registerMenu();
+      if (menu) {
+        emit this->PluginMenuNeedAdd(menu);
+      }
+
+      auto dockw = p->registerDockWidget();
+      if (dockw) {
+        emit this->PluginDockWidgetAdd(dockw, p->registerDockWidgetDockArea());
+      }
+
+      connect(p, &IWingPlugin::host2MessagePipe, this,
+              &PluginSystem::messagePipe);
+
+      auto hvs = new HexViewShadow(this);
+      hexshadows.insert(p, hvs);
+      emit ConnectShadow(hvs);
+      emit p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
+
+    } else {
+      logger->logMessage(ERRLOG(loader.errorString()));
+      loader.unload();
+    }
+  }
+}
+
 bool PluginSystem::LoadPlugin() {
 #ifdef QT_DEBUG
   QDir plugindir("/home/wingsummer/QT Project/build-TestPlugin-unknown-Debug");
@@ -53,57 +103,8 @@ bool PluginSystem::LoadPlugin() {
   logger->logMessage(
       INFOLOG(tr("FoundPluginCount") + QString::number(plgs.count())));
   for (auto item : plgs) {
-    if (item.exists()) {
-      QPluginLoader loader(item.absoluteFilePath());
-      logger->logMessage(
-          INFOLOG(QString(">> ") + tr("LoadingPlugin") + item.fileName()));
-      auto p = qobject_cast<IWingPlugin *>(loader.instance());
-      if (p) {
-        if (p->signature() != sign) {
-          logger->logMessage(ERRLOG(tr("ErrLoadPluginSign")));
-          loader.unload();
-        }
-        auto puid = PluginUtils::GetPUID(p);
-        if (puid != p->puid()) {
-          logger->logMessage(ERRLOG(tr("ErrLoadPluginPUID")));
-          loader.unload();
-        }
-        p->self = p;
-
-        emit p->plugin2MessagePipe(WingPluginMessage::PluginLoading,
-                                   emptyparam);
-
-        p->init(loadedplgs);
-
-        loadedplgs.push_back(p);
-
-        logger->logMessage(WARNLOG(tr("PluginWidgetRegister")));
-        auto menu = p->registerMenu();
-        if (menu) {
-          emit this->PluginMenuNeedAdd(menu);
-        }
-
-        auto dockw = p->registerDockWidget();
-        if (dockw) {
-          emit this->PluginDockWidgetAdd(dockw,
-                                         p->registerDockWidgetDockArea());
-        }
-
-        connect(p, &IWingPlugin::host2MessagePipe, this,
-                &PluginSystem::messagePipe);
-
-        auto hvs = new HexViewShadow(this);
-        hexshadows.insert(p, hvs);
-        emit ConnectShadow(hvs);
-        emit p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
-
-      } else {
-        logger->logMessage(ERRLOG(loader.errorString()));
-        loader.unload();
-      }
-    }
+    loadPlugin(item);
   }
-
   return true;
 }
 
