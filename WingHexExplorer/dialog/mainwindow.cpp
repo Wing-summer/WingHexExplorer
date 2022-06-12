@@ -22,6 +22,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QGraphicsOpacityEffect>
 #include <QIcon>
 #include <QKeySequence>
 #include <QList>
@@ -45,7 +46,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   setMinimumSize(QSize(1200, 800));
 
   auto _title = titlebar();
-  auto picon = ICONRES("icon");
+  auto picon = Utilities::isRoot() ? ICONRES("iconroot") : ICONRES("icon");
   setWindowIcon(picon);
   _title->setIcon(picon);
   _title->setTitle("WingHexExplorer");
@@ -65,8 +66,18 @@ MainWindow::MainWindow(DMainWindow *parent) {
           &MainWindow::on_tabAddRequested);
   connect(tabs, &DTabBar::tabMoved, this, &MainWindow::on_tabMoved);
 
+  DLabel *l;
   w = new QWidget(this);
   setCentralWidget(w);
+  l = new DLabel(w);
+  l->setFixedSize(300, 300);
+  l->setScaledContents(true);
+  auto op = new QGraphicsOpacityEffect(l);
+  op->setOpacity(0.1);
+  l->setGraphicsEffect(op);
+  l->move(10, 10);
+  l->setPixmap(QPixmap(Utilities::isRoot() ? ":/images/iconroot.png"
+                                           : ":/images/icon.png"));
   vlayout = new QVBoxLayout(w);
 
   auto menu = new DMenu(this);
@@ -154,6 +165,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm->addSeparator();
   AddToolSubMenuShortcutAction("save", tr("Save"), MainWindow::on_savefile,
                                QKeySequence::Save);
+  AddMenuDB(ToolBoxIndex::Save);
   AddToolSubMenuShortcutAction("saveas", tr("SaveAs"),
                                MainWindow::on_saveasfile, keysaveas);
   AddMenuDB(ToolBoxIndex::SaveAs);
@@ -411,8 +423,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   Var->setIconSize(QSize(20, 20));                                             \
   status->addPermanentWidget(Var);
 
-  DLabel *l;
-
   AddFunctionIconButton(iSetBaseAddr, "mAddr");
   iSetBaseAddr->setToolTip(tr("SetaddressBase"));
   connect(iSetBaseAddr, &DIconButton::clicked, [=] {
@@ -469,7 +479,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   LoadPixMap(PixMap, Icon);                                                    \
   LoadPixMap(OPixMap, OIcon);                                                  \
   LoadPixMap(GPixMap, GIcon) Label = new DLabel(this);                         \
-  Label->setPixmap(PixMap);                                                    \
+  Label->setPixmap(GPixMap);                                                   \
   Label->setScaledContents(true);                                              \
   Label->setFixedSize(20, 20);                                                 \
   Label->setAlignment(Qt::AlignCenter);                                        \
@@ -489,11 +499,11 @@ MainWindow::MainWindow(DMainWindow *parent) {
   infoOverg = ICONRES("overg");
 
   iLocked = new DIconButton(this);
-  iLocked->setIcon(infoUnLock);
+  iLocked->setIcon(infoLockg);
   iLocked->setIconSize(QSize(20, 20));
   iLocked->setToolTip(tr("SetLocked"));
   iOver = new DIconButton(this);
-  iOver->setIcon(infoCanOver);
+  iOver->setIcon(infoOverg);
   iOver->setIconSize(QSize(20, 20));
   iOver->setToolTip(tr("SetOver"));
 
@@ -1919,7 +1929,9 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
   for (auto item : toolmenutools.values()) {
     item->setEnabled(b);
   }
-  enableDirverLimit(isdriver);
+  if (b)
+    enableDirverLimit(isdriver);
+
   status->setEnabled(b);
   if (b) {
     on_documentStatusChanged();
@@ -1928,6 +1940,8 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
     iReadWrite->setPixmap(inforwg);
     iLocked->setIcon(infoLockg);
     iOver->setIcon(infoOverg);
+    lblloc->setText("(0,0)");
+    lblsellen->setText("0 - 0x0");
   }
 }
 

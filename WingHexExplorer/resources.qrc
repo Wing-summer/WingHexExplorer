@@ -56,6 +56,7 @@
         <file>images/lockg.png</file>
         <file>images/savesel.png</file>
         <file>images/loadplg.png</file>
+        <file>images/iconroot.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>
