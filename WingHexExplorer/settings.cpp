@@ -15,6 +15,7 @@
 #include <QSettings>
 #include <QStandardPaths>
 #include <QStyleFactory>
+#include <QTextCodec>
 
 Settings *Settings::s_pSetting = nullptr;
 Settings::Settings(QWidget *parent) : QObject(parent) {
@@ -74,6 +75,22 @@ Settings::Settings(QWidget *parent) : QObject(parent) {
     DMessageManager::instance()->sendMessage(
         m_pSettingsDialog, ICONRES("setting"), tr("RestartTakeEffect"));
   });
+  BindConfigSignal(encoding, "editor.font.encoding", {
+    emit sigChangedEncoding(value.toString());
+    DMessageManager::instance()->sendMessage(
+        m_pSettingsDialog, ICONRES("setting"), tr("OpenNextTakeEffect"));
+  });
+
+  auto enCoding = settings->option("editor.font.encoding");
+  QMap<QString, QVariant> encodingMap;
+  QStringList encodings;
+
+  for (QString item : QTextCodec::availableCodecs()) {
+    encodings << item;
+  }
+  encodingMap.insert("keys", encodings);
+  encodingMap.insert("values", encodings);
+  encoding->setData("items", encodingMap);
 
   // only used by new window
   auto windowState = settings->option("appearance.window.windowsize");
@@ -168,6 +185,8 @@ void Settings::applySetting() {
         sigShowEncodingText(showText->value().toBool()));
   Apply(windowstate, "appearance.window.windowsize",
         sigChangeWindowState(windowstate->value().toString()));
+  Apply(encoding, "editor.font.encoding",
+        sigChangedEncoding(encoding->value().toString()));
 }
 
 DDialog *Settings::createDialog(const QString &title, const QString &content,

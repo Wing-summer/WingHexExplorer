@@ -37,6 +37,12 @@
                             "min": 8
                         },
                         {
+                            "key": "encoding",
+                            "name": "Encoding",
+                            "type": "combobox",
+                            "default": "ASCII"
+                        },
+                        {
                             "key": "showaddr",
                             "name": "Show address number",
                             "type": "checkbox",

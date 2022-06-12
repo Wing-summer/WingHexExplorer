@@ -71,7 +71,7 @@ class MainWindow : public DMainWindow {
     BookMark,
     DelBookMark,
     ClsBookMark,
-    MaxTool
+    Encoding
   };
 
 public:
@@ -177,6 +177,7 @@ private:
   void on_fill();
   void on_clearfindresult();
   void on_loadplg();
+  void on_encoding();
 
 private:
   QList<HexFile> hexfiles;
@@ -246,6 +247,7 @@ private:
   QFont _font;
   QFont _hexeditorfont;
   QString _windowmode;
+  QString _encoding;
 
   bool _enableplugin = true;
   bool _rootenableplugin = false;

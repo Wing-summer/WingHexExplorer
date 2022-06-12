@@ -46,6 +46,7 @@ signals:
   void sigShowAddressNumber(bool enable);
   void sigShowColNumber(bool enable);
   void sigShowEncodingText(bool enable);
+  void sigChangedEncoding(QString encoding);
   void sigChangeWindowSize(QString mode);
   void sigChangeWindowState(QString state);
   void sigChangePluginEnabled(bool b);

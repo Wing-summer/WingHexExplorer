@@ -1,5 +1,7 @@
 #include "finddialog.h"
 #include <DDialogButtonBox>
+#include <DPushButton>
+#include <QShortcut>
 
 FindDialog::FindDialog(DMainWindow *parent) : DDialog(parent) {
   this->setFixedSize(500, 600);
@@ -36,6 +38,9 @@ FindDialog::FindDialog(DMainWindow *parent) : DDialog(parent) {
       DDialogButtonBox::Ok | DDialogButtonBox::Cancel, this);
   connect(dbbox, &DDialogButtonBox::accepted, this, &FindDialog::on_accept);
   connect(dbbox, &DDialogButtonBox::rejected, this, &FindDialog::on_reject);
+  auto key = QKeySequence(Qt::Key_Return);
+  auto s = new QShortcut(key, this);
+  connect(s, &QShortcut::activated, this, &FindDialog::on_accept);
   addContent(dbbox);
 }
 

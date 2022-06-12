@@ -1,5 +1,6 @@
 #include "qhexrenderer.h"
 #include <QApplication>
+#include <QTextCodec>
 #include <QTextCursor>
 #include <QWidget>
 #include <cctype>
@@ -22,11 +23,21 @@ bool QHexRenderer::addressVisible() { return m_addressVisible; }
 
 void QHexRenderer::setAddressVisible(bool b) { m_addressVisible = b; }
 
+QString QHexRenderer::encoding() { return m_encoding; }
+
+bool QHexRenderer::setEncoding(QString encoding) {
+  if (QTextCodec::codecForName(encoding.toUtf8())) {
+    m_encoding = encoding;
+    return true;
+  }
+  return false;
+}
 /*===================================*/
 
 QHexRenderer::QHexRenderer(QHexDocument *document,
                            const QFontMetricsF &fontmetrics, QObject *parent)
-    : QObject(parent), m_document(document), m_fontmetrics(fontmetrics) {
+    : QObject(parent), m_document(document), m_fontmetrics(fontmetrics),
+      m_encoding("ASCII") {
   m_selectedarea = QHexRenderer::HexArea;
   m_cursorenabled = false;
 
@@ -85,7 +96,7 @@ void QHexRenderer::render(QPainter *painter, quint64 begin, quint64 end,
     this->drawHex(painter, palette, linerect, line);
 
     if (m_asciiVisible)
-      this->drawAscii(painter, palette, linerect, line);
+      this->drawString(painter, palette, linerect, line, m_encoding);
   }
 }
 
@@ -201,14 +212,24 @@ QString QHexRenderer::hexString(quint64 line, QByteArray *rawline) const {
   return lrawline.toHex(' ').toUpper() + " ";
 }
 
-QString QHexRenderer::asciiString(quint64 line, QByteArray *rawline) const {
+// modified by wingsummer
+QString QHexRenderer::decodeString(quint64 line, QString encoding,
+                                   QByteArray *rawline) const {
   QByteArray lrawline = this->getLine(line);
   if (rawline)
     *rawline = lrawline;
 
-  QByteArray ascii = lrawline;
-  this->unprintableChars(ascii);
-  return ascii;
+  if (encoding.toLower() == "ascii") {
+    QByteArray ascii = lrawline;
+    this->unprintableChars(ascii);
+    return ascii;
+  } else {
+    auto enc = QTextCodec::codecForName(encoding.toUtf8());
+    auto d = enc->makeDecoder();
+    auto unicode = d->toUnicode(lrawline);
+    this->unprintableWChars(unicode);
+    return unicode;
+  }
 }
 
 QByteArray QHexRenderer::getLine(quint64 line) const {
@@ -269,6 +290,15 @@ void QHexRenderer::unprintableChars(QByteArray &ascii) const {
   }
 }
 
+// added by wingsummer
+void QHexRenderer::unprintableWChars(QString &unicode) const {
+  for (QChar &ch : unicode) {
+    if (std::iswprint(ch.unicode()))
+      continue;
+    ch = HEX_UNPRINTABLE_CHAR;
+  }
+}
+
 void QHexRenderer::applyDocumentStyles(QPainter *painter,
                                        QTextDocument *textdocument) const {
   textdocument->setDocumentMargin(0);
@@ -294,7 +324,7 @@ void QHexRenderer::applyBasicStyle(QTextCursor &textcursor,
   charformat.setForeground(color);
 
   for (int i = 0; i < rawline.length(); i++) {
-    if ((rawline[i] != 0x00) && (static_cast<uchar>(rawline[i]) != 0xFF))
+    if ((rawline[i] != 0x00) && (uchar(rawline[i]) != 0xFF))
       continue;
 
     textcursor.setPosition(i * factor);
@@ -473,13 +503,15 @@ void QHexRenderer::drawHex(QPainter *painter, const QPalette &palette,
   painter->restore();
 }
 
-void QHexRenderer::drawAscii(QPainter *painter, const QPalette &palette,
-                             const QRect &linerect, quint64 line) {
+void QHexRenderer::drawString(QPainter *painter, const QPalette &palette,
+                              const QRect &linerect, quint64 line,
+                              QString encoding) {
   Q_UNUSED(palette)
   QTextDocument textdocument;
   QTextCursor textcursor(&textdocument);
   QByteArray rawline;
-  textcursor.insertText(this->asciiString(line, &rawline));
+  // modified by wingsummer
+  textcursor.insertText(this->decodeString(line, encoding, &rawline));
 
   if (line == this->documentLastLine())
     textcursor.insertText(" ");
@@ -488,9 +520,9 @@ void QHexRenderer::drawAscii(QPainter *painter, const QPalette &palette,
   asciirect.setX(this->getAsciiColumnX() + this->borderSize());
 
   this->applyDocumentStyles(painter, &textdocument);
-  this->applyBasicStyle(textcursor, rawline, Ascii);
-  this->applyMetadata(textcursor, line, Ascii);
-  this->applySelection(textcursor, line, Ascii);
+  this->applyBasicStyle(textcursor, rawline, String);
+  this->applyMetadata(textcursor, line, String);
+  this->applySelection(textcursor, line, String);
   this->applyCursorAscii(textcursor, line);
 
   painter->save();
@@ -536,6 +568,6 @@ void QHexRenderer::drawHeader(QPainter *painter, const QPalette &palette) {
 
   if (m_asciiVisible)
     painter->drawText(asciirect, Qt::AlignHCenter | Qt::AlignVCenter,
-                      QString("Ascii"));
+                      m_encoding);
   painter->restore();
 }

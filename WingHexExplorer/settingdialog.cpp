@@ -15,4 +15,5 @@ void GenerateSettingTranslate() {
   auto editor_rootplugin = QObject::tr("EnablePluginOnRoot");
   auto editor_eplugin = QObject::tr("Enable Plugin");
   auto window = QObject::tr("Window");
+  auto editor_encoding = QObject::tr("Encoding");
 }

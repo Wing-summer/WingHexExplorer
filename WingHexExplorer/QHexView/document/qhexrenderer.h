@@ -38,6 +38,9 @@ public:
   void setHeaderVisible(bool b);
   bool headerVisible();
 
+  QString encoding();
+  bool setEncoding(QString encoding);
+
   /*==============================*/
 
 public:
@@ -59,7 +62,16 @@ public:
 
 private:
   QString hexString(quint64 line, QByteArray *rawline = nullptr) const;
-  QString asciiString(quint64 line, QByteArray *rawline = nullptr) const;
+
+  /*======================================*/
+  // added by wingsummer
+
+  QString decodeString(quint64 line, QString encoding,
+                       QByteArray *rawline = nullptr) const;
+  void unprintableWChars(QString &unicode) const;
+
+  /*======================================*/
+
   QByteArray getLine(quint64 line) const;
   qint64 rendererLength() const;
   int getAddressWidth() const;
@@ -71,7 +83,8 @@ private:
   void unprintableChars(QByteArray &ascii) const;
 
 private:
-  enum Factor { Ascii = 1, Hex = 3 };
+  // modified by wingsummer
+  enum Factor { String = 1, Hex = 3 };
 
   void applyDocumentStyles(QPainter *painter,
                            QTextDocument *textdocument) const;
@@ -87,8 +100,9 @@ private:
                    const QRect &linerect, quint64 line);
   void drawHex(QPainter *painter, const QPalette &palette,
                const QRect &linerect, quint64 line);
-  void drawAscii(QPainter *painter, const QPalette &palette,
-                 const QRect &linerect, quint64 line);
+  void drawString(QPainter *painter, const QPalette &palette,
+                  const QRect &linerect, quint64 line,
+                  QString encoding = "ASCII");
   void drawHeader(QPainter *painter, const QPalette &palette);
 
 private:
@@ -103,6 +117,7 @@ private:
   bool m_asciiVisible;
   bool m_addressVisible;
   bool m_headerVisible;
+  QString m_encoding;
 
   /*==============================*/
 };

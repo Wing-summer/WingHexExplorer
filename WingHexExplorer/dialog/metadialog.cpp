@@ -1,5 +1,6 @@
 #include "metadialog.h"
 #include <DDialogButtonBox>
+#include <QShortcut>
 
 MetaDialog::MetaDialog(DMainWindow *parent) : DDialog(parent) {
   setWindowTitle(tr("Metadata"));
@@ -70,6 +71,9 @@ MetaDialog::MetaDialog(DMainWindow *parent) : DDialog(parent) {
   });
   connect(dbbox, &DDialogButtonBox::accepted, this, &MetaDialog::on_accept);
   connect(dbbox, &DDialogButtonBox::rejected, this, &MetaDialog::on_reject);
+  auto key = QKeySequence(Qt::Key_Return);
+  auto s = new QShortcut(key, this);
+  connect(s, &QShortcut::activated, this, &MetaDialog::on_accept);
 }
 
 void MetaDialog::on_accept() {

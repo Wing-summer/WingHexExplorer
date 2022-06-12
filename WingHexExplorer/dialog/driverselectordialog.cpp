@@ -2,6 +2,7 @@
 #include "utilities.h"
 #include <DDialogButtonBox>
 #include <DLabel>
+#include <QShortcut>
 
 DriverSelectorDialog::DriverSelectorDialog(DMainWindow *parent)
     : DDialog(parent) {
@@ -34,7 +35,9 @@ DriverSelectorDialog::DriverSelectorDialog(DMainWindow *parent)
   connect(dbbox, &DDialogButtonBox::rejected, this,
           &DriverSelectorDialog::on_rejected);
   addContent(dbbox);
-
+  auto key = QKeySequence(Qt::Key_Return);
+  auto s = new QShortcut(key, this);
+  connect(s, &QShortcut::activated, this, &DriverSelectorDialog::on_accepted);
   connect(drivers, &QListWidget::itemSelectionChanged, this,
           &DriverSelectorDialog::on_list_selectionChanged);
 }

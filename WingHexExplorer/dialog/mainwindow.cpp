@@ -5,6 +5,7 @@
 #include "QHexView/document/qhexmetadata.h"
 #include "aboutsoftwaredialog.h"
 #include "driverselectordialog.h"
+#include "encodingdialog.h"
 #include "finddialog.h"
 #include "logger.h"
 #include "metadialog.h"
@@ -156,6 +157,10 @@ MainWindow::MainWindow(DMainWindow *parent) {
   auto keyloadplg = QKeySequence(Qt::KeyboardModifier::ControlModifier |
                                  Qt::KeyboardModifier::AltModifier | Qt::Key_L);
 
+  auto keyencoding =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::AltModifier | Qt::Key_E);
+
 #define AddMenuDB(index)                                                       \
   a->setEnabled(false);                                                        \
   toolmenutools.insert(index, a);
@@ -238,6 +243,10 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolSubMenuShortcutAction("bookmarkcls", tr("ClearBookMark"),
                                MainWindow::on_bookmarkcls, keybookmarkcls);
   AddMenuDB(ToolBoxIndex::ClsBookMark);
+  tm->addSeparator();
+  AddToolSubMenuShortcutAction("encoding", tr("Encoding"),
+                               MainWindow::on_encoding, keyencoding);
+  AddMenuDB(ToolBoxIndex::Encoding);
   menu->addMenu(tm);
 
   tm = new DMenu(this);
@@ -313,6 +322,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
                        MainWindow::on_bookmarkdel, keybookmarkdel);
   AddContextMenuAction("bookmarkcls", tr("ClearBookMark"),
                        MainWindow::on_bookmarkcls, keybookmarkcls);
+  hexeditorMenu->addSeparator();
+  AddContextMenuAction("encoding", tr("Encoding"), MainWindow::on_encoding,
+                       keyencoding);
   toolbar = new DToolBar(this);
 
 #define AddToolBarAction(Icon, Owner, Slot, ToolTip)                           \
@@ -382,6 +394,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolBarTool("bookmarkcls", MainWindow::on_bookmarkcls,
                  tr("ClearBookMark"));
   AddToolsDB(ToolBoxIndex::ClsBookMark);
+  AddToolBarTool("encoding", MainWindow::on_encoding, tr("Encoding"));
+  AddToolsDB(ToolBoxIndex::Encoding);
   toolbar->addSeparator();
   AddToolBarTool("general", MainWindow::on_setting_general, tr("General"));
   AddToolBarTool("soft", MainWindow::on_about, tr("About"));
@@ -652,6 +666,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keyfillzero, MainWindow::on_fillzero);
   ConnectShortCut(keyexport, MainWindow::on_exportfile);
   ConnectShortCut(keyloadplg, MainWindow::on_loadplg);
+  ConnectShortCut(keyencoding, MainWindow::on_encoding);
 
   logger->logMessage(INFOLOG(tr("SettingLoading")));
 
@@ -686,6 +701,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
           [=](bool b) { _enableplugin = b; });
   connect(m_settings, &Settings::sigChangeRootPluginEnabled,
           [=](bool b) { _rootenableplugin = b; });
+  connect(m_settings, &Settings::sigChangedEncoding,
+          [=](QString encoding) { _encoding = encoding; });
 
   m_settings->applySetting();
   hexeditor->setAddressVisible(_showaddr);
@@ -1224,6 +1241,7 @@ void MainWindow::newFile() {
   hexeditor->setAddressVisible(_showaddr);
   hexeditor->setAsciiVisible(_showascii);
   hexeditor->setHeaderVisible(_showheader);
+  hexeditor->renderer()->setEncoding(_encoding);
   hf.render = hexeditor->renderer();
   hf.vBarValue = -1;
   hf.filename = ":" + title;
@@ -1302,6 +1320,8 @@ ErrFile MainWindow::openFile(QString filename, bool readonly) {
     hexeditor->setDocument(p);
     hexeditor->setKeepSize(true);
     hf.isdriver = false;
+
+    hexeditor->renderer()->setEncoding(_encoding);
     hf.render = hexeditor->renderer();
     hf.vBarValue = -1;
     hf.filename = filename;
@@ -1547,13 +1567,28 @@ void MainWindow::on_tabCloseRequested(int index) {
 
 void MainWindow::on_tabAddRequested() { newFile(); }
 
-void MainWindow::on_undofile() { hexeditor->document()->undo(); }
+void MainWindow::on_undofile() {
+  CheckEnabled;
+  hexeditor->document()->undo();
+}
 
-void MainWindow::on_redofile() { hexeditor->document()->redo(); }
+void MainWindow::on_redofile() {
+  CheckEnabled;
+  hexeditor->document()->redo();
+}
 
-void MainWindow::on_cutfile() { hexeditor->document()->cut(); }
-void MainWindow::on_copyfile() { hexeditor->document()->copy(); }
-void MainWindow::on_pastefile() { hexeditor->document()->paste(); }
+void MainWindow::on_cutfile() {
+  CheckEnabled;
+  hexeditor->document()->cut();
+}
+void MainWindow::on_copyfile() {
+  CheckEnabled;
+  hexeditor->document()->copy();
+}
+void MainWindow::on_pastefile() {
+  CheckEnabled;
+  hexeditor->document()->paste();
+}
 
 void MainWindow::on_opendriver() {
   DriverSelectorDialog ds;
@@ -1565,6 +1600,7 @@ void MainWindow::on_opendriver() {
 }
 
 void MainWindow::on_exportfile() {
+  CheckEnabled;
   auto filename = QFileDialog::getSaveFileName(this, tr("ChooseExportFile"));
   if (filename.isEmpty())
     return;
@@ -1921,6 +1957,15 @@ void MainWindow::on_bookmarkcls() {
   bookmarks->clear();
 }
 
+void MainWindow::on_encoding() {
+  CheckEnabled;
+  EncodingDialog d;
+  if (d.exec()) {
+    auto res = d.getResult();
+    hexeditor->renderer()->setEncoding(res);
+  }
+}
+
 void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
   for (auto item : toolbartools.values()) {
     item->setEnabled(b);
@@ -1956,6 +2001,7 @@ void MainWindow::enableDirverLimit(bool b) {
 void MainWindow::on_restoreLayout() { m_settings->loadWindowState(this, true); }
 
 void MainWindow::on_fill() {
+  CheckEnabled;
   auto in = DInputDialog::getText(this, tr("Fill"), tr("PleaseInputFill"));
   if (in.length() != 0) {
     bool b = false;
@@ -1992,6 +2038,8 @@ void MainWindow::on_fillzero() {
 }
 
 void MainWindow::on_loadplg() {
+  if (!_enableplugin)
+    return;
   auto filename = QFileDialog::getOpenFileName(
       this, tr("ChoosePlugin"), QString(), tr("PluginFile (*.wingplg)"));
   if (!filename.isEmpty()) {
