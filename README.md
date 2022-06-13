@@ -6,9 +6,9 @@
 </p>
 
 <p align="center">
-<img alt="作者" src="https://img.shields.io/badge/Author-Wingsummer-green">
-<img alt="开源协议" src="https://img.shields.io/badge/OpenSource%20License-WingSummer%OpenSource%20License-red">
-<img alt="商用协议" src="https://img.shields.io/badge/Commerical%20License-WingHexExplorer%20Commerical%20License-red">
+<img alt="作者" src="authorband.svg">
+<img alt="开源协议" src="olband.svg">
+<img alt="商用协议" src="clband.svg">
 </p>
 
 * 开源不易，给个 [Star](https://gitee.com/wingsummer/be.-windows.-forms.-hex-box/star) 或者 [捐助](#捐助) 吧
