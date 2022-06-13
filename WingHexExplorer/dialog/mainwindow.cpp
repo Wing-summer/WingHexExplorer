@@ -7,7 +7,6 @@
 #include "driverselectordialog.h"
 #include "encodingdialog.h"
 #include "finddialog.h"
-#include "logger.h"
 #include "metadialog.h"
 #include "pluginwindow.h"
 #include "settings.h"
@@ -160,6 +159,14 @@ MainWindow::MainWindow(DMainWindow *parent) {
   auto keyencoding =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::AltModifier | Qt::Key_E);
+  auto keyopenws =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_W);
+  auto keysavews =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::ShiftModifier | Qt::Key_W);
+  auto keysaveasws =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::AltModifier | Qt::Key_W);
 
 #define AddMenuDB(index)                                                       \
   a->setEnabled(false);                                                        \
@@ -179,6 +186,16 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddMenuDB(ToolBoxIndex::Export);
   AddToolSubMenuAction("savesel", tr("SaveSel"), MainWindow::on_savesel);
   AddMenuDB(ToolBoxIndex::SaveSel);
+  tm->addSeparator();
+  AddToolSubMenuShortcutAction("workspace", tr("OpenWorkSpace"),
+                               MainWindow::on_openworkspace, keyopenws);
+  AddMenuDB(ToolBoxIndex::OpenWorkSpace);
+  AddToolSubMenuShortcutAction("workspacesave", tr("SaveWorkSpace"),
+                               MainWindow::on_saveworkspace, keysavews);
+  AddMenuDB(ToolBoxIndex::SaveWorkSpace);
+  AddToolSubMenuShortcutAction("workspacesaveas", tr("SaveAsWorkSpace"),
+                               MainWindow::on_saveasworkspace, keysaveasws);
+  AddMenuDB(ToolBoxIndex::SaveAsWorkSpace);
   tm->addSeparator();
   AddToolSubMenuShortcutAction("exit", tr("Exit"), MainWindow::on_exit,
                                QKeySequence::Quit);
@@ -326,7 +343,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddContextMenuAction("encoding", tr("Encoding"), MainWindow::on_encoding,
                        keyencoding);
   toolbar = new DToolBar(this);
-
+  toolbar->setObjectName("MainToolBar");
 #define AddToolBarAction(Icon, Owner, Slot, ToolTip)                           \
   a = new QAction(Owner);                                                      \
   a->setIcon(ICONRES(Icon));                                                   \
@@ -351,6 +368,16 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolsDB(ToolBoxIndex::SaveAs);
   AddToolBarTool("export", MainWindow::on_exportfile, tr("Export"));
   AddToolsDB(ToolBoxIndex::Export);
+  toolbar->addSeparator();
+  AddToolBarTool("workspace", MainWindow::on_openworkspace,
+                 tr("OpenWorkSpace"));
+  AddToolsDB(ToolBoxIndex::OpenWorkSpace);
+  AddToolBarTool("workspacesave", MainWindow::on_saveworkspace,
+                 tr("SaveWorkSpace"));
+  AddToolsDB(ToolBoxIndex::SaveWorkSpace);
+  AddToolBarTool("workspacesaveas", MainWindow::on_saveasworkspace,
+                 tr("SaveAsWorkSpace"));
+  AddToolsDB(ToolBoxIndex::SaveAsWorkSpace);
   toolbar->addSeparator();
   AddToolBarTool("undo", MainWindow::on_undofile, tr("Undo"));
   AddToolsDB(ToolBoxIndex::Undo);
@@ -598,8 +625,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   numshowtable->setEditTriggers(DTableWidget::EditTrigger::NoEditTriggers);
   numshowtable->setSelectionBehavior(
       QAbstractItemView::SelectionBehavior::SelectRows);
-  numshowtable->setHorizontalHeaderLabels(
-      QStringList({tr("Type"), tr("Value")}));
+  numshowtable->setHorizontalHeaderLabels(QStringList(tr("Value")));
   numshowtable->setColumnWidth(0, 350);
   numshowtable->setFocusPolicy(Qt::StrongFocus);
   numshowtable->setVerticalHeaderLabels(
@@ -667,6 +693,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keyexport, MainWindow::on_exportfile);
   ConnectShortCut(keyloadplg, MainWindow::on_loadplg);
   ConnectShortCut(keyencoding, MainWindow::on_encoding);
+  ConnectShortCut(keyopenws, MainWindow::on_openworkspace);
+  ConnectShortCut(keysavews, MainWindow::on_saveworkspace);
+  ConnectShortCut(keysaveas, MainWindow::on_saveasworkspace);
 
   logger->logMessage(INFOLOG(tr("SettingLoading")));
 
@@ -958,6 +987,9 @@ void MainWindow::connectShadow(HexViewShadow *shadow) {
     }
     return files;
   });
+  ConnectShadows(HexViewShadow::getSupportedEncodings, Utilities::GetEncodings);
+  ConnectShadowLamba(HexViewShadow::currentEncoding,
+                     [=] { return hexfiles[_pcurfile].render->encoding(); });
 }
 
 void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
@@ -1145,6 +1177,10 @@ void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
         hexfiles[_pcurfile].doc->metadata()->background(line, start, length,
                                                         bgcolor);
       });
+
+  ConnectShadowLamba(HexViewShadow::setCurrentEncoding, [=](QString encoding) {
+    hexfiles[_pcurfile].render->setEncoding(encoding);
+  });
 
   ConnectShadows(HexViewShadow::newFile, MainWindow::newFile);
   ConnectShadows(HexViewShadow::openFile, MainWindow::openFile);
@@ -1660,6 +1696,8 @@ void MainWindow::on_findfile() {
       auto res = fd->getResult();
       auto d = hexeditor->document();
       QList<quint64> results;
+      if (d == nullptr)
+        return;
       d->FindAllBytes(res, results);
       if (findresitem) {
         delete[] findresitem;
@@ -1987,6 +2025,10 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
     iOver->setIcon(infoOverg);
     lblloc->setText("(0,0)");
     lblsellen->setText("0 - 0x0");
+    for (auto i = 0; i < NumTableIndexCount; i++) {
+      numsitem[i].setText("-");
+    }
+    bookmarks->clear();
   }
 }
 
@@ -2062,3 +2104,9 @@ void MainWindow::on_about() {
   AboutSoftwareDialog d;
   d.exec();
 }
+
+void MainWindow::on_openworkspace() {}
+
+void MainWindow::on_saveworkspace() {}
+
+void MainWindow::on_saveasworkspace() {}

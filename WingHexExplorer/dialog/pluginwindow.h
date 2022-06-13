@@ -1,7 +1,7 @@
 #ifndef PLUGINWINDOW_H
 #define PLUGINWINDOW_H
 
-#include "pluginsystem.h"
+#include "plugin/pluginsystem.h"
 #include <DDialog>
 #include <DListWidget>
 #include <DMainWindow>

@@ -23,12 +23,12 @@ GotoBar::GotoBar(QWidget *parent) : DFloatingWidget(parent) {
   m_layout->addWidget(m_editLine);
 
   m_line = new DRadioButton(this);
-  m_line->setChecked(true);
   m_line->setText(tr("Line"));
   m_layout->addWidget(m_line);
 
   m_offset = new DRadioButton(this);
   m_offset->setText(tr("Offset"));
+  m_offset->setChecked(true);
   m_layout->addWidget(m_offset);
 
   m_goto = new DIconButton(this);

@@ -83,11 +83,7 @@ Settings::Settings(QWidget *parent) : QObject(parent) {
 
   auto enCoding = settings->option("editor.font.encoding");
   QMap<QString, QVariant> encodingMap;
-  QStringList encodings;
-
-  for (QString item : QTextCodec::availableCodecs()) {
-    encodings << item;
-  }
+  QStringList encodings = Utilities::GetEncodings();
   encodingMap.insert("keys", encodings);
   encodingMap.insert("values", encodings);
   encoding->setData("items", encodingMap);

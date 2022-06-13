@@ -3,9 +3,9 @@
 
 #include "QHexView/document/qhexdocument.h"
 #include "QHexView/qhexview.h"
-#include "gotobar.h"
-#include "logger.h"
-#include "pluginsystem.h"
+#include "class/logger.h"
+#include "control/gotobar.h"
+#include "plugin/pluginsystem.h"
 #include "settings.h"
 #include "utilities.h"
 #include <DApplicationHelper>
@@ -54,6 +54,9 @@ class MainWindow : public DMainWindow {
     SaveAs,
     SaveSel,
     Export,
+    OpenWorkSpace,
+    SaveWorkSpace,
+    SaveAsWorkSpace,
     Undo,
     Redo,
     Cut,
@@ -178,6 +181,9 @@ private:
   void on_clearfindresult();
   void on_loadplg();
   void on_encoding();
+  void on_openworkspace();
+  void on_saveworkspace();
+  void on_saveasworkspace();
 
 private:
   QList<HexFile> hexfiles;

@@ -1,5 +1,5 @@
 #include "./dialog/mainwindow.h"
-#include "appmanager.h"
+#include "class/appmanager.h"
 #include "winghexapplication.h"
 #include <DApplication>
 #include <DApplicationSettings>
@@ -20,8 +20,8 @@ DWIDGET_USE_NAMESPACE
 
 int main(int argc, char *argv[]) {
 
-  //解决 root 主题样式变形
-  if (qgetenv("XDG_CURRENT_DESKTOP").toLower() != "deepin") {
+  //解决 root 主题样式走形
+  if (qEnvironmentVariableIsEmpty("XDG_CURRENT_DESKTOP")) {
     qputenv("XDG_CURRENT_DESKTOP", "Deepin");
   }
 
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 
   a.setOrganizationName("WingCloud");
   a.setApplicationName(QObject::tr("WingHexExplorer"));
-  a.setApplicationVersion("1.1.0");
+  a.setApplicationVersion("1.2.0");
   a.setProductIcon(QIcon(":/images/icon.png"));
   a.setProductName(QObject::tr("WingHexExplorer"));
   a.setApplicationDescription(QObject::tr("AppDescription"));

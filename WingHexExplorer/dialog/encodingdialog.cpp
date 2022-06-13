@@ -1,4 +1,5 @@
 #include "encodingdialog.h"
+#include "utilities.h"
 #include <DLabel>
 #include <DPushButton>
 #include <QAction>
@@ -13,10 +14,9 @@ EncodingDialog::EncodingDialog(DMainWindow *parent) {
   addContent(l);
   addSpacing(5);
   enclist = new DListWidget(this);
-  for (QByteArray item : QTextCodec::availableCodecs()) {
+  for (auto item : Utilities::GetEncodings()) {
     enclist->addItem(item);
   }
-  enclist->sortItems();
   addContent(enclist);
   addSpacing(10);
   auto dbbox = new DDialogButtonBox(

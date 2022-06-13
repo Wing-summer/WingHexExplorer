@@ -3,12 +3,12 @@
 
 #include "QHexView/document/qhexdocument.h"
 #include "QHexView/document/qhexrenderer.h"
-#include "iwingplugin.h"
+#include "plugin/iwingplugin.h"
 #include <QDBusInterface>
 #include <QDBusReply>
 #include <QDebug>
 #include <QList>
-
+#include <QTextCodec>
 #include <unistd.h>
 
 #define ICONRES(name) QIcon(":/images/" name ".png")
@@ -20,6 +20,8 @@ struct HexFile {
   int vBarValue;
   bool isdriver;
 };
+
+static QStringList encodingsBuffer;
 
 class Utilities {
 private:
@@ -55,6 +57,25 @@ public:
     }
 
     return QString("%1 TB").arg(av);
+  }
+
+  static QStringList GetEncodings() {
+    if (encodingsBuffer.length() > 0)
+      return encodingsBuffer;
+    QStringList encodings;
+    QByteArray e[] = {
+        "ASCII",  "UTF-7",    "UTF-8",    "UTF-16",  "UTF-16BE", "UTF-16LE",
+        "UTF-32", "UTF-32BE", "UTF-32LE", "GB18030", "GB2312",   "GBK",
+        "Big5",   "ANSI1251", "greek",    "unicode", "DOS-862",  "ISO646-US",
+        "JIS",    "KOI8-R",   "KOI8-U",   "korean",
+    };
+    for (auto item : e) {
+      if (QTextCodec::codecForName(item)) {
+        encodings << item;
+      }
+    }
+    encodingsBuffer = encodings;
+    return encodings;
   }
 };
 

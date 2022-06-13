@@ -1,7 +1,9 @@
 #include "finddialog.h"
+#include "utilities.h"
 #include <DDialogButtonBox>
 #include <DPushButton>
 #include <QShortcut>
+#include <QTextCodec>
 
 FindDialog::FindDialog(DMainWindow *parent) : DDialog(parent) {
   this->setFixedSize(500, 600);
@@ -12,7 +14,17 @@ FindDialog::FindDialog(DMainWindow *parent) : DDialog(parent) {
   addContent(m_string);
   addSpacing(3);
 
+  m_encodings = new DComboBox(this);
+  m_encodings->addItems(Utilities::GetEncodings());
+  m_encodings->setCurrentIndex(0);
+  m_encodings->setEnabled(false);
+  connect(m_string, &DRadioButton::toggled, m_encodings,
+          &DComboBox::setEnabled);
+  addContent(m_encodings);
+  addSpacing(3);
+
   m_lineeditor = new DLineEdit(this);
+  m_lineeditor->setEnabled(false);
   connect(m_string, &DRadioButton::toggled, m_lineeditor,
           &DLineEdit::setEnabled);
   addContent(m_lineeditor);
@@ -20,19 +32,18 @@ FindDialog::FindDialog(DMainWindow *parent) : DDialog(parent) {
 
   m_hex = new DRadioButton(this);
   m_hex->setText(tr("findhex"));
-  m_hex->setEnabled(true);
   addContent(m_hex);
   addSpacing(3);
 
   m_hexeditor = new QHexView(this);
   m_hexeditor->setAsciiVisible(false);
   m_hexeditor->setAddressVisible(false);
-  m_hexeditor->setEnabled(false);
+  m_hexeditor->setEnabled(true);
   connect(m_hex, &DRadioButton::toggled, m_hexeditor, &QHexView::setEnabled);
   addContent(m_hexeditor);
   addSpacing(10);
 
-  m_string->setChecked(true);
+  m_hex->setChecked(true);
 
   auto dbbox = new DDialogButtonBox(
       DDialogButtonBox::Ok | DDialogButtonBox::Cancel, this);
@@ -48,7 +59,9 @@ QByteArray FindDialog::getResult() { return _findarr; }
 
 void FindDialog::on_accept() {
   if (m_string->isChecked()) {
-    _findarr = m_lineeditor->text().toUtf8();
+    auto en = QTextCodec::codecForName(m_encodings->currentText().toUtf8());
+    auto e = en->makeEncoder();
+    _findarr = e->fromUnicode(m_lineeditor->text());
   } else {
     _findarr =
         m_hexeditor->document()->read(0, int(m_hexeditor->documentBytes()));

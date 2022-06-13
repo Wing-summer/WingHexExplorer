@@ -1,8 +1,8 @@
 #ifndef PLUGINSYSTEM_H
 #define PLUGINSYSTEM_H
 
-#include "iwingplugin.h"
-#include "logger.h"
+#include "class/logger.h"
+#include "plugin/iwingplugin.h"
 #include <QDockWidget>
 #include <QList>
 #include <QMap>

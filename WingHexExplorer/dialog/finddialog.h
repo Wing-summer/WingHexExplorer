@@ -2,6 +2,7 @@
 #define FINDDIALOG_H
 
 #include "./QHexView/qhexview.h"
+#include <DComboBox>
 #include <DDialog>
 #include <DLineEdit>
 #include <DMainWindow>
@@ -25,7 +26,7 @@ private:
   DLineEdit *m_lineeditor;
   DRadioButton *m_string;
   DRadioButton *m_hex;
-
+  DComboBox *m_encodings;
   QByteArray _findarr;
 };
 

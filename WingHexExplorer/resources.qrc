@@ -58,6 +58,9 @@
         <file>images/loadplg.png</file>
         <file>images/iconroot.png</file>
         <file>images/encoding.png</file>
+        <file>images/workspace.png</file>
+        <file>images/workspacesave.png</file>
+        <file>images/workspacesaveas.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

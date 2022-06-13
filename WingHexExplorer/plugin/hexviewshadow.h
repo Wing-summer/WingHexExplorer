@@ -223,6 +223,9 @@ signals:
 
   // extension
   QList<QString> getOpenFiles();
+  QStringList getSupportedEncodings();
+  QString currentEncoding();
+  void setCurrentEncoding(QString encoding);
 };
 
 #endif // HEXVIEWSHADOW_H
