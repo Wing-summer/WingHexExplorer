@@ -50,6 +50,8 @@ public:
 
   void addBookMark(QString comment);
   BookMarkStruct bookMark(int index);
+  QList<BookMarkStruct> getAllBookMarks();
+  void applyBookMarks(QList<BookMarkStruct> books);
   void removeBookMark(int index);
   void clearBookMark();
   void getBookMarks(QList<BookMarkStruct> &bookmarks);

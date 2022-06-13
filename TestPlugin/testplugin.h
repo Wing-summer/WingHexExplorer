@@ -1,7 +1,7 @@
 #ifndef GENERICPLUGIN_H
 #define GENERICPLUGIN_H
 
-#include "../WingHexExplorer/iwingplugin.h"
+#include "../WingHexExplorer/plugin/iwingplugin.h"
 #include <QList>
 #include <QObject>
 

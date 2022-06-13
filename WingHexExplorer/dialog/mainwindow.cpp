@@ -189,7 +189,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm->addSeparator();
   AddToolSubMenuShortcutAction("workspace", tr("OpenWorkSpace"),
                                MainWindow::on_openworkspace, keyopenws);
-  AddMenuDB(ToolBoxIndex::OpenWorkSpace);
   AddToolSubMenuShortcutAction("workspacesave", tr("SaveWorkSpace"),
                                MainWindow::on_saveworkspace, keysavews);
   AddMenuDB(ToolBoxIndex::SaveWorkSpace);
@@ -371,7 +370,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   toolbar->addSeparator();
   AddToolBarTool("workspace", MainWindow::on_openworkspace,
                  tr("OpenWorkSpace"));
-  AddToolsDB(ToolBoxIndex::OpenWorkSpace);
   AddToolBarTool("workspacesave", MainWindow::on_saveworkspace,
                  tr("SaveWorkSpace"));
   AddToolsDB(ToolBoxIndex::SaveWorkSpace);
@@ -1183,7 +1181,9 @@ void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
   });
 
   ConnectShadows(HexViewShadow::newFile, MainWindow::newFile);
-  ConnectShadows(HexViewShadow::openFile, MainWindow::openFile);
+  ConnectShadowLamba(
+      HexViewShadow::openFile,
+      [=](QString filename, bool readonly) { openFile(filename, readonly); });
   ConnectShadows(HexViewShadow::openDriver, MainWindow::openDriver);
   ConnectShadows(HexViewShadow::closeFile, MainWindow::closeFile);
   ConnectShadows(HexViewShadow::saveFile, MainWindow::saveFile);
@@ -1281,6 +1281,7 @@ void MainWindow::newFile() {
   hf.render = hexeditor->renderer();
   hf.vBarValue = -1;
   hf.filename = ":" + title;
+  hf.workspace = "";
   hf.isdriver = false;
   hexfiles.push_back(hf);
   tabs->addTab(QIcon::fromTheme("text-plain"), title);
@@ -1296,7 +1297,8 @@ void MainWindow::newFile() {
   }
 }
 
-ErrFile MainWindow::openFile(QString filename, bool readonly) {
+ErrFile MainWindow::openFile(QString filename, bool readonly,
+                             QString workspace) {
   QList<QVariant> params;
   if (_enableplugin) {
     params << HookIndex::OpenFileBegin << filename << readonly;
@@ -1361,6 +1363,7 @@ ErrFile MainWindow::openFile(QString filename, bool readonly) {
     hf.render = hexeditor->renderer();
     hf.vBarValue = -1;
     hf.filename = filename;
+    hf.workspace = workspace;
     hexfiles.push_back(hf);
 
     QMimeDatabase db;
@@ -1921,7 +1924,7 @@ void MainWindow::on_metadata() {
       auto begin =
           qint64(hexeditor->document()->cursor()->selectionStart().offset());
       auto end =
-          qint64(hexeditor->document()->cursor()->selectionEnd().offset());
+          qint64(hexeditor->document()->cursor()->selectionEnd().offset()) + 1;
       hexeditor->document()->metadata()->metadata(
           begin, end, m.foreGroundColor(), m.backGroundColor(), m.comment());
     }
@@ -2105,8 +2108,66 @@ void MainWindow::on_about() {
   d.exec();
 }
 
-void MainWindow::on_openworkspace() {}
+void MainWindow::on_openworkspace() {
+  auto filename = QFileDialog::getOpenFileName(
+      this, tr("ChooseFile"), QString(), tr("ProjectFile (*.wingpro)"));
+  if (filename.isEmpty())
+    return;
+  QString file;
+  QList<BookMarkStruct> bookmarks;
+  QHash<quint64, QHexLineMetadata> metas;
+  if (WorkSpaceManager::loadWorkSpace(filename, file, bookmarks, metas)) {
+    openFile(file, false, filename);
+    auto doc = hexeditor->document();
+    doc->applyBookMarks(bookmarks);
+    on_documentSwitched();
+    doc->metadata()->applyMetas(metas);
+  } else {
+    DMessageManager::instance()->sendMessage(this, ICONRES("workspace"),
+                                             tr("SaveUnSuccessfully"));
+  }
+}
 
-void MainWindow::on_saveworkspace() {}
+void MainWindow::on_saveworkspace() {
+  CheckEnabled;
+  auto f = hexfiles[_currentfile];
+  if (f.workspace.length() == 0) {
+    on_saveasworkspace();
+    return;
+  }
+  if (WorkSpaceManager::saveWorkSpace(
+          f.workspace, f.filename, hexeditor->document()->getAllBookMarks(),
+          hexeditor->document()->metadata()->getallMetas())) {
+    DMessageManager::instance()->sendMessage(this, ICONRES("workspacesave"),
+                                             tr("SaveSuccessfully"));
+  } else {
+    DMessageManager::instance()->sendMessage(this, ICONRES("workspacesave"),
+                                             tr("SaveUnSuccessfully"));
+  }
+}
 
-void MainWindow::on_saveasworkspace() {}
+void MainWindow::on_saveasworkspace() {
+  CheckEnabled;
+  auto f = hexfiles[_currentfile];
+  if (f.filename[0] == ':') {
+    QMessageBox::warning(this, tr("Warn"), tr("PleaseSaveNewFile"));
+    return;
+  }
+  auto filename = QFileDialog::getSaveFileName(
+      this, tr("ChooseSaveFile"), QString(), tr("ProjectFile (*.wingpro)"));
+  if (filename.isEmpty())
+    return;
+  if (!filename.endsWith(".wingpro")) {
+    filename += ".wingpro";
+  }
+  if (WorkSpaceManager::saveWorkSpace(
+          filename, f.filename, hexeditor->document()->getAllBookMarks(),
+          hexeditor->document()->metadata()->getallMetas())) {
+    f.workspace = filename;
+    DMessageManager::instance()->sendMessage(this, ICONRES("workspacesaveas"),
+                                             tr("SaveSuccessfully"));
+  } else {
+    DMessageManager::instance()->sendMessage(this, ICONRES("workspacesaveas"),
+                                             tr("SaveUnSuccessfully"));
+  }
+}

@@ -16,12 +16,12 @@ class WorkSpaceManager : public QObject {
   Q_OBJECT
 public:
   explicit WorkSpaceManager(QObject *parent = nullptr);
-  bool saveWorkSpace(QString filename, QString file,
-                     QList<BookMarkStruct> bookmarks,
-                     QHash<quint64, QHexLineMetadata> metas);
-  bool loadWorkSpace(QString filename, QString &file,
-                     QList<BookMarkStruct> &bookmarks,
-                     QHash<quint64, QHexLineMetadata> &metas);
+  bool static saveWorkSpace(QString filename, QString file,
+                            QList<BookMarkStruct> bookmarks,
+                            QHash<quint64, QHexLineMetadata> metas);
+  bool static loadWorkSpace(QString filename, QString &file,
+                            QList<BookMarkStruct> &bookmarks,
+                            QHash<quint64, QHexLineMetadata> &metas);
 
 signals:
 

@@ -4,6 +4,7 @@
 #include "QHexView/document/qhexdocument.h"
 #include "QHexView/qhexview.h"
 #include "class/logger.h"
+#include "class/workspacemanager.h"
 #include "control/gotobar.h"
 #include "plugin/pluginsystem.h"
 #include "settings.h"
@@ -110,7 +111,8 @@ private:
   void setTheme(DGuiApplicationHelper::ColorType theme);
 
 public:
-  ErrFile openFile(QString filename, bool readonly = false);
+  ErrFile openFile(QString filename, bool readonly = false,
+                   QString workspace = "");
 
 private:
   void newFile();

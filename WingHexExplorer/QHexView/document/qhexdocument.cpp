@@ -80,6 +80,12 @@ bool QHexDocument::existBookMark(int &index) {
   return false;
 }
 
+QList<BookMarkStruct> QHexDocument::getAllBookMarks() { return bookmarks; }
+
+void QHexDocument::applyBookMarks(QList<BookMarkStruct> books) {
+  bookmarks.append(books);
+}
+
 void QHexDocument::FindAllBytes(QByteArray b, QList<quint64> &results) {
   results.clear();
   qlonglong p = 0;

@@ -70,13 +70,13 @@ public slots:
                                   QList<QVariant> msg) = 0;
 };
 
-const QString sign = "wingsummer";
+#define WINGSUMMER "wingsummer"
 
 class PluginUtils {
 public:
   static QString GetPUID(IWingPlugin *plugin) {
     auto str = QString("%1%2%3%4%5")
-                   .arg(sign)
+                   .arg(WINGSUMMER)
                    .arg(plugin->pluginName())
                    .arg(plugin->pluginAuthor())
                    .arg(plugin->comment())
@@ -88,7 +88,7 @@ public:
   static QString GetPuid(QString pluginName, QString author, QString comment,
                          uint version) {
     auto str = QString("%1%2%3%4%5")
-                   .arg(sign)
+                   .arg(WINGSUMMER)
                    .arg(pluginName)
                    .arg(author)
                    .arg(comment)

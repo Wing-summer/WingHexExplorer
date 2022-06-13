@@ -46,7 +46,7 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         INFOLOG(QString(">> ") + tr("LoadingPlugin") + fileinfo.fileName()));
     auto p = qobject_cast<IWingPlugin *>(loader.instance());
     if (p) {
-      if (p->signature() != sign) {
+      if (p->signature() != WINGSUMMER) {
         logger->logMessage(ERRLOG(tr("ErrLoadPluginSign")));
         loader.unload();
       }

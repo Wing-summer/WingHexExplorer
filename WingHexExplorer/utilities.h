@@ -17,6 +17,7 @@ struct HexFile {
   QHexDocument *doc;
   QHexRenderer *render;
   QString filename;
+  QString workspace;
   int vBarValue;
   bool isdriver;
 };

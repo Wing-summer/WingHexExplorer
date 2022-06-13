@@ -12,7 +12,10 @@ bool WorkSpaceManager::loadWorkSpace(QString filename, QString &file,
   QFile f(filename);
   if (f.exists()) {
     QJsonParseError err;
+    if (!f.open(QFile::ReadOnly))
+      return false;
     QJsonDocument doc = QJsonDocument::fromJson(f.readAll(), &err);
+    f.close();
     if (err.error == QJsonParseError::NoError) {
       auto jobj = doc.object();
       auto t = jobj.value("type");
@@ -36,7 +39,7 @@ bool WorkSpaceManager::loadWorkSpace(QString filename, QString &file,
                     auto pos = ipos.toString().toULongLong(&b);
                     if (!b)
                       continue;
-                    auto ivalues = sitem.value("values");
+                    auto ivalues = sitem.value("value");
                     if (!ivalues.isUndefined() && ivalues.isArray()) {
                       QHexLineMetadata linemetas;
                       for (auto v : ivalues.toArray()) {
@@ -127,6 +130,13 @@ bool WorkSpaceManager::saveWorkSpace(
   if (f.open(QFile::WriteOnly)) {
     QJsonObject jobj;
     jobj.insert("type", "workspace");
+
+    if (file[0] == '/') {
+      QDir dir(QFileInfo(f).absoluteDir());
+      QFileInfo fi(file);
+      file = dir.relativeFilePath(fi.absoluteFilePath());
+    }
+
     jobj.insert("file", file);
 
     QJsonArray metas;
@@ -140,8 +150,8 @@ bool WorkSpaceManager::saveWorkSpace(
         lineobj.insert("start", QString::number(line.start));
         lineobj.insert("length", QString::number(line.length));
         lineobj.insert("comment", line.comment);
-        lineobj.insert("fgcolor", line.foreground.name(QColor::HexArgb));
-        lineobj.insert("bgcolor", line.background.name(QColor::HexArgb));
+        lineobj.insert("fgcolor", QString::number(line.foreground.rgba(), 16));
+        lineobj.insert("bgcolor", QString::number(line.background.rgba(), 16));
         linemetas.append(lineobj);
       }
       i.insert("value", linemetas);

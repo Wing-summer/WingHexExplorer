@@ -39,7 +39,7 @@ QString TestPlugin::comment() {
 
 uint TestPlugin::pluginVersion() { return 1; }
 
-QString TestPlugin::signature() { return sign; }
+QString TestPlugin::signature() { return WINGSUMMER; }
 
 QList<QVariant> TestPlugin::optionalInfos() { return QList<QVariant>(); }
 

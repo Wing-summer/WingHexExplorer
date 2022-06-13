@@ -53,10 +53,16 @@ public:
   explicit QHexMetadata(QObject *parent = nullptr);
   const QHexLineMetadata &get(quint64 line) const;
   QString comments(quint64 line, int column) const;
-  bool lineHasMetadata(quint64 line) const;
-  bool removeMetadata(qint64 offset,
-                      QList<QHexMetadataItem> refer); // added by wingsummer
-  QList<QHexMetadataItem> gets(qint64 offset);        // added by wingsummer
+  bool lineHasMetadata(quint64 line) const; // modified by wingsummer
+
+  /*============================*/
+  // added by wingsummer
+
+  bool removeMetadata(qint64 offset, QList<QHexMetadataItem> refer);
+  QList<QHexMetadataItem> gets(qint64 offset);
+  void applyMetas(QHash<quint64, QHexLineMetadata> metas);
+
+  /*============================*/
 
   void
   clear(quint64 line); // this is transient till next call to setLineWidth()
@@ -77,6 +83,9 @@ public:
   void foreground(quint64 line, int start, int length, const QColor &fgcolor);
   void background(quint64 line, int start, int length, const QColor &bgcolor);
   void comment(quint64 line, int start, int length, const QString &comment);
+
+  QHash<quint64, QHexLineMetadata>
+  getallMetas(); // added by wingsummer to support workspace
 
 private:
   void setMetadata(const QHexMetadataItem &mi);

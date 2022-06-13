@@ -7,51 +7,12 @@ const QHexLineMetadata &QHexMetadata::get(quint64 line) const {
   return it.value();
 }
 
+/*==================================*/
 // added by wingsummer
-QList<QHexMetadataItem> QHexMetadata::gets(qint64 offset) {
-  QList<QHexMetadataItem> items;
-  auto res = lldiv(offset, m_lineWidth);
-  quint64 line = quint64(res.quot);
-  auto m = res.quot;
-  auto it = m_metadata.find(line);
-  if (it != m_metadata.end()) {
-    for (auto item : *it) {
-      if (item.start <= m && m <= item.start + item.length) {
-        items.push_back(item);
-      }
-    }
-  }
-  return items;
+QHash<quint64, QHexLineMetadata> QHexMetadata::getallMetas() {
+  return m_metadata;
 }
 
-QString QHexMetadata::comments(quint64 line, int column) const {
-  if (!this->lineHasMetadata(line))
-    return QString();
-
-  QString s;
-
-  const auto &linemetadata = this->get(line);
-
-  for (auto &mi : linemetadata) {
-    if (!(mi.start <= column && column < mi.start + mi.length))
-      continue;
-    if (mi.comment.isEmpty())
-      continue;
-
-    if (!s.isEmpty())
-      s += "\n";
-
-    s += mi.comment;
-  }
-
-  return s;
-}
-
-bool QHexMetadata::lineHasMetadata(quint64 line) const {
-  return m_metadata.contains(line);
-}
-
-// added by wingsummer
 bool QHexMetadata::removeMetadata(qint64 offset,
                                   QList<QHexMetadataItem> refer) {
   QList<QHexMetadataAbsoluteItem> delneeded;
@@ -85,6 +46,55 @@ bool QHexMetadata::removeMetadata(qint64 offset,
     }
   }
   return true;
+}
+
+QList<QHexMetadataItem> QHexMetadata::gets(qint64 offset) {
+  QList<QHexMetadataItem> items;
+  auto res = lldiv(offset, m_lineWidth);
+  quint64 line = quint64(res.quot);
+  auto m = res.rem;
+  auto it = m_metadata.find(line);
+  if (it != m_metadata.end()) {
+    for (auto item : *it) {
+      if (item.start <= m && m <= item.start + item.length) {
+        items.push_back(item);
+      }
+    }
+  }
+  return items;
+}
+
+void QHexMetadata::applyMetas(QHash<quint64, QHexLineMetadata> metas) {
+  m_metadata.insert(metas);
+}
+
+/*==================================*/
+
+QString QHexMetadata::comments(quint64 line, int column) const {
+  if (!this->lineHasMetadata(line))
+    return QString();
+
+  QString s;
+
+  const auto &linemetadata = this->get(line);
+
+  for (auto &mi : linemetadata) {
+    if (!(mi.start <= column && column < mi.start + mi.length))
+      continue;
+    if (mi.comment.isEmpty())
+      continue;
+
+    if (!s.isEmpty())
+      s += "\n";
+
+    s += mi.comment;
+  }
+
+  return s;
+}
+
+bool QHexMetadata::lineHasMetadata(quint64 line) const {
+  return m_metadata.contains(line);
 }
 
 void QHexMetadata::clear(quint64 line) {
