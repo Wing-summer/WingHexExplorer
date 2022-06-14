@@ -2,3 +2,4 @@
 !settings.json
 !TestPlugin.json
 **/*.pro.user
+push.sh
