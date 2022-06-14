@@ -291,6 +291,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
                                MainWindow::on_setting_general, keyGeneral);
   AddToolSubMenuShortcutAction("settingplugin", tr("Plugin"),
                                MainWindow::on_setting_plugin, keyplugin);
+  settingplg = a;
   AddToolSubMenuAction("layout", tr("RestoreLayout"),
                        MainWindow::on_restoreLayout);
   menu->addMenu(tm);
@@ -813,6 +814,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   } else {
     plgmenu->setEnabled(false);
     logger->logMessage(ERRLOG(tr("UnLoadPluginSetting")));
+    settingplg->setEnabled(false);
   }
 
   m_settings->saveWindowState(this, true);
@@ -2078,6 +2080,8 @@ void MainWindow::on_metadatacls() {
 }
 
 void MainWindow::on_setting_plugin() {
+  if (!_enableplugin)
+    return;
   PluginWindow pw(this);
   pw.setPluginSystem(plgsys);
   pw.exec();

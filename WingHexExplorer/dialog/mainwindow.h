@@ -106,6 +106,8 @@ private:
   DMenu *hexeditorMenu;
   DMenu *findresultMenu;
 
+  QAction *settingplg;
+
 private:
   QHexView *hexeditor;
   QFile file;
