@@ -77,7 +77,8 @@ int main(int argc, char *argv[]) {
     MainWindow w;
 
     for (auto item : urls) {
-      w.openFile(item);
+      if (w.openWorkSpace(item) != ErrFile::Success)
+        w.openFile(item);
     }
 
     manager->mWindow = &w;

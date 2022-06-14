@@ -572,6 +572,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
   setDockNestingEnabled(true);
 
   findresultMenu = new DMenu(this);
+  AddMenuAction("export", tr("ExportFindResult"),
+                MainWindow::on_exportfindresult, findresultMenu);
   AddMenuAction("del", tr("ClearFindResult"), MainWindow::on_clearfindresult,
                 findresultMenu);
 
@@ -2168,6 +2170,38 @@ void MainWindow::on_clearfindresult() {
   findresitem = nullptr;
 }
 
+void MainWindow::on_exportfindresult() {
+  auto c = findresult->rowCount();
+  if (c == 0) {
+    DMessageManager::instance()->sendMessage(this, ICONRES("export"),
+                                             tr("EmptyFindResult"));
+    return;
+  }
+  auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"));
+  if (filename.isEmpty())
+    return;
+  QFile f(filename);
+  if (f.open(QFile::WriteOnly)) {
+    QJsonArray arr;
+    for (int i = 0; i < c; i++) {
+      QJsonObject jobj;
+      jobj.insert("file", findresitem[i][0].text());
+      jobj.insert("offset", findresitem[i][1].text());
+      jobj.insert("value", findresitem[i][2].text());
+      arr.append(jobj);
+    }
+    QJsonDocument doc(arr);
+    if (f.write(doc.toJson(QJsonDocument::JsonFormat::Indented)) >= 0) {
+      f.close();
+      DMessageManager::instance()->sendMessage(this, ICONRES("export"),
+                                               tr("SaveFindResult"));
+    }
+  } else {
+    DMessageManager::instance()->sendMessage(this, ICONRES("export"),
+                                             tr("SaveFindResultError"));
+  }
+}
+
 void MainWindow::on_sponsor() {
   SponsorDialog d;
   d.exec();
@@ -2178,19 +2212,21 @@ void MainWindow::on_about() {
   d.exec();
 }
 
-bool MainWindow::openWorkSpace(QString filename) {
+ErrFile MainWindow::openWorkSpace(QString filename) {
   QString file;
   QList<BookMarkStruct> bookmarks;
   QHash<quint64, QHexLineMetadata> metas;
+  auto res = ErrFile::Error;
   if (WorkSpaceManager::loadWorkSpace(filename, file, bookmarks, metas)) {
-    openFile(file, false, filename);
+    res = openFile(file, false, filename);
+    if (res != ErrFile::Success)
+      return res;
     auto doc = hexeditor->document();
     doc->applyBookMarks(bookmarks);
     on_documentSwitched();
     doc->metadata()->applyMetas(metas);
-    return true;
   }
-  return false;
+  return res;
 }
 
 void MainWindow::on_openworkspace() {
@@ -2198,7 +2234,7 @@ void MainWindow::on_openworkspace() {
       this, tr("ChooseFile"), QString(), tr("ProjectFile (*.wingpro)"));
   if (filename.isEmpty())
     return;
-  if (!openWorkSpace(filename))
+  if (openWorkSpace(filename) != ErrFile::Success)
     DMessageManager::instance()->sendMessage(this, ICONRES("workspace"),
                                              tr("SaveUnSuccessfully"));
 }

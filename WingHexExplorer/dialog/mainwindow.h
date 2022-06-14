@@ -114,6 +114,7 @@ private:
 public:
   ErrFile openFile(QString filename, bool readonly = false,
                    QString workspace = "");
+  ErrFile openWorkSpace(QString filename);
 
 private:
   void newFile();
@@ -140,7 +141,6 @@ private:
   void cutCurrentBytes(quint64 pos, qint64 len, QByteArray &arr);
   void pasteFileBytes(int index, QByteArray arr, qint64 len = -1);
   void pasteCurrentBytes(quint64 pos, QByteArray arr, qint64 len = -1);
-  bool openWorkSpace(QString filename);
   bool saveWorkSpace();
   bool saveAsWorkSpace(QString filename);
 
@@ -184,6 +184,7 @@ private:
   void on_fillnop();
   void on_fillzero();
   void on_fill();
+  void on_exportfindresult();
   void on_clearfindresult();
   void on_loadplg();
   void on_encoding();
