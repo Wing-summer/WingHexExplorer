@@ -58,12 +58,13 @@ public:
   void gotoBookMark(int index);
   bool existBookMark(int &index);
 
-  void FindAllBytes(QByteArray b, QList<quint64> &results);
+  void FindAllBytes(qint64 begin, qint64 end, QByteArray b,
+                    QList<quint64> &results, int maxCount = -1);
 
   /*======================*/
 
 public:
-  void removeSelection();
+  bool removeSelection();
   QByteArray read(qint64 offset, int len = 0);
   QByteArray selectedBytes() const;
   char at(int offset) const;
@@ -73,14 +74,14 @@ public:
 public slots:
   void undo();
   void redo();
-  void cut(bool hex = false);
+  bool cut(bool hex = false);
   void copy(bool hex = false);
   void paste(bool hex = false);
   void insert(qint64 offset, uchar b);
   void replace(qint64 offset, uchar b);
   void insert(qint64 offset, const QByteArray &data);
   void replace(qint64 offset, const QByteArray &data);
-  void remove(qint64 offset, int len);
+  bool remove(qint64 offset, int len);
   QByteArray read(qint64 offset, int len) const;
   bool saveTo(QIODevice *device, bool cleanUndo);
 

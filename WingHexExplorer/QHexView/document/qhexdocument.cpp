@@ -86,13 +86,16 @@ void QHexDocument::applyBookMarks(QList<BookMarkStruct> books) {
   bookmarks.append(books);
 }
 
-void QHexDocument::FindAllBytes(QByteArray b, QList<quint64> &results) {
+void QHexDocument::FindAllBytes(qint64 begin, qint64 end, QByteArray b,
+                                QList<quint64> &results, int maxCount) {
   results.clear();
-  qlonglong p = 0;
+  qlonglong p = begin > 0 ? begin : 0;
+  qlonglong e = end > begin ? end : -1;
   auto offset = b.count();
   while (1) {
     p = m_buffer->indexOf(b, p);
-    if (p < 0) {
+    if (p < 0 || (e > 0 && p > e) ||
+        (maxCount > 0 && results.count() >= maxCount)) {
       break;
     }
     results.append(quint64(p));
@@ -160,13 +163,15 @@ QByteArray QHexDocument::read(qint64 offset, int len) {
   return m_buffer->read(offset, len);
 }
 
-void QHexDocument::removeSelection() {
+bool QHexDocument::removeSelection() {
   if (!m_cursor->hasSelection())
-    return;
+    return false;
 
-  this->remove(m_cursor->selectionStart().offset(),
-               m_cursor->selectionLength());
-  m_cursor->clearSelection();
+  auto res = this->remove(m_cursor->selectionStart().offset(),
+                          m_cursor->selectionLength());
+  if (res)
+    m_cursor->clearSelection();
+  return res;
 }
 
 QByteArray QHexDocument::selectedBytes() const {
@@ -199,12 +204,12 @@ void QHexDocument::redo() {
   emit documentChanged();
 }
 
-void QHexDocument::cut(bool hex) {
+bool QHexDocument::cut(bool hex) {
   if (!m_cursor->hasSelection() || m_keepsize)
-    return;
+    return false;
 
   this->copy(hex);
-  this->removeSelection();
+  return this->removeSelection();
 }
 
 void QHexDocument::copy(bool hex) {
@@ -265,11 +270,12 @@ void QHexDocument::replace(qint64 offset, const QByteArray &data) {
   emit documentChanged();
 }
 
-void QHexDocument::remove(qint64 offset, int len) {
+bool QHexDocument::remove(qint64 offset, int len) {
   if (m_keepsize || m_readonly || m_islocked)
-    return;
+    return false;
   m_undostack.push(new RemoveCommand(m_buffer, offset, len));
   emit documentChanged();
+  return true;
 }
 
 QByteArray QHexDocument::read(qint64 offset, int len) const {

@@ -155,7 +155,8 @@ signals:
   QByteArray read(qint64 offset, int len);
   qint64 searchForward(const QByteArray &ba);
   qint64 searchBackward(const QByteArray &ba);
-  void FindAllBytes(QByteArray b, QList<quint64> &results);
+  void FindAllBytes(qlonglong begin, qlonglong end, QByteArray b,
+                    QList<quint64> &results);
 
   // render
   bool editableArea(int area);

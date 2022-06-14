@@ -43,7 +43,9 @@
 
 ### 协议
 
-&emsp;&emsp;本软件采用`GNU Affero General Public License v3.0`协议，但并不意味着你可以将本人编写的任何相关代码用于商业用途，包括我改良的部分，除非你直接使用原组件。 **没有我的任何授权，不得将该软件以任何形式用于商业用途，不限于商业二次开发、换 UI 套壳、二手转卖等。** 你可以不需要亲自来确认我的授权进行非商业用途的分发代码、编译代码、修改代码、使用二进制文件等。
+&emsp;&emsp;本软件如果用于非商业用途，采用`WingSummer OpenSource Lincense`协议，对应的协议内容在仓库`OpenSource-LICENSE`文件。 **没有我的任何授权，不得将该软件用于任何形式的商业用途，包括我改良的部分，除非你直接使用原组件，不限于商业二次开发、换 UI 套壳、二手转卖等，我不允许任何人随意把我当作免费劳动力作为赚钱的工具！** 我的初衷是让 Linux 的生态更加完整，早日让祖国推动操作系统国产化。我不希望“吸血鬼”们利益归自己，脏活累活给开源，都那么理所当然，开源就是这么被败坏的。我不希望因为版权的事情牵扯了大量的精力。本人初次深入接触开源协议，不太会根据自己真正的需要来选择合适的协议，感谢`Deepin`前辈`BLumia`给我提供相关的建议和指导。由于本人一直在`README`一直强调商业用途相关事宜，本开源协议和我强调的内容相一致，故适用于目前所有本仓库的代码及其`fork`分支以及所有发行版。
+
+&emsp;&emsp;如果你想将本软件或者本软件的部分代码用于商业用途，必须亲自咨询我，商讨商业授权相关事宜。如果得到授权则采用`WingSummer Commerical License`协议，也就是本仓库的`Commerical-LICENSE`文件的内容。
 
 ### issue 前必读
 
@@ -127,3 +129,6 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+## 其他
+
+&emsp;&emsp;本篇仅仅是本软件的简介，具体请到我的仓库，一切以我的仓库说明为准： https://gitee.com/wingsummer/wing-hex-explorer

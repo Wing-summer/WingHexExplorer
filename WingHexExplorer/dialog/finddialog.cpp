@@ -1,11 +1,12 @@
 #include "finddialog.h"
 #include "utilities.h"
+#include <DButtonBox>
 #include <DDialogButtonBox>
 #include <DPushButton>
 #include <QShortcut>
 #include <QTextCodec>
 
-FindDialog::FindDialog(DMainWindow *parent) : DDialog(parent) {
+FindDialog::FindDialog(bool sel, DMainWindow *parent) : DDialog(parent) {
   this->setFixedSize(500, 600);
   this->setWindowTitle(tr("find"));
 
@@ -45,6 +46,43 @@ FindDialog::FindDialog(DMainWindow *parent) : DDialog(parent) {
 
   m_hex->setChecked(true);
 
+  auto group = new DButtonBox(this);
+
+  QList<DButtonBoxButton *> blist;
+  auto b = new DButtonBoxButton(tr("BeforeCursor"), this);
+  connect(b, &DButtonBoxButton::toggled, [=](bool b) {
+    if (b)
+      _dir = SearchDirection::Foreword;
+  });
+  blist.push_back(b);
+  b = new DButtonBoxButton(tr("AfterCursor"), this);
+  connect(b, &DButtonBoxButton::toggled, [=](bool b) {
+    if (b)
+      _dir = SearchDirection::Backword;
+  });
+
+  blist.push_back(b);
+  b = new DButtonBoxButton(tr("Selection"), this);
+  if (sel) {
+    connect(b, &DButtonBoxButton::toggled, [=](bool b) {
+      if (b)
+        _dir = SearchDirection::Selection;
+    });
+  } else {
+    b->setEnabled(false);
+  }
+  blist.push_back(b);
+  b = new DButtonBoxButton(tr("None"), this);
+  connect(b, &DButtonBoxButton::toggled, [=](bool b) {
+    if (b)
+      _dir = SearchDirection::None;
+  });
+  blist.push_front(b);
+  group->setButtonList(blist, true);
+  b->setChecked(true);
+
+  addContent(group);
+  addSpacing(20);
   auto dbbox = new DDialogButtonBox(
       DDialogButtonBox::Ok | DDialogButtonBox::Cancel, this);
   connect(dbbox, &DDialogButtonBox::accepted, this, &FindDialog::on_accept);
@@ -55,7 +93,10 @@ FindDialog::FindDialog(DMainWindow *parent) : DDialog(parent) {
   addContent(dbbox);
 }
 
-QByteArray FindDialog::getResult() { return _findarr; }
+QByteArray FindDialog::getResult(SearchDirection &dir) {
+  dir = _dir;
+  return _findarr;
+}
 
 void FindDialog::on_accept() {
   if (m_string->isChecked()) {

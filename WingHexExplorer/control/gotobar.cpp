@@ -82,7 +82,10 @@ void GotoBar::handleLineChanged() {
   }
 }
 
-void GotoBar::jumpCancel() { setVisible(false); }
+void GotoBar::jumpCancel() {
+  jumpToLine(qlonglong(m_oldFileOffsetBeforeJump), false);
+  setVisible(false);
+}
 
 void GotoBar::jumpConfirm() {
   handleLineChanged();
@@ -126,7 +129,7 @@ qint64 GotoBar::Convert2Pos(QString value, SEEKPOS &ps, bool isline) {
       value = value.remove(0, 1);
 
       bool ok = false;
-      res = -value.toLongLong(&ok, 0);
+      res = value.toLongLong(&ok, 0);
 
       if (!ok) {
         ps = SEEKPOS::Invaild;
@@ -139,11 +142,11 @@ qint64 GotoBar::Convert2Pos(QString value, SEEKPOS &ps, bool isline) {
             res -= m_rowBeforeJump;
           }
         } else {
-          if (res - qlonglong(m_oldFileOffsetBeforeJump) < 0) {
+          if (qlonglong(m_oldFileOffsetBeforeJump) - res < 0) {
             ps = SEEKPOS::Invaild;
             res = 0;
           } else {
-            res -= qlonglong(m_oldFileOffsetBeforeJump);
+            res = qlonglong(m_oldFileOffsetBeforeJump) - res;
           }
         }
       }
@@ -166,11 +169,11 @@ qint64 GotoBar::Convert2Pos(QString value, SEEKPOS &ps, bool isline) {
             res = m_maxFilelines - res;
           }
         } else {
-          if (qlonglong(m_oldFileOffsetBeforeJump) - res < 0) {
+          if (qlonglong(m_maxFileBytes) - res < 0) {
             ps = SEEKPOS::Invaild;
             res = 0;
           } else {
-            res = qlonglong(m_oldFileOffsetBeforeJump) - res;
+            res = qlonglong(m_maxFileBytes) - res;
           }
         }
       }

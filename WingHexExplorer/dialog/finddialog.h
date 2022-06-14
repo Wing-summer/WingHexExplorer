@@ -11,11 +11,13 @@
 
 DWIDGET_USE_NAMESPACE
 
+enum class SearchDirection { None, Foreword, Backword, Selection };
+
 class FindDialog : public DDialog {
   Q_OBJECT
 public:
-  FindDialog(DMainWindow *parent = nullptr);
-  QByteArray getResult();
+  FindDialog(bool sel = true, DMainWindow *parent = nullptr);
+  QByteArray getResult(SearchDirection &dir);
 
 private:
   void on_accept();
@@ -28,6 +30,8 @@ private:
   DRadioButton *m_hex;
   DComboBox *m_encodings;
   QByteArray _findarr;
+
+  SearchDirection _dir = SearchDirection::None;
 };
 
 #endif // FINDDIALOG_H

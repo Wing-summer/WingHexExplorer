@@ -23,6 +23,7 @@
 #include <DToolBar>
 #include <QFile>
 #include <QList>
+#include <QMutex>
 #include <QObject>
 #include <QPixmap>
 #include <QPoint>
@@ -219,6 +220,7 @@ private:
 private:
   DMenu *plgmenu;
   DMenu *toolmenu;
+  QMutex mutex;
 
   DIconButton *iSetBaseAddr;
   DIconButton *iColInfo;
@@ -263,6 +265,8 @@ private:
 
   bool _enableplugin = true;
   bool _rootenableplugin = false;
+
+  int _findmax = 100;
 };
 
 #endif // MAINWINDOW_H

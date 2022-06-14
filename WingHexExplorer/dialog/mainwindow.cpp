@@ -670,11 +670,12 @@ MainWindow::MainWindow(DMainWindow *parent) {
   vlayout->insertWidget(1, gotobar);
   gotobar->setVisible(false);
   connect(gotobar, &GotoBar::jumpToLine, this, &MainWindow::on_gotobar);
+  connect(gotobar, &GotoBar::pressEsc, [=] { // ToDo
+  });
 
 #define ConnectShortCut(ShortCut, Slot)                                        \
   s = new QShortcut(ShortCut, this);                                           \
   connect(s, &QShortcut::activated, this, &Slot);
-
   QShortcut *s;
   ConnectShortCut(QKeySequence::New, MainWindow::on_newfile);
   ConnectShortCut(QKeySequence::Open, MainWindow::on_openfile);
@@ -736,6 +737,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
           [=](bool b) { _rootenableplugin = b; });
   connect(m_settings, &Settings::sigChangedEncoding,
           [=](QString encoding) { _encoding = encoding; });
+  connect(m_settings, &Settings::sigAdjustFindMaxCount,
+          [=](int count) { _findmax = count; });
 
   m_settings->applySetting();
   hexeditor->setAddressVisible(_showaddr);
@@ -952,8 +955,9 @@ void MainWindow::connectShadow(HexViewShadow *shadow) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->read(offset, len), QByteArray());
   });
   ConnectShadowLamba(
-      HexViewShadow::FindAllBytes, [=](QByteArray b, QList<quint64> &results) {
-        PCHECK(hexfiles[_pcurfile].doc->FindAllBytes(b, results), );
+      HexViewShadow::FindAllBytes, [=](qlonglong begin, qlonglong end,
+                                       QByteArray b, QList<quint64> &results) {
+        PCHECK(hexfiles[_pcurfile].doc->FindAllBytes(begin, end, b, results), );
       });
   ConnectShadowLamba(HexViewShadow::searchForward, [=](const QByteArray &ba) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->searchForward(ba), qint64(-1));
@@ -1627,11 +1631,19 @@ void MainWindow::on_redofile() {
 
 void MainWindow::on_cutfile() {
   CheckEnabled;
-  hexeditor->document()->cut();
+  if (hexeditor->document()->cut()) {
+    DMessageManager::instance()->sendMessage(this, ICONRES("cut"),
+                                             tr("CutToClipBoard"));
+  } else {
+    DMessageManager::instance()->sendMessage(this, ICONRES("cut"),
+                                             tr("UnCutToClipBoard"));
+  }
 }
 void MainWindow::on_copyfile() {
   CheckEnabled;
   hexeditor->document()->copy();
+  DMessageManager::instance()->sendMessage(this, ICONRES("copy"),
+                                           tr("CopyToClipBoard"));
 }
 void MainWindow::on_pastefile() {
   CheckEnabled;
@@ -1641,9 +1653,9 @@ void MainWindow::on_pastefile() {
 void MainWindow::on_opendriver() {
   DriverSelectorDialog ds;
   if (ds.exec()) {
-    auto d = DMessageManager::instance();
     if (openDriver(ds.GetResult().device()) != ErrFile::Success)
-      d->sendMessage(this, ICONRES("opendriver"), tr("DriverOpenErrorTip"));
+      DMessageManager::instance()->sendMessage(this, ICONRES("opendriver"),
+                                               tr("DriverOpenErrorTip"));
   }
 }
 
@@ -1716,15 +1728,36 @@ void MainWindow::on_saveasfile() {
 
 void MainWindow::on_findfile() {
   CheckEnabled;
-  FindDialog *fd = new FindDialog();
+  FindDialog *fd = new FindDialog(hexeditor->selectlength() > 1, this);
   if (fd->exec()) {
     auto th = QThread ::create([=]() {
-      auto res = fd->getResult();
+      SearchDirection sd;
+      auto res = fd->getResult(sd);
       auto d = hexeditor->document();
       QList<quint64> results;
       if (d == nullptr)
         return;
-      d->FindAllBytes(res, results);
+      qint64 begin, end;
+      switch (sd) {
+      case SearchDirection::Foreword: {
+        begin = 0;
+        end = qlonglong(hexeditor->currentOffset());
+      } break;
+      case SearchDirection::Backword: {
+        begin = qlonglong(hexeditor->currentOffset());
+        end = -1;
+      } break;
+      case SearchDirection::Selection: {
+        auto cur = hexeditor->document()->cursor();
+        begin = qlonglong(cur->selectionStart().offset());
+        end = qlonglong(cur->selectionEnd().offset());
+      } break;
+      default: {
+        begin = -1;
+        end = -1;
+      } break;
+      }
+      d->FindAllBytes(begin, end, res, results, _findmax);
       if (findresitem) {
         delete[] findresitem;
         findresult->setRowCount(0);
@@ -1743,8 +1776,15 @@ void MainWindow::on_findfile() {
         findresult->setItem(i, 1, frow + 1);
         findresult->setItem(i, 2, frow + 2);
       }
+    });
+    connect(th, &QThread::finished, this, [=] {
       DMessageManager::instance()->sendMessage(this, ICONRES("find"),
                                                tr("FindFininish"));
+      if (findresult->rowCount() == _findmax) {
+        DMessageManager::instance()->sendMessage(this, ICONRES("find"),
+                                                 tr("TooMuchFindResult"));
+      }
+      delete fd;
     });
     th->start();
   }
@@ -2124,8 +2164,8 @@ void MainWindow::on_loadplg() {
 
 void MainWindow::on_clearfindresult() {
   delete[] findresitem;
-  findresitem = nullptr;
   findresult->setRowCount(0);
+  findresitem = nullptr;
 }
 
 void MainWindow::on_sponsor() {

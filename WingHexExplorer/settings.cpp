@@ -51,21 +51,21 @@ Settings::Settings(QWidget *parent) : QObject(parent) {
     emit sigChangeRootPluginEnabled(v);
   });
 
-  BindConfigSignal(hexfontSize, "editor.font.size",
+  BindConfigSignal(hexfontSize, "editor.basic.size",
                    { emit sigAdjustEditorFontSize(value.toInt()); });
-  BindConfigSignal(infofontSize, "appearance.font.size",
+  BindConfigSignal(infofontSize, "appearance.basic.size",
                    { emit sigAdjustInfoFontSize(value.toInt()); });
-  BindConfigSignal(showAddr, "editor.font.showaddr", {
+  BindConfigSignal(showAddr, "editor.basic.showaddr", {
     emit sigShowAddressNumber(value.toBool());
     DMessageManager::instance()->sendMessage(
         m_pSettingsDialog, ICONRES("setting"), tr("OpenNextTakeEffect"));
   });
-  BindConfigSignal(showCol, "editor.font.showcol", {
+  BindConfigSignal(showCol, "editor.basic.showcol", {
     emit sigShowColNumber(value.toBool());
     DMessageManager::instance()->sendMessage(
         m_pSettingsDialog, ICONRES("setting"), tr("OpenNextTakeEffect"));
   });
-  BindConfigSignal(showText, "editor.font.showtext", {
+  BindConfigSignal(showText, "editor.basic.showtext", {
     emit sigShowEncodingText(value.toBool());
     DMessageManager::instance()->sendMessage(
         m_pSettingsDialog, ICONRES("setting"), tr("OpenNextTakeEffect"));
@@ -75,13 +75,18 @@ Settings::Settings(QWidget *parent) : QObject(parent) {
     DMessageManager::instance()->sendMessage(
         m_pSettingsDialog, ICONRES("setting"), tr("RestartTakeEffect"));
   });
-  BindConfigSignal(encoding, "editor.font.encoding", {
+  BindConfigSignal(encoding, "editor.basic.encoding", {
     emit sigChangedEncoding(value.toString());
     DMessageManager::instance()->sendMessage(
         m_pSettingsDialog, ICONRES("setting"), tr("OpenNextTakeEffect"));
   });
+  BindConfigSignal(fmax, "editor.basic.findmaxcount", {
+    emit sigAdjustFindMaxCount(value.toInt());
+    DMessageManager::instance()->sendMessage(
+        m_pSettingsDialog, ICONRES("setting"), tr("FindNextTakeEffect"));
+  });
 
-  auto enCoding = settings->option("editor.font.encoding");
+  auto enCoding = settings->option("editor.basic.encoding");
   QMap<QString, QVariant> encodingMap;
   QStringList encodings = Utilities::GetEncodings();
   encodingMap.insert("keys", encodings);
@@ -169,20 +174,22 @@ void Settings::applySetting() {
         sigChangeRootPluginEnabled(rootplugin->value().toBool()));
   Apply(fontFamliy, "appearance.font.family",
         sigAdjustFont(fontFamliy->value().toString()));
-  Apply(hexfontSize, "editor.font.size",
+  Apply(hexfontSize, "editor.basic.size",
         sigAdjustEditorFontSize(hexfontSize->value().toInt()));
-  Apply(infofontSize, "appearance.font.size",
+  Apply(infofontSize, "appearance.basic.size",
         sigAdjustInfoFontSize(infofontSize->value().toInt()));
-  Apply(showAddr, "editor.font.showaddr",
+  Apply(showAddr, "editor.basic.showaddr",
         sigShowAddressNumber(showAddr->value().toBool()));
-  Apply(showCol, "editor.font.showcol",
+  Apply(showCol, "editor.basic.showcol",
         sigShowColNumber(showCol->value().toBool()));
-  Apply(showText, "editor.font.showtext",
+  Apply(showText, "editor.basic.showtext",
         sigShowEncodingText(showText->value().toBool()));
   Apply(windowstate, "appearance.window.windowsize",
         sigChangeWindowState(windowstate->value().toString()));
-  Apply(encoding, "editor.font.encoding",
+  Apply(encoding, "editor.basic.encoding",
         sigChangedEncoding(encoding->value().toString()));
+  Apply(fmax, "editor.basic.findmaxcount",
+        sigAdjustFindMaxCount(fmax->value().toInt()););
 }
 
 DDialog *Settings::createDialog(const QString &title, const QString &content,

@@ -25,8 +25,8 @@
                     ]
                 },
                 {
-                    "key": "font",
-                    "name": "Font Style",
+                    "key": "basic",
+                    "name": "Basic",
                     "options": [
                         {
                             "key": "size",
@@ -35,6 +35,14 @@
                             "default": 12,
                             "max": 50,
                             "min": 8
+                        },
+                        {
+                            "key": "findmaxcount",
+                            "name": "FindMaxResultCount",
+                            "type": "spinbutton",
+                            "default": 100,
+                            "max": 10000,
+                            "min": 10
                         },
                         {
                             "key": "encoding",
