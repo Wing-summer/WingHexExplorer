@@ -139,6 +139,9 @@ private:
   void cutCurrentBytes(quint64 pos, qint64 len, QByteArray &arr);
   void pasteFileBytes(int index, QByteArray arr, qint64 len = -1);
   void pasteCurrentBytes(quint64 pos, QByteArray arr, qint64 len = -1);
+  bool openWorkSpace(QString filename);
+  bool saveWorkSpace();
+  bool saveAsWorkSpace(QString filename);
 
 private:
   void setFilePage(int index);
@@ -191,6 +194,7 @@ private:
   QList<HexFile> hexfiles;
   QMap<ToolBoxIndex, QAction *> toolbartools;
   QMap<ToolBoxIndex, QAction *> toolmenutools;
+  QMap<ToolBoxIndex, QAction *> conmenutools;
 
   uint defaultindex = 1; //表示新建使用的累计索引
   int _currentfile = -1; //表示正在使用文件的索引，编辑器使用

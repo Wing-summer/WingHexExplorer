@@ -301,10 +301,16 @@ MainWindow::MainWindow(DMainWindow *parent) {
 #define AddContextMenuAction(Icon, Title, Slot, ShortCut)                      \
   AddMenuShortcutAction(Icon, Title, Slot, hexeditorMenu, ShortCut)
 
+#define AddContextMenuDB(index)                                                \
+  a->setEnabled(false);                                                        \
+  conmenutools.insert(index, a);
+
   AddContextMenuAction("undo", tr("Undo"), MainWindow::on_undofile,
                        QKeySequence::Undo);
+  AddContextMenuDB(ToolBoxIndex::Undo);
   AddContextMenuAction("redo", tr("Redo"), MainWindow::on_redofile,
                        QKeySequence::Redo);
+  AddContextMenuDB(ToolBoxIndex::Redo);
   hexeditorMenu->addSeparator();
   AddContextMenuAction("cut", tr("Cut"), MainWindow::on_cutfile,
                        QKeySequence::Cut);
@@ -1180,6 +1186,9 @@ void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
     hexfiles[_pcurfile].render->setEncoding(encoding);
   });
 
+  ConnectShadows(HexViewShadow::openWorkSpace, MainWindow::openWorkSpace);
+  ConnectShadows(HexViewShadow::saveWorkSpace, MainWindow::saveWorkSpace);
+  ConnectShadows(HexViewShadow::saveAsWorkSpace, MainWindow::saveAsWorkSpace);
   ConnectShadows(HexViewShadow::newFile, MainWindow::newFile);
   ConnectShadowLamba(
       HexViewShadow::openFile,
@@ -1674,8 +1683,16 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::on_savefile() {
   CheckEnabled;
-  if (saveCurrentFile() == ErrFile::IsNewFile)
+  auto res = saveCurrentFile();
+  if (res == ErrFile::IsNewFile)
     on_saveasfile();
+  else if (res == ErrFile::Success) {
+    DMessageManager::instance()->sendMessage(this, ICONRES("save"),
+                                             tr("SaveSuccessfully"));
+  } else {
+    DMessageManager::instance()->sendMessage(this, ICONRES("save"),
+                                             tr("SaveUnSuccessfully"));
+  }
 }
 
 void MainWindow::on_delete() {
@@ -1688,7 +1705,13 @@ void MainWindow::on_saveasfile() {
   auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"));
   if (filename.isEmpty())
     return;
-  saveasFile(filename, _currentfile);
+  if (saveasFile(filename, _currentfile) == ErrFile::Success) {
+    DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
+                                             tr("SaveSuccessfully"));
+  } else {
+    DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
+                                             tr("SaveUnSuccessfully"));
+  }
 }
 
 void MainWindow::on_findfile() {
@@ -1720,6 +1743,8 @@ void MainWindow::on_findfile() {
         findresult->setItem(i, 1, frow + 1);
         findresult->setItem(i, 2, frow + 2);
       }
+      DMessageManager::instance()->sendMessage(this, ICONRES("find"),
+                                               tr("FindFininish"));
     });
     th->start();
   }
@@ -1761,9 +1786,8 @@ void MainWindow::on_locChanged() {
 
   if (len == sizeof(quint64)) {
     auto s = n;
-    numsitem[NumTableIndex::Uint64].setText(QString("0x%1 | %2")
-                                                .arg(QString::number(s, 16))
-                                                .arg(QString::number(s)));
+    numsitem[NumTableIndex::Uint64].setText(
+        QString("0x%1").arg(QString::number(s, 16)));
     auto s1 = qint64(n);
     numsitem[NumTableIndex::Int64].setText(QString::number(s1));
   } else {
@@ -1773,9 +1797,8 @@ void MainWindow::on_locChanged() {
 
   if (len > int(sizeof(quint32))) {
     auto s = ulong(n);
-    numsitem[NumTableIndex::Uint32].setText(QString("0x%1 | %2")
-                                                .arg(QString::number(s, 16))
-                                                .arg(QString::number(s)));
+    numsitem[NumTableIndex::Uint32].setText(
+        QString("0x%1").arg(QString::number(s, 16)));
     auto s1 = long(n);
     numsitem[NumTableIndex::Int32].setText(QString::number(s1));
   } else {
@@ -1785,9 +1808,8 @@ void MainWindow::on_locChanged() {
 
   if (len > int(sizeof(ushort))) {
     auto s = ushort(n);
-    numsitem[NumTableIndex::Ushort].setText(QString("0x%1 | %2")
-                                                .arg(QString::number(s, 16))
-                                                .arg(QString::number(s)));
+    numsitem[NumTableIndex::Ushort].setText(
+        QString("0x%1").arg(QString::number(s, 16)));
     auto s1 = short(n);
     numsitem[NumTableIndex::Short].setText(QString::number(s1));
   } else {
@@ -1797,9 +1819,8 @@ void MainWindow::on_locChanged() {
   if (len > int(sizeof(uchar))) {
     auto s1 = tmp.at(0);
     auto s = uchar(s1);
-    numsitem[NumTableIndex::Byte].setText(QString("0x%1 | %2")
-                                              .arg(QString::number(s, 16))
-                                              .arg(QString::number(s)));
+    numsitem[NumTableIndex::Byte].setText(
+        QString("0x%1").arg(QString::number(s, 16)));
     numsitem[NumTableIndex::Char].setText(QString::number(s1));
   } else {
     numsitem[NumTableIndex::Byte].setText("-");
@@ -1821,6 +1842,14 @@ void MainWindow::on_setting_general() {
 void MainWindow::on_documentChanged() {
   CheckEnabled;
   iSaved->setPixmap(isModified(_currentfile) ? infoUnsaved : infoSaved);
+  auto canundo = hexeditor->document()->canUndo();
+  auto canredo = hexeditor->document()->canRedo();
+  toolbartools[ToolBoxIndex::Undo]->setEnabled(canundo);
+  toolbartools[ToolBoxIndex::Redo]->setEnabled(canredo);
+  toolmenutools[ToolBoxIndex::Undo]->setEnabled(canundo);
+  toolmenutools[ToolBoxIndex::Redo]->setEnabled(canredo);
+  conmenutools[ToolBoxIndex::Undo]->setEnabled(canundo);
+  conmenutools[ToolBoxIndex::Redo]->setEnabled(canredo);
 }
 
 void MainWindow::on_savesel() {
@@ -2020,6 +2049,7 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
 
   status->setEnabled(b);
   if (b) {
+    on_documentChanged();
     on_documentStatusChanged();
   } else {
     iSaved->setPixmap(infoSaveg);
@@ -2108,11 +2138,7 @@ void MainWindow::on_about() {
   d.exec();
 }
 
-void MainWindow::on_openworkspace() {
-  auto filename = QFileDialog::getOpenFileName(
-      this, tr("ChooseFile"), QString(), tr("ProjectFile (*.wingpro)"));
-  if (filename.isEmpty())
-    return;
+bool MainWindow::openWorkSpace(QString filename) {
   QString file;
   QList<BookMarkStruct> bookmarks;
   QHash<quint64, QHexLineMetadata> metas;
@@ -2122,10 +2148,42 @@ void MainWindow::on_openworkspace() {
     doc->applyBookMarks(bookmarks);
     on_documentSwitched();
     doc->metadata()->applyMetas(metas);
-  } else {
+    return true;
+  }
+  return false;
+}
+
+void MainWindow::on_openworkspace() {
+  auto filename = QFileDialog::getOpenFileName(
+      this, tr("ChooseFile"), QString(), tr("ProjectFile (*.wingpro)"));
+  if (filename.isEmpty())
+    return;
+  if (!openWorkSpace(filename))
     DMessageManager::instance()->sendMessage(this, ICONRES("workspace"),
                                              tr("SaveUnSuccessfully"));
+}
+
+bool MainWindow::saveWorkSpace() {
+  if (hexfiles.count() > 0) {
+    auto f = hexfiles[_currentfile];
+    if (f.workspace.length() == 0) {
+      return false;
+    }
+    return WorkSpaceManager::saveWorkSpace(
+        f.workspace, f.filename, hexeditor->document()->getAllBookMarks(),
+        hexeditor->document()->metadata()->getallMetas());
   }
+  return false;
+}
+
+bool MainWindow::saveAsWorkSpace(QString filename) {
+  if (hexfiles.count() > 0) {
+    auto f = hexfiles[_currentfile];
+    return WorkSpaceManager::saveWorkSpace(
+        filename, f.filename, hexeditor->document()->getAllBookMarks(),
+        hexeditor->document()->metadata()->getallMetas());
+  }
+  return false;
 }
 
 void MainWindow::on_saveworkspace() {
@@ -2135,9 +2193,7 @@ void MainWindow::on_saveworkspace() {
     on_saveasworkspace();
     return;
   }
-  if (WorkSpaceManager::saveWorkSpace(
-          f.workspace, f.filename, hexeditor->document()->getAllBookMarks(),
-          hexeditor->document()->metadata()->getallMetas())) {
+  if (saveWorkSpace()) {
     DMessageManager::instance()->sendMessage(this, ICONRES("workspacesave"),
                                              tr("SaveSuccessfully"));
   } else {
@@ -2160,9 +2216,7 @@ void MainWindow::on_saveasworkspace() {
   if (!filename.endsWith(".wingpro")) {
     filename += ".wingpro";
   }
-  if (WorkSpaceManager::saveWorkSpace(
-          filename, f.filename, hexeditor->document()->getAllBookMarks(),
-          hexeditor->document()->metadata()->getallMetas())) {
+  if (saveAsWorkSpace(filename)) {
     f.workspace = filename;
     DMessageManager::instance()->sendMessage(this, ICONRES("workspacesaveas"),
                                              tr("SaveSuccessfully"));

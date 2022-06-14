@@ -226,6 +226,11 @@ signals:
   QStringList getSupportedEncodings();
   QString currentEncoding();
   void setCurrentEncoding(QString encoding);
+
+  // workspace
+  bool openWorkSpace(QString filename);
+  bool saveWorkSpace();
+  bool saveAsWorkSpace(QString filename);
 };
 
 #endif // HEXVIEWSHADOW_H
