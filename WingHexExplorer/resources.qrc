@@ -61,6 +61,9 @@
         <file>images/workspace.png</file>
         <file>images/workspacesave.png</file>
         <file>images/workspacesaveas.png</file>
+        <file>images/copyhex.png</file>
+        <file>images/cuthex.png</file>
+        <file>images/pastehex.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

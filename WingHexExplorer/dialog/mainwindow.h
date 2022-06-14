@@ -62,8 +62,11 @@ class MainWindow : public DMainWindow {
     Undo,
     Redo,
     Cut,
+    CutHex,
     Copy,
+    CopyHex,
     Paste,
+    PasteHex,
     Del,
     Find,
     Goto,
@@ -151,8 +154,11 @@ private:
   void on_redofile();
   void on_undofile();
   void on_copyfile();
+  void on_copyhex();
+  void on_pastehex();
   void on_exportfile();
   void on_cutfile();
+  void on_cuthex();
   void on_savesel();
   void on_delete();
   void on_pastefile();

@@ -168,6 +168,16 @@ MainWindow::MainWindow(DMainWindow *parent) {
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::AltModifier | Qt::Key_W);
 
+  auto keycopyhex =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::ShiftModifier | Qt::Key_C);
+  auto keycuthex =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::ShiftModifier | Qt::Key_X);
+  auto keypastehex =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::ShiftModifier | Qt::Key_V);
+
 #define AddMenuDB(index)                                                       \
   a->setEnabled(false);                                                        \
   toolmenutools.insert(index, a);
@@ -213,12 +223,21 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolSubMenuShortcutAction("cut", tr("Cut"), MainWindow::on_cutfile,
                                QKeySequence::Cut);
   AddMenuDB(ToolBoxIndex::Cut);
+  AddToolSubMenuShortcutAction("cuthex", tr("CutHex"), MainWindow::on_cuthex,
+                               keycuthex);
+  AddMenuDB(ToolBoxIndex::CutHex);
   AddToolSubMenuShortcutAction("copy", tr("Copy"), MainWindow::on_copyfile,
                                QKeySequence::Copy);
   AddMenuDB(ToolBoxIndex::Copy);
+  AddToolSubMenuShortcutAction("copyhex", tr("CopyHex"), MainWindow::on_copyhex,
+                               keycopyhex);
+  AddMenuDB(ToolBoxIndex::CopyHex);
   AddToolSubMenuShortcutAction("paste", tr("Paste"), MainWindow::on_pastefile,
                                QKeySequence::Paste);
   AddMenuDB(ToolBoxIndex::Paste);
+  AddToolSubMenuShortcutAction("pastehex", tr("PasteHex"),
+                               MainWindow::on_pastehex, keypastehex);
+  AddMenuDB(ToolBoxIndex::PasteHex);
   AddToolSubMenuShortcutAction("del", tr("Delete"), MainWindow::on_delete,
                                QKeySequence::Delete);
   AddMenuDB(ToolBoxIndex::Del);
@@ -314,10 +333,16 @@ MainWindow::MainWindow(DMainWindow *parent) {
   hexeditorMenu->addSeparator();
   AddContextMenuAction("cut", tr("Cut"), MainWindow::on_cutfile,
                        QKeySequence::Cut);
+  AddContextMenuAction("cuthex", tr("CutHex"), MainWindow::on_cuthex,
+                       keycuthex);
   AddContextMenuAction("copy", tr("Copy"), MainWindow::on_copyfile,
                        QKeySequence::Copy);
+  AddContextMenuAction("copyhex", tr("CopyHex"), MainWindow::on_copyhex,
+                       keycopyhex);
   AddContextMenuAction("paste", tr("Paste"), MainWindow::on_pastefile,
                        QKeySequence::Paste);
+  AddContextMenuAction("pastehex", tr("PasteHex"), MainWindow::on_pastehex,
+                       keypastehex);
   AddContextMenuAction("del", tr("Delete"), MainWindow::on_delete,
                        QKeySequence::Delete);
   hexeditorMenu->addSeparator();
@@ -389,10 +414,16 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolsDB(ToolBoxIndex::Redo);
   AddToolBarTool("cut", MainWindow::on_cutfile, tr("Cut"));
   AddToolsDB(ToolBoxIndex::Cut);
+  AddToolBarTool("cuthex", MainWindow::on_cuthex, tr("CutHex"));
+  AddToolsDB(ToolBoxIndex::CutHex);
   AddToolBarTool("copy", MainWindow::on_copyfile, tr("Copy"));
   AddToolsDB(ToolBoxIndex::Copy);
+  AddToolBarTool("copyhex", MainWindow::on_copyhex, tr("CopyHex"));
+  AddToolsDB(ToolBoxIndex::CopyHex);
   AddToolBarTool("paste", MainWindow::on_pastefile, tr("Paste"));
   AddToolsDB(ToolBoxIndex::Paste);
+  AddToolBarTool("pastehex", MainWindow::on_pastehex, tr("PasteHex"));
+  AddToolsDB(ToolBoxIndex::PasteHex);
   AddToolBarTool("del", MainWindow::on_delete, tr("Delete"));
   AddToolsDB(ToolBoxIndex::Del);
   toolbar->addSeparator();
@@ -703,6 +734,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keyopenws, MainWindow::on_openworkspace);
   ConnectShortCut(keysavews, MainWindow::on_saveworkspace);
   ConnectShortCut(keysaveas, MainWindow::on_saveasworkspace);
+  ConnectShortCut(keycuthex, MainWindow::on_cuthex);
+  ConnectShortCut(keycopyhex, MainWindow::on_copyhex);
+  ConnectShortCut(keypastehex, MainWindow::on_pastehex);
 
   logger->logMessage(INFOLOG(tr("SettingLoading")));
 
@@ -1641,15 +1675,40 @@ void MainWindow::on_cutfile() {
                                              tr("UnCutToClipBoard"));
   }
 }
+
+void MainWindow::on_cuthex() {
+  CheckEnabled;
+  if (hexeditor->document()->cut(true)) {
+    DMessageManager::instance()->sendMessage(this, ICONRES("cut"),
+                                             tr("CutToClipBoard"));
+  } else {
+    DMessageManager::instance()->sendMessage(this, ICONRES("cut"),
+                                             tr("UnCutToClipBoard"));
+  }
+}
+
 void MainWindow::on_copyfile() {
   CheckEnabled;
   hexeditor->document()->copy();
   DMessageManager::instance()->sendMessage(this, ICONRES("copy"),
                                            tr("CopyToClipBoard"));
 }
+
+void MainWindow::on_copyhex() {
+  CheckEnabled;
+  hexeditor->document()->copy(true);
+  DMessageManager::instance()->sendMessage(this, ICONRES("copyhex"),
+                                           tr("CopyToClipBoard"));
+}
+
 void MainWindow::on_pastefile() {
   CheckEnabled;
   hexeditor->document()->paste();
+}
+
+void MainWindow::on_pastehex() {
+  CheckEnabled;
+  hexeditor->document()->paste(true);
 }
 
 void MainWindow::on_opendriver() {
