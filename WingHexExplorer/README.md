@@ -131,4 +131,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## 其他
 
-&emsp;&emsp;本篇仅仅是本软件的简介，具体请到我的仓库，一切以我的仓库说明为准： https://gitee.com/wingsummer/wing-hex-explorer
+&emsp;&emsp;本篇仅仅是本软件的简介，具体请到我的仓库，一切以我的仓库说明为准： 
+
+* GitLink : https://www.gitlink.org.cn/wingsummer/WingHexExplorer
+* Gitee : https://gitee.com/wingsummer/wing-hex-explorer
