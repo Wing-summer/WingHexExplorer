@@ -190,7 +190,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 <p align="center">
 
-<img alt="星火商店" src="spark-store.png">
+<img alt="星火商店" src="sparkstore.png">
 <p align="center">星火商店</p>
 
 </p>
