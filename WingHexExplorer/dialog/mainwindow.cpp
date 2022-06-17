@@ -1793,61 +1793,72 @@ void MainWindow::on_findfile() {
   CheckEnabled;
   FindDialog *fd = new FindDialog(hexeditor->selectlength() > 1, this);
   if (fd->exec()) {
-    auto th = QThread ::create([=]() {
-      SearchDirection sd;
-      auto res = fd->getResult(sd);
-      auto d = hexeditor->document();
-      QList<quint64> results;
-      if (d == nullptr)
-        return;
-      qint64 begin, end;
-      switch (sd) {
-      case SearchDirection::Foreword: {
-        begin = 0;
-        end = qlonglong(hexeditor->currentOffset());
-      } break;
-      case SearchDirection::Backword: {
-        begin = qlonglong(hexeditor->currentOffset());
-        end = -1;
-      } break;
-      case SearchDirection::Selection: {
-        auto cur = hexeditor->document()->cursor();
-        begin = qlonglong(cur->selectionStart().offset());
-        end = qlonglong(cur->selectionEnd().offset());
-      } break;
-      default: {
-        begin = -1;
-        end = -1;
-      } break;
-      }
-      d->FindAllBytes(begin, end, res, results, _findmax);
-      if (findresitem) {
-        delete[] findresitem;
-        findresult->setRowCount(0);
-      }
-      auto len = results.length();
-      findresitem = new QTableWidgetItem[ulong(len)][3];
-      for (auto i = 0; i < len; i++) {
-        auto frow = findresitem[i];
-        findresult->insertRow(i);
-        frow[0].setText(hexfiles.at(_currentfile).filename);
-        frow[0].setData(Qt::UserRole, results.at(i));
-        frow[1].setText(
-            QString::number(results.at(i) + hexeditor->addressBase(), 16));
-        frow[2].setText(res.toHex(' '));
-        findresult->setItem(i, 0, frow);
-        findresult->setItem(i, 1, frow + 1);
-        findresult->setItem(i, 2, frow + 2);
-      }
-    });
+    auto th = QThread::create(
+        [=](MainWindow *m) {
+          if (mutex.tryLock(3000)) {
+            SearchDirection sd;
+            auto res = fd->getResult(sd);
+            auto d = hexeditor->document();
+            QList<quint64> results;
+            if (d == nullptr)
+              return;
+            qint64 begin, end;
+            switch (sd) {
+            case SearchDirection::Foreword: {
+              begin = 0;
+              end = qlonglong(hexeditor->currentOffset());
+            } break;
+            case SearchDirection::Backword: {
+              begin = qlonglong(hexeditor->currentOffset());
+              end = -1;
+            } break;
+            case SearchDirection::Selection: {
+              auto cur = hexeditor->document()->cursor();
+              begin = qlonglong(cur->selectionStart().offset());
+              end = qlonglong(cur->selectionEnd().offset());
+            } break;
+            default: {
+              begin = -1;
+              end = -1;
+            } break;
+            }
+            d->FindAllBytes(begin, end, res, results, _findmax);
+            if (findresitem) {
+              delete[] findresitem;
+              findresult->setRowCount(0);
+            }
+            auto len = results.length();
+            findresitem = new QTableWidgetItem[ulong(len)][3];
+            for (auto i = 0; i < len; i++) {
+              auto frow = findresitem[i];
+              findresult->insertRow(i);
+              frow[0].setText(hexfiles.at(_currentfile).filename);
+              frow[0].setData(Qt::UserRole, results.at(i));
+              frow[1].setText(QString::number(
+                  results.at(i) + hexeditor->addressBase(), 16));
+              frow[2].setText(res.toHex(' '));
+              findresult->setItem(i, 0, frow);
+              findresult->setItem(i, 1, frow + 1);
+              findresult->setItem(i, 2, frow + 2);
+            }
+            mutex.unlock();
+
+            if (len == _findmax) {
+              DMessageManager::instance()->sendMessage(this, ICONRES("find"),
+                                                       tr("TooMuchFindResult"));
+            } else {
+              DMessageManager::instance()->sendMessage(m, ICONRES("find"),
+                                                       tr("FindFininish"));
+            }
+          } else {
+            DMessageManager::instance()->sendMessage(m, ICONRES("find"),
+                                                     tr("FindFininishError"));
+          }
+        },
+        this);
     connect(th, &QThread::finished, this, [=] {
-      DMessageManager::instance()->sendMessage(this, ICONRES("find"),
-                                               tr("FindFininish"));
-      if (findresult->rowCount() == _findmax) {
-        DMessageManager::instance()->sendMessage(this, ICONRES("find"),
-                                                 tr("TooMuchFindResult"));
-      }
       delete fd;
+      delete th;
     });
     th->start();
   }
@@ -2248,9 +2259,9 @@ void MainWindow::on_exportfindresult() {
     QJsonArray arr;
     for (int i = 0; i < c; i++) {
       QJsonObject jobj;
-      jobj.insert("file", findresitem[i][0].text());
-      jobj.insert("offset", findresitem[i][1].text());
-      jobj.insert("value", findresitem[i][2].text());
+      jobj.insert(QLatin1String("file"), findresitem[i][0].text());
+      jobj.insert(QLatin1String("offset"), findresitem[i][1].text());
+      jobj.insert(QLatin1String("value"), findresitem[i][2].text());
       arr.append(jobj);
     }
     QJsonDocument doc(arr);
@@ -2352,7 +2363,7 @@ void MainWindow::on_saveasworkspace() {
       this, tr("ChooseSaveFile"), QString(), tr("ProjectFile (*.wingpro)"));
   if (filename.isEmpty())
     return;
-  if (!filename.endsWith(".wingpro")) {
+  if (!filename.endsWith(QLatin1String(".wingpro"))) {
     filename += ".wingpro";
   }
   if (saveAsWorkSpace(filename)) {

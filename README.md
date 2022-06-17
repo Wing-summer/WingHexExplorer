@@ -182,23 +182,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 &emsp;&emsp;最近发现了一个仓库，十分简洁，还允许免登录下载发行版。对于仅仅我来维护该软件仓库足够了。以后 Gitee 仅作为备份使用，故关闭了它的 issue 、PR 、Wiki 功能，如果想贡献想法或者代码建议到 GitLink ： https://www.gitlink.org.cn/wingsummer/WingHexExplorer 。
 
+&emsp;&emsp;如果想到 Gitea 看，请到： https://code.gitlink.org.cn/wingsummer/WingHexExplorer 。其实它就是 GitLink ，不过貌似 GitLink 显示仓库图片会有点 Bug ， **推荐到这里来！**
+
 &emsp;&emsp;如果你还想到 Gitee 逛逛： https://gitee.com/wingsummer/wing-hex-explorer 。欢迎到我的新仓库来 star 或者反馈 Bug 以及贡献代码。
 
 ## 应用商店
 
-&emsp;&emsp;目前我已把安装包投递到星火商店，欢迎大家下载安装。目前最高 v1.1.0 ，最新版还在审核中：
+&emsp;&emsp;目前我已把安装包投递到星火商店，欢迎大家下载安装。
 
 <p align="center">
 
 <img alt="星火商店" src="sparkstore.png">
 <p align="center">星火商店</p>
-
-</p>
-
-<p align="center">
-
-<img alt="星火商店" src="store.png">
-<p align="center">正在审核</p>
 
 </p>
 
