@@ -7,5 +7,3 @@ TEMPLATE = app
 
 include($$PWD/QHexView/QHexView.pri)
 include($$PWD/WingHexExplorer.pri)
-
-DEFINES+=Q_CLANG_QDOC

@@ -103,3 +103,34 @@ QColor MetaDialog::backGroundColor() {
   else
     return QColor::fromRgba(qRgba(0, 0, 0, 0));
 }
+
+void MetaDialog::setComment(QString comment) {
+  if (comment.length() > 0) {
+    ccomment->setChecked(true);
+    ccomment->clicked(true);
+    _comment = comment;
+    m_comment->setText(comment);
+  }
+}
+
+void MetaDialog::setBackGroundColor(QColor color) {
+  if (color.rgba()) {
+    cbackground->setChecked(true);
+    cbackground->clicked(true);
+    _background = color;
+    QPalette pe;
+    pe.setColor(QPalette::ButtonText, color);
+    ibackground->setPalette(pe);
+  }
+}
+
+void MetaDialog::setForeGroundColor(QColor color) {
+  if (color.rgba()) {
+    cforeground->setChecked(true);
+    cforeground->clicked(true);
+    _foreground = color;
+    QPalette pe;
+    pe.setColor(QPalette::ButtonText, color);
+    iforeground->setPalette(pe);
+  }
+}

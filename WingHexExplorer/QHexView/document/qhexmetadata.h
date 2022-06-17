@@ -58,9 +58,10 @@ public:
   /*============================*/
   // added by wingsummer
 
-  bool removeMetadata(qint64 offset, QList<QHexMetadataItem> refer);
-  QList<QHexMetadataItem> gets(qint64 offset);
-  void applyMetas(QHash<quint64, QHexLineMetadata> metas);
+  void removeMetadata(QHexMetadataAbsoluteItem item);
+  bool removeMetadata(qint64 offset, QList<QHexMetadataAbsoluteItem> refer);
+  QList<QHexMetadataAbsoluteItem> gets(qint64 offset);
+  void applyMetas(QList<QHexMetadataAbsoluteItem> metas);
 
   /*============================*/
 
@@ -84,7 +85,7 @@ public:
   void background(quint64 line, int start, int length, const QColor &bgcolor);
   void comment(quint64 line, int start, int length, const QString &comment);
 
-  QHash<quint64, QHexLineMetadata>
+  QList<QHexMetadataAbsoluteItem>
   getallMetas(); // added by wingsummer to support workspace
 
 private:
@@ -98,7 +99,7 @@ signals:
 private:
   quint8 m_lineWidth;
   QHash<quint64, QHexLineMetadata> m_metadata;
-  QVector<QHexMetadataAbsoluteItem> m_absoluteMetadata;
+  QList<QHexMetadataAbsoluteItem> m_absoluteMetadata;
 };
 
 #endif // QHEXMETADATA_H

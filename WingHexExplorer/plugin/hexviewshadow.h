@@ -185,8 +185,8 @@ signals:
   void metadata(quint64 line, int start, int length, const QColor &fgcolor,
                 const QColor &bgcolor, const QString &comment);
   bool lineHasMetadata(quint64 line) const;
-  bool removeMetadata(qint64 offset, QList<HexMetadataItem> refer);
-  QList<HexMetadataItem> getMetadatas(qint64 offset);
+  bool removeMetadata(qint64 offset, QList<HexMetadataAbsoluteItem> refer);
+  QList<HexMetadataAbsoluteItem> getMetadatas(qint64 offset);
   void clear(quint64 line);
   void clear();
   HexLineMetadata getMetaLine(quint64 line) const;

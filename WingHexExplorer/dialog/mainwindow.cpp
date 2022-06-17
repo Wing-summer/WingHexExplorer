@@ -413,18 +413,33 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolsDB(ToolBoxIndex::Undo);
   AddToolBarTool("redo", MainWindow::on_redofile, tr("Redo"));
   AddToolsDB(ToolBoxIndex::Redo);
-  AddToolBarTool("cut", MainWindow::on_cutfile, tr("Cut"));
-  AddToolsDB(ToolBoxIndex::Cut);
-  AddToolBarTool("cuthex", MainWindow::on_cuthex, tr("CutHex"));
-  AddToolsDB(ToolBoxIndex::CutHex);
-  AddToolBarTool("copy", MainWindow::on_copyfile, tr("Copy"));
-  AddToolsDB(ToolBoxIndex::Copy);
-  AddToolBarTool("copyhex", MainWindow::on_copyhex, tr("CopyHex"));
-  AddToolsDB(ToolBoxIndex::CopyHex);
-  AddToolBarTool("paste", MainWindow::on_pastefile, tr("Paste"));
-  AddToolsDB(ToolBoxIndex::Paste);
-  AddToolBarTool("pastehex", MainWindow::on_pastehex, tr("PasteHex"));
-  AddToolsDB(ToolBoxIndex::PasteHex);
+
+  DToolButton *tbtn;
+  DMenu *tmenu;
+
+#define AddToolBtn(DIcon, DTitle, DSlot, Icon, Title, Slot, Index)             \
+  tbtn = new DToolButton(this);                                                \
+  tbtn->setEnabled(false);                                                     \
+  tbtn->setIcon(ICONRES(DIcon));                                               \
+  tmenu = new DMenu(this);                                                     \
+  a = new QAction(ICONRES(DIcon), DTitle, this);                               \
+  connect(a, &QAction::triggered, this, &DSlot);                               \
+  tmenu->addAction(a);                                                         \
+  a = new QAction(ICONRES(Icon), Title, this);                                 \
+  connect(a, &QAction::triggered, this, &Slot);                                \
+  tmenu->addAction(a);                                                         \
+  tbtn->setMenu(tmenu);                                                        \
+  tbtn->setPopupMode(DToolButton::ToolButtonPopupMode::InstantPopup);          \
+  toolbar->addWidget(tbtn);                                                    \
+  toolbtnstools.insert(Index, tbtn);
+
+  AddToolBtn("cut", tr("Cut"), MainWindow::on_cutfile, "cuthex", tr("CutHex"),
+             MainWindow::on_cuthex, ToolBoxIndex::Cut);
+  AddToolBtn("copy", tr("Copy"), MainWindow::on_copyfile, "copyhex",
+             tr("CopyHex"), MainWindow::on_copyhex, ToolBoxIndex::Copy);
+  AddToolBtn("paste", tr("Paste"), MainWindow::on_pastefile, "pastehex",
+             tr("PasteHex"), MainWindow::on_pastehex, ToolBoxIndex::Paste);
+
   AddToolBarTool("del", MainWindow::on_delete, tr("Delete"));
   AddToolsDB(ToolBoxIndex::Del);
   toolbar->addSeparator();
@@ -433,30 +448,62 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolBarTool("jmp", MainWindow::on_gotoline, tr("Goto"));
   AddToolsDB(ToolBoxIndex::Goto);
   toolbar->addSeparator();
-  AddToolBarTool("fill", MainWindow::on_fill, tr("Fill"));
-  AddToolsDB(ToolBoxIndex::Fill);
-  AddToolBarTool("fillNop", MainWindow::on_fillnop, tr("FillNop"));
-  AddToolsDB(ToolBoxIndex::FillNop);
-  AddToolBarTool("fillZero", MainWindow::on_fillzero, tr("FillZero"));
-  AddToolsDB(ToolBoxIndex::FillZero);
-  toolbar->addSeparator();
-  AddToolBarTool("metadata", MainWindow::on_metadata, tr("MetaData"));
-  AddToolsDB(ToolBoxIndex::Meta);
-  AddToolBarTool("metadatadel", MainWindow::on_metadatadel,
-                 tr("DeleteMetaData"));
-  AddToolsDB(ToolBoxIndex::DelMeta);
-  AddToolBarTool("metadatacls", MainWindow::on_metadatacls,
-                 tr("ClearMetaData"));
-  AddToolsDB(ToolBoxIndex::ClsMeta);
-  toolbar->addSeparator();
-  AddToolBarTool("bookmark", MainWindow::on_bookmark, tr("BookMark"));
-  AddToolsDB(ToolBoxIndex::BookMark);
-  AddToolBarTool("bookmarkdel", MainWindow::on_bookmarkdel,
-                 tr("DeleteBookMark"));
-  AddToolsDB(ToolBoxIndex::DelBookMark);
-  AddToolBarTool("bookmarkcls", MainWindow::on_bookmarkcls,
-                 tr("ClearBookMark"));
-  AddToolsDB(ToolBoxIndex::ClsBookMark);
+
+#define AddToolBtn3(DIcon, DTitle, DSlot, Icon, Title, Slot, Icon2, Title2,    \
+                    Slot2, Index)                                              \
+  tbtn = new DToolButton(this);                                                \
+  tbtn->setEnabled(false);                                                     \
+  tbtn->setIcon(ICONRES(DIcon));                                               \
+  tmenu = new DMenu(this);                                                     \
+  a = new QAction(ICONRES(DIcon), DTitle, this);                               \
+  connect(a, &QAction::triggered, this, &DSlot);                               \
+  tmenu->addAction(a);                                                         \
+  a = new QAction(ICONRES(Icon), Title, this);                                 \
+  connect(a, &QAction::triggered, this, &Slot);                                \
+  tmenu->addAction(a);                                                         \
+  a = new QAction(ICONRES(Icon2), Title2, this);                               \
+  connect(a, &QAction::triggered, this, &Slot2);                               \
+  tmenu->addAction(a);                                                         \
+  tbtn->setMenu(tmenu);                                                        \
+  tbtn->setPopupMode(DToolButton::ToolButtonPopupMode::InstantPopup);          \
+  toolbar->addWidget(tbtn);                                                    \
+  toolbtnstools.insert(Index, tbtn);
+
+#define AddToolBtn4(DIcon, DTitle, DSlot, Icon, Title, Slot, Icon2, Title2,    \
+                    Slot2, Icon3, Title3, Slot3, Index)                        \
+  tbtn = new DToolButton(this);                                                \
+  tbtn->setEnabled(false);                                                     \
+  tbtn->setIcon(ICONRES(DIcon));                                               \
+  tmenu = new DMenu(this);                                                     \
+  a = new QAction(ICONRES(DIcon), DTitle, this);                               \
+  connect(a, &QAction::triggered, this, &DSlot);                               \
+  tmenu->addAction(a);                                                         \
+  a = new QAction(ICONRES(Icon), Title, this);                                 \
+  connect(a, &QAction::triggered, this, &Slot);                                \
+  tmenu->addAction(a);                                                         \
+  a = new QAction(ICONRES(Icon2), Title2, this);                               \
+  connect(a, &QAction::triggered, this, &Slot2);                               \
+  tmenu->addAction(a);                                                         \
+  a = new QAction(ICONRES(Icon3), Title3, this);                               \
+  connect(a, &QAction::triggered, this, &Slot3);                               \
+  tmenu->addAction(a);                                                         \
+  tbtn->setMenu(tmenu);                                                        \
+  tbtn->setPopupMode(DToolButton::ToolButtonPopupMode::InstantPopup);          \
+  toolbar->addWidget(tbtn);                                                    \
+  toolbtnstools.insert(Index, tbtn);
+
+  AddToolBtn3("fill", tr("Fill"), MainWindow::on_fill, "fillNop", tr("FillNop"),
+              MainWindow::on_fillnop, "fillZero", tr("FillZero"),
+              MainWindow::on_fillzero, ToolBoxIndex::Fill);
+  AddToolBtn4("metadata", tr("MetaData"), MainWindow::on_metadata,
+              "metadataedit", tr("MetaDataEdit"), MainWindow::on_metadataedit,
+              "metadatadel", tr("DeleteMetaData"), MainWindow::on_metadatadel,
+              "metadatacls", tr("ClearMetaData"), MainWindow::on_metadatacls,
+              ToolBoxIndex::Meta);
+  AddToolBtn3("bookmark", tr("BookMark"), MainWindow::on_bookmark,
+              "bookmarkdel", tr("DeleteBookMark"), MainWindow::on_bookmarkdel,
+              "bookmarkcls", tr("ClearBookMark"), MainWindow::on_bookmarkcls,
+              ToolBoxIndex::BookMark);
   AddToolBarTool("encoding", MainWindow::on_encoding, tr("Encoding"));
   AddToolsDB(ToolBoxIndex::Encoding);
   toolbar->addSeparator();
@@ -1015,11 +1062,11 @@ void MainWindow::connectShadow(HexViewShadow *shadow) {
   });
   ConnectShadowLamba(HexViewShadow::getMetadatas, [=](qint64 offset) {
     auto ometaline = hexfiles[_pcurfile].doc->metadata()->gets(offset);
-    QList<HexMetadataItem> metaline;
+    QList<HexMetadataAbsoluteItem> metaline;
     for (auto item : ometaline) {
-      metaline.push_back(HexMetadataItem(item.line, item.start, item.length,
-                                         item.foreground, item.background,
-                                         item.comment));
+      metaline.push_back(
+          HexMetadataAbsoluteItem(item.begin, item.end, item.foreground,
+                                  item.background, item.comment));
     }
     return metaline;
   });
@@ -1176,13 +1223,12 @@ void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
       });
 
   ConnectShadowLamba(HexViewShadow::removeMetadata,
-                     [=](qint64 offset, QList<HexMetadataItem> refer) {
-                       QList<QHexMetadataItem> nrefer;
+                     [=](qint64 offset, QList<HexMetadataAbsoluteItem> refer) {
+                       QList<QHexMetadataAbsoluteItem> nrefer;
                        for (auto item : refer) {
-                         QHexMetadataItem m;
-                         m.line = item.line;
-                         m.start = item.start;
-                         m.length = item.length;
+                         QHexMetadataAbsoluteItem m;
+                         m.begin = item.begin;
+                         m.end = item.end;
                          m.comment = item.comment;
                          m.background = item.background;
                          m.foreground = item.foreground;
@@ -1793,72 +1839,78 @@ void MainWindow::on_findfile() {
   CheckEnabled;
   FindDialog *fd = new FindDialog(hexeditor->selectlength() > 1, this);
   if (fd->exec()) {
-    auto th = QThread::create(
-        [=](MainWindow *m) {
-          if (mutex.tryLock(3000)) {
-            SearchDirection sd;
-            auto res = fd->getResult(sd);
-            auto d = hexeditor->document();
-            QList<quint64> results;
-            if (d == nullptr)
-              return;
-            qint64 begin, end;
-            switch (sd) {
-            case SearchDirection::Foreword: {
-              begin = 0;
-              end = qlonglong(hexeditor->currentOffset());
-            } break;
-            case SearchDirection::Backword: {
-              begin = qlonglong(hexeditor->currentOffset());
-              end = -1;
-            } break;
-            case SearchDirection::Selection: {
-              auto cur = hexeditor->document()->cursor();
-              begin = qlonglong(cur->selectionStart().offset());
-              end = qlonglong(cur->selectionEnd().offset());
-            } break;
-            default: {
-              begin = -1;
-              end = -1;
-            } break;
-            }
-            d->FindAllBytes(begin, end, res, results, _findmax);
-            if (findresitem) {
-              delete[] findresitem;
-              findresult->setRowCount(0);
-            }
-            auto len = results.length();
-            findresitem = new QTableWidgetItem[ulong(len)][3];
-            for (auto i = 0; i < len; i++) {
-              auto frow = findresitem[i];
-              findresult->insertRow(i);
-              frow[0].setText(hexfiles.at(_currentfile).filename);
-              frow[0].setData(Qt::UserRole, results.at(i));
-              frow[1].setText(QString::number(
-                  results.at(i) + hexeditor->addressBase(), 16));
-              frow[2].setText(res.toHex(' '));
-              findresult->setItem(i, 0, frow);
-              findresult->setItem(i, 1, frow + 1);
-              findresult->setItem(i, 2, frow + 2);
-            }
-            mutex.unlock();
+    auto m = this;
+    auto th = QThread::create([=] {
+      if (mutex.tryLock(3000)) {
+        SearchDirection sd;
+        auto res = fd->getResult(sd);
+        auto d = hexeditor->document();
+        QList<quint64> results;
+        if (d == nullptr)
+          return;
+        qint64 begin, end;
+        switch (sd) {
+        case SearchDirection::Foreword: {
+          begin = 0;
+          end = qlonglong(hexeditor->currentOffset());
+        } break;
+        case SearchDirection::Backword: {
+          begin = qlonglong(hexeditor->currentOffset());
+          end = -1;
+        } break;
+        case SearchDirection::Selection: {
+          auto cur = hexeditor->document()->cursor();
+          begin = qlonglong(cur->selectionStart().offset());
+          end = qlonglong(cur->selectionEnd().offset());
+        } break;
+        default: {
+          begin = -1;
+          end = -1;
+        } break;
+        }
+        d->FindAllBytes(begin, end, res, results, _findmax);
+        if (findresitem) {
+          delete[] findresitem;
+          findresult->setRowCount(0);
+        }
+        auto len = results.length();
+        findresitem = new QTableWidgetItem[ulong(len)][3];
+        for (auto i = 0; i < len; i++) {
+          auto frow = findresitem[i];
+          findresult->insertRow(i);
+          frow[0].setText(hexfiles.at(_currentfile).filename);
+          frow[0].setData(Qt::UserRole, results.at(i));
+          frow[1].setText(
+              QString::number(results.at(i) + hexeditor->addressBase(), 16));
+          frow[2].setText(res.toHex(' '));
+          findresult->setItem(i, 0, frow);
+          findresult->setItem(i, 1, frow + 1);
+          findresult->setItem(i, 2, frow + 2);
+        }
 
-            if (len == _findmax) {
-              DMessageManager::instance()->sendMessage(this, ICONRES("find"),
-                                                       tr("TooMuchFindResult"));
-            } else {
-              DMessageManager::instance()->sendMessage(m, ICONRES("find"),
-                                                       tr("FindFininish"));
-            }
-          } else {
-            DMessageManager::instance()->sendMessage(m, ICONRES("find"),
-                                                     tr("FindFininishError"));
-          }
-        },
-        this);
+        if (len == _findmax) {
+          findres = 1;
+        } else {
+          findres = -1;
+        }
+      } else {
+        findres = 0;
+      }
+    });
     connect(th, &QThread::finished, this, [=] {
+      if (findres > 0) {
+        DMessageManager::instance()->sendMessage(m, ICONRES("find"),
+                                                 tr("TooMuchFindResult"));
+      } else if (findres < 0) {
+        DMessageManager::instance()->sendMessage(m, ICONRES("find"),
+                                                 tr("FindFininish"));
+      } else {
+        DMessageManager::instance()->sendMessage(m, ICONRES("find"),
+                                                 tr("FindFininishError"));
+      }
       delete fd;
       delete th;
+      mutex.unlock();
     });
     th->start();
   }
@@ -2058,22 +2110,74 @@ ErrFile MainWindow::saveasFile(QString filename, int index) {
 
 ErrFile MainWindow::saveCurrentFile() { return saveFile(_currentfile); }
 
+void MainWindow::on_metadataedit() {
+  CheckEnabled;
+  if (hexeditor->documentBytes() > 0) {
+    MetaDialog m;
+    auto cur = hexeditor->document()->cursor();
+    if (cur->selectionLength() > 0) {
+      auto mc =
+          hexeditor->document()->metadata()->gets(cur->position().offset());
+
+      if (mc.length() > 0) {
+        auto meta = mc.first();
+        auto begin = meta.begin;
+        auto end = meta.end;
+        m.setForeGroundColor(meta.foreground);
+        m.setBackGroundColor(meta.background);
+        m.setComment(meta.comment);
+        if (m.exec()) {
+          auto mi = hexeditor->document()->metadata();
+          mi->removeMetadata(meta);
+          mi->metadata(begin, end, m.foreGroundColor(), m.backGroundColor(),
+                       m.comment());
+        }
+      } else {
+        DMessageManager::instance()->sendMessage(this, ICONRES("metadata"),
+                                                 tr("NoMetaData"));
+      }
+    } else {
+      DMessageManager::instance()->sendMessage(this, ICONRES("metadata"),
+                                               tr("NoSelection"));
+    }
+  }
+}
+
 void MainWindow::on_metadata() {
   CheckEnabled;
   if (hexeditor->documentBytes() > 0) {
     MetaDialog m;
+    auto cur = hexeditor->document()->cursor();
 
-    if (m.exec()) {
-      auto begin =
-          qint64(hexeditor->document()->cursor()->selectionStart().offset());
-      auto end =
-          qint64(hexeditor->document()->cursor()->selectionEnd().offset()) + 1;
-      hexeditor->document()->metadata()->metadata(
-          begin, end, m.foreGroundColor(), m.backGroundColor(), m.comment());
+    if (cur->selectionLength() > 0) {
+      auto mc =
+          hexeditor->document()->metadata()->gets(cur->position().offset());
+
+      if (mc.length() > 0) {
+        auto meta = mc.first();
+        auto begin = cur->selectionStart().offset();
+        auto end = begin + cur->selectionLength();
+        m.setForeGroundColor(meta.foreground);
+        m.setBackGroundColor(meta.background);
+        m.setComment(meta.comment);
+        if (m.exec()) {
+          hexeditor->document()->metadata()->metadata(
+              begin, end, m.foreGroundColor(), m.backGroundColor(),
+              m.comment());
+        }
+      } else {
+        auto begin = qint64(cur->selectionStart().offset());
+        auto end = qint64(cur->selectionEnd().offset()) + 1;
+        if (m.exec()) {
+          hexeditor->document()->metadata()->metadata(
+              begin, end, m.foreGroundColor(), m.backGroundColor(),
+              m.comment());
+        }
+      }
+    } else {
+      DMessageManager::instance()->sendMessage(this, ICONRES("metadata"),
+                                               tr("NoSelection"));
     }
-  } else {
-    auto d = DMessageManager::instance();
-    d->sendMessage(this, ICONRES("metadata"), tr("NoSelection"));
   }
 }
 
@@ -2158,6 +2262,9 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
   }
   hexeditorMenu->setEnabled(b);
   for (auto item : toolmenutools.values()) {
+    item->setEnabled(b);
+  }
+  for (auto item : toolbtnstools.values()) {
     item->setEnabled(b);
   }
   if (b)
@@ -2289,7 +2396,7 @@ void MainWindow::on_about() {
 ErrFile MainWindow::openWorkSpace(QString filename) {
   QString file;
   QList<BookMarkStruct> bookmarks;
-  QHash<quint64, QHexLineMetadata> metas;
+  QList<QHexMetadataAbsoluteItem> metas;
   auto res = ErrFile::Error;
   if (WorkSpaceManager::loadWorkSpace(filename, file, bookmarks, metas)) {
     res = openFile(file, false, filename);

@@ -8,7 +8,7 @@ WorkSpaceManager::WorkSpaceManager(QObject *parent) : QObject(parent) {}
 
 bool WorkSpaceManager::loadWorkSpace(QString filename, QString &file,
                                      QList<BookMarkStruct> &bookmarks,
-                                     QHash<quint64, QHexLineMetadata> &metas) {
+                                     QList<QHexMetadataAbsoluteItem> &metas) {
   QFile f(filename);
   if (f.exists()) {
     QJsonParseError err;
@@ -31,65 +31,40 @@ bool WorkSpaceManager::loadWorkSpace(QString filename, QString &file,
             if (!values.isUndefined() && values.isArray()) {
               auto metaitems = values.toArray();
               for (auto item : metaitems) {
-                if (!item.isUndefined() && item.isObject()) {
-                  auto sitem = item.toObject();
-                  auto ipos = sitem.value("pos");
-                  if (!ipos.isUndefined() && ipos.isString()) {
-                    bool b = false;
-                    auto pos = ipos.toString().toULongLong(&b);
-                    if (!b)
-                      continue;
-                    auto ivalues = sitem.value("value");
-                    if (!ivalues.isUndefined() && ivalues.isArray()) {
-                      QHexLineMetadata linemetas;
-                      for (auto v : ivalues.toArray()) {
-                        if (!v.isUndefined() && v.isObject()) {
-                          auto linem = v.toObject();
-                          auto line = linem.value("line");
-                          auto start = linem.value("start");
-                          auto length = linem.value("length");
-                          auto comment = linem.value("comment");
-                          auto fgcolor = linem.value("fgcolor");
-                          auto bgcolor = linem.value("bgcolor");
-                          if (!line.isUndefined() && line.isString() &&
-                              !start.isUndefined() && start.isString() &&
-                              !length.isUndefined() && length.isString() &&
-                              !comment.isUndefined() && comment.isString() &&
-                              !fgcolor.isUndefined() && fgcolor.isString() &&
-                              !bgcolor.isUndefined() && bgcolor.isString()) {
-                            auto nline = line.toString().toULongLong(&b);
-                            if (!b)
-                              continue;
-                            auto nstart = start.toString().toInt(&b);
-                            if (!b)
-                              continue;
-                            auto nlength = length.toString().toInt(&b);
-                            if (!b)
-                              continue;
-                            auto nf = fgcolor.toString().toUInt(&b, 16);
-                            if (!b)
-                              continue;
-                            auto nb = bgcolor.toString().toUInt(&b, 16);
-                            if (!b)
-                              continue;
-                            auto fcolor = QColor::fromRgba(nf);
-                            auto bcolor = QColor::fromRgba(nb);
-                            QHexMetadataItem hmi;
-                            hmi.line = nline;
-                            hmi.start = nstart;
-                            hmi.length = nlength;
-                            hmi.comment = comment.toString();
-                            hmi.foreground = fcolor;
-                            hmi.background = bcolor;
-                            linemetas.push_back(hmi);
-                          }
-                        }
-                      }
-                      if (!linemetas.size())
-                        continue;
-                      metas.insert(pos, linemetas);
-                    }
-                  }
+                bool b = false;
+                auto linem = item.toObject();
+                auto begin = linem.value("begin");
+                auto end = linem.value("end");
+                auto comment = linem.value("comment");
+                auto fgcolor = linem.value("fgcolor");
+                auto bgcolor = linem.value("bgcolor");
+                if (!begin.isUndefined() && begin.isString() &&
+                    !end.isUndefined() && end.isString() &&
+                    !comment.isUndefined() && comment.isString() &&
+                    !fgcolor.isUndefined() && fgcolor.isString() &&
+                    !bgcolor.isUndefined() && bgcolor.isString()) {
+                  auto nbegin = begin.toString().toUInt(&b);
+                  if (!b)
+                    continue;
+                  auto nend = end.toString().toInt(&b);
+                  if (!b)
+                    continue;
+                  auto nf = fgcolor.toString().toUInt(&b, 16);
+                  if (!b)
+                    continue;
+                  auto nb = bgcolor.toString().toUInt(&b, 16);
+                  if (!b)
+                    continue;
+                  auto fcolor = QColor::fromRgba(nf);
+                  auto bcolor = QColor::fromRgba(nb);
+
+                  QHexMetadataAbsoluteItem metaitem;
+                  metaitem.begin = nbegin;
+                  metaitem.end = nend;
+                  metaitem.comment = comment.toString();
+                  metaitem.foreground = fcolor;
+                  metaitem.background = bcolor;
+                  metas.append(metaitem);
                 }
               }
             }
@@ -123,9 +98,9 @@ bool WorkSpaceManager::loadWorkSpace(QString filename, QString &file,
   return false;
 }
 
-bool WorkSpaceManager::saveWorkSpace(
-    QString filename, QString file, QList<BookMarkStruct> bookmarklist,
-    QHash<quint64, QHexLineMetadata> metalist) {
+bool WorkSpaceManager::saveWorkSpace(QString filename, QString file,
+                                     QList<BookMarkStruct> bookmarklist,
+                                     QList<QHexMetadataAbsoluteItem> metalist) {
   QFile f(filename);
   if (f.open(QFile::WriteOnly)) {
     QJsonObject jobj;
@@ -140,22 +115,14 @@ bool WorkSpaceManager::saveWorkSpace(
     jobj.insert("file", file);
 
     QJsonArray metas;
-    for (auto meta : metalist.keys()) {
-      QJsonObject i;
-      QJsonArray linemetas;
-      i.insert("pos", QString::number(meta));
-      for (auto line : metalist.value(meta)) {
-        QJsonObject lineobj;
-        lineobj.insert("line", QString::number(line.line));
-        lineobj.insert("start", QString::number(line.start));
-        lineobj.insert("length", QString::number(line.length));
-        lineobj.insert("comment", line.comment);
-        lineobj.insert("fgcolor", QString::number(line.foreground.rgba(), 16));
-        lineobj.insert("bgcolor", QString::number(line.background.rgba(), 16));
-        linemetas.append(lineobj);
-      }
-      i.insert("value", linemetas);
-      metas.append(i);
+    for (auto meta : metalist) {
+      QJsonObject obj;
+      obj.insert("begin", QString::number(meta.begin));
+      obj.insert("end", QString::number(meta.end));
+      obj.insert("comment", meta.comment);
+      obj.insert("fgcolor", QString::number(meta.foreground.rgba(), 16));
+      obj.insert("bgcolor", QString::number(meta.background.rgba(), 16));
+      metas.append(obj);
     }
     jobj.insert("metas", metas);
 

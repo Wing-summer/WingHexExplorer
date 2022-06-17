@@ -9,12 +9,35 @@ const QHexLineMetadata &QHexMetadata::get(quint64 line) const {
 
 /*==================================*/
 // added by wingsummer
-QHash<quint64, QHexLineMetadata> QHexMetadata::getallMetas() {
-  return m_metadata;
+QList<QHexMetadataAbsoluteItem> QHexMetadata::getallMetas() {
+  return m_absoluteMetadata;
+}
+
+void QHexMetadata::removeMetadata(QHexMetadataAbsoluteItem item) {
+  quint64 firstRow = quint64(item.begin / m_lineWidth);
+  quint64 lastRow = quint64(item.end / m_lineWidth);
+
+  for (auto i = firstRow; i <= lastRow; i++) {
+    QList<QHexMetadataItem> delmeta;
+    auto it = m_metadata.find(i);
+    if (it != m_metadata.end()) {
+      for (auto iitem : *it) {
+        if (iitem.foreground == item.foreground &&
+            iitem.background == item.background &&
+            iitem.comment == item.comment) {
+          delmeta.push_back(iitem);
+        }
+      }
+      for (auto iitem : delmeta) {
+        it->remove(iitem);
+      }
+      m_absoluteMetadata.removeOne(item);
+    }
+  }
 }
 
 bool QHexMetadata::removeMetadata(qint64 offset,
-                                  QList<QHexMetadataItem> refer) {
+                                  QList<QHexMetadataAbsoluteItem> refer) {
   QList<QHexMetadataAbsoluteItem> delneeded;
   for (auto item : m_absoluteMetadata) {
     if (offset >= item.begin && offset <= item.end) {
@@ -48,24 +71,21 @@ bool QHexMetadata::removeMetadata(qint64 offset,
   return true;
 }
 
-QList<QHexMetadataItem> QHexMetadata::gets(qint64 offset) {
-  QList<QHexMetadataItem> items;
-  auto res = lldiv(offset, m_lineWidth);
-  quint64 line = quint64(res.quot);
-  auto m = res.rem;
-  auto it = m_metadata.find(line);
-  if (it != m_metadata.end()) {
-    for (auto item : *it) {
-      if (item.start <= m && m <= item.start + item.length) {
-        items.push_back(item);
-      }
+QList<QHexMetadataAbsoluteItem> QHexMetadata::gets(qint64 offset) {
+  QList<QHexMetadataAbsoluteItem> items;
+  for (auto item : m_absoluteMetadata) {
+    if (item.begin <= offset && offset <= item.end) {
+      items.push_back(item);
     }
   }
   return items;
 }
 
-void QHexMetadata::applyMetas(QHash<quint64, QHexLineMetadata> metas) {
-  m_metadata.insert(metas);
+void QHexMetadata::applyMetas(QList<QHexMetadataAbsoluteItem> metas) {
+  for (auto item : metas) {
+    metadata(item.begin, item.end, item.foreground, item.background,
+             item.comment);
+  }
 }
 
 /*==================================*/

@@ -64,6 +64,7 @@
         <file>images/copyhex.png</file>
         <file>images/cuthex.png</file>
         <file>images/pastehex.png</file>
+        <file>images/metadataedit.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

@@ -18,10 +18,10 @@ public:
   explicit WorkSpaceManager(QObject *parent = nullptr);
   bool static saveWorkSpace(QString filename, QString file,
                             QList<BookMarkStruct> bookmarks,
-                            QHash<quint64, QHexLineMetadata> metas);
+                            QList<QHexMetadataAbsoluteItem> metas);
   bool static loadWorkSpace(QString filename, QString &file,
                             QList<BookMarkStruct> &bookmarks,
-                            QHash<quint64, QHexLineMetadata> &metas);
+                            QList<QHexMetadataAbsoluteItem> &metas);
 
 signals:
 

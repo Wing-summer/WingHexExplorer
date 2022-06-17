@@ -21,6 +21,7 @@
 #include <DTabBar>
 #include <DTableWidget>
 #include <DToolBar>
+#include <DToolButton>
 #include <QFile>
 #include <QList>
 #include <QMutex>
@@ -181,6 +182,7 @@ private:
   void on_documentSwitched();
   void on_documentStatusChanged();
   void on_metadata();
+  void on_metadataedit();
   void on_metadatadel();
   void on_metadatacls();
   void on_bookmark();
@@ -205,6 +207,7 @@ private:
   QMap<ToolBoxIndex, QAction *> toolbartools;
   QMap<ToolBoxIndex, QAction *> toolmenutools;
   QMap<ToolBoxIndex, QAction *> conmenutools;
+  QMap<ToolBoxIndex, DToolButton *> toolbtnstools;
 
   uint defaultindex = 1; //表示新建使用的累计索引
   int _currentfile = -1; //表示正在使用文件的索引，编辑器使用
@@ -276,6 +279,8 @@ private:
   bool _rootenableplugin = false;
 
   int _findmax = 100;
+
+  int findres = 0;
 };
 
 #endif // MAINWINDOW_H
