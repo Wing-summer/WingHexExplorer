@@ -45,15 +45,22 @@ public:
   quint64 addressBase();
   void setAddressBase(quint64 base);
 
-  bool isModified();
+  bool isSaved();
+  void establishSignal(QHexDocument *doc);
 
   static QFont getHexeditorFont();
 
 signals:
   void cursorLocationChanged();
-  void documentChanged();
-  void documentStatusChanged();
   void documentSwitched();
+  void workspaceSaved(bool saved);
+  void canMetaUndoChanged(bool canUndo);
+  void canMetaRedoChanged(bool canRedo);
+  void canUndoChanged(bool canUndo);
+  void canRedoChanged(bool canRedo);
+  void documentSaved(bool saved);
+  void documentLockedFile(bool locked);
+  void documentKeepSize(bool keep);
 
   /*=============================*/
 

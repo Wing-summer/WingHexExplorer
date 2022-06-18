@@ -19,6 +19,7 @@
 #include <DSettingsWidgetFactory>
 #include <DTitlebar>
 #include <QCheckBox>
+#include <QDesktopServices>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -111,6 +112,15 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   AddToolSubMenuShortcutAction("open", tr("OpenF"), MainWindow::on_openfile,
                                QKeySequence::Open);
+
+  auto keyundo =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_Z);
+  auto keymundo = QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                               Qt::KeyboardModifier::ShiftModifier | Qt::Key_Z);
+  auto keyredo =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_Y);
+  auto keymredo = QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                               Qt::KeyboardModifier::ShiftModifier | Qt::Key_Y);
 
   auto keysaveas =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
@@ -217,10 +227,10 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm->setTitle(tr("Edit"));
   tm->setIcon(ICONRES("edit"));
   AddToolSubMenuShortcutAction("undo", tr("Undo"), MainWindow::on_undofile,
-                               QKeySequence::Undo);
+                               keyundo);
   AddMenuDB(ToolBoxIndex::Undo);
   AddToolSubMenuShortcutAction("redo", tr("Redo"), MainWindow::on_redofile,
-                               QKeySequence::Redo);
+                               keyredo);
   AddMenuDB(ToolBoxIndex::Redo);
   tm->addSeparator();
   AddToolSubMenuShortcutAction("cut", tr("Cut"), MainWindow::on_cutfile,
@@ -262,6 +272,21 @@ MainWindow::MainWindow(DMainWindow *parent) {
                                MainWindow::on_fillzero, keyfillzero);
   AddMenuDB(ToolBoxIndex::FillZero);
   tm->addSeparator();
+  AddToolSubMenuShortcutAction("encoding", tr("Encoding"),
+                               MainWindow::on_encoding, keyencoding);
+  AddMenuDB(ToolBoxIndex::Encoding);
+  menu->addMenu(tm);
+
+  tm = new DMenu(this);
+  tm->setTitle(tr("Mark"));
+  tm->setIcon(ICONRES("mark"));
+  AddToolSubMenuShortcutAction("metaundo", tr("Undo"), MainWindow::on_metaundo,
+                               keymundo);
+  AddMenuDB(ToolBoxIndex::MetaUndo);
+  AddToolSubMenuShortcutAction("metaredo", tr("Redo"), MainWindow::on_metaredo,
+                               keymredo);
+  AddMenuDB(ToolBoxIndex::MetaRedo);
+  tm->addSeparator();
   AddToolSubMenuShortcutAction("metadata", tr("MetaData"),
                                MainWindow::on_metadata, keymetadata);
   AddMenuDB(ToolBoxIndex::Meta);
@@ -284,10 +309,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolSubMenuShortcutAction("bookmarkcls", tr("ClearBookMark"),
                                MainWindow::on_bookmarkcls, keybookmarkcls);
   AddMenuDB(ToolBoxIndex::ClsBookMark);
-  tm->addSeparator();
-  AddToolSubMenuShortcutAction("encoding", tr("Encoding"),
-                               MainWindow::on_encoding, keyencoding);
-  AddMenuDB(ToolBoxIndex::Encoding);
   menu->addMenu(tm);
 
   tm = new DMenu(this);
@@ -316,6 +337,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm->setIcon(ICONRES("author"));
   AddToolSubMenuAction("soft", tr("About"), MainWindow::on_about);
   AddToolSubMenuAction("sponsor", tr("Sponsor"), MainWindow::on_sponsor);
+  AddToolSubMenuAction("wiki", tr("Wiki"), MainWindow::on_wiki);
 
   menu->addMenu(tm);
 
@@ -331,13 +353,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   a->setEnabled(false);                                                        \
   conmenutools.insert(index, a);
 
-  AddContextMenuAction("undo", tr("Undo"), MainWindow::on_undofile,
-                       QKeySequence::Undo);
-  AddContextMenuDB(ToolBoxIndex::Undo);
-  AddContextMenuAction("redo", tr("Redo"), MainWindow::on_redofile,
-                       QKeySequence::Redo);
-  AddContextMenuDB(ToolBoxIndex::Redo);
-  hexeditorMenu->addSeparator();
   AddContextMenuAction("cut", tr("Cut"), MainWindow::on_cutfile,
                        QKeySequence::Cut);
   AddContextMenuAction("cuthex", tr("CutHex"), MainWindow::on_cuthex,
@@ -356,29 +371,11 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddContextMenuAction("find", tr("Find"), MainWindow::on_findfile,
                        QKeySequence::Find);
   AddContextMenuAction("jmp", tr("Goto"), MainWindow::on_gotoline, keygoto);
-  hexeditorMenu->addSeparator();
   AddContextMenuAction("fill", tr("Fill"), MainWindow::on_fill, keyfill);
-  AddContextMenuAction("fillNop", tr("FillNop"), MainWindow::on_fillnop,
-                       keyfillnop);
-  AddContextMenuAction("fillZero", tr("FillZero"), MainWindow::on_fillzero,
-                       keyfillzero);
-  hexeditorMenu->addSeparator();
   AddContextMenuAction("metadata", tr("MetaData"), MainWindow::on_metadata,
                        keymetadata);
-  AddContextMenuAction("metadataedit", tr("MetaDataEdit"),
-                       MainWindow::on_metadataedit, keymetaedit);
-  AddContextMenuAction("metadatadel", tr("DeleteMetaData"),
-                       MainWindow::on_metadatadel, keymetadatadel);
-  AddContextMenuAction("metadatacls", tr("ClearMetaData"),
-                       MainWindow::on_metadatacls, keymetadatacls);
-  hexeditorMenu->addSeparator();
   AddContextMenuAction("bookmark", tr("BookMark"), MainWindow::on_bookmark,
                        keybookmark);
-  AddContextMenuAction("bookmarkdel", tr("DeleteBookMark"),
-                       MainWindow::on_bookmarkdel, keybookmarkdel);
-  AddContextMenuAction("bookmarkcls", tr("ClearBookMark"),
-                       MainWindow::on_bookmarkcls, keybookmarkcls);
-  hexeditorMenu->addSeparator();
   AddContextMenuAction("encoding", tr("Encoding"), MainWindow::on_encoding,
                        keyencoding);
   toolbar = new DToolBar(this);
@@ -478,7 +475,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   AddToolBtnBegin("metadata") {
     AddToolBtnBtn("metaundo", tr("Undo"), MainWindow::on_metaundo);
+    AddToolsDB(ToolBoxIndex::MetaUndo);
     AddToolBtnBtn("metaredo", tr("Redo"), MainWindow::on_metaredo);
+    AddToolsDB(ToolBoxIndex::MetaRedo);
     tmenu->addSeparator();
     AddToolBtnBtn("metadata", tr("MetaData"), MainWindow::on_metadata);
     AddToolBtnBtn("metadataedit", tr("MetaDataEdit"),
@@ -580,11 +579,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddNamedStatusLabel(lblloc, "(0,0)");
   connect(hexeditor, &QHexView::cursorLocationChanged, this,
           &MainWindow::on_locChanged);
-  connect(hexeditor, &QHexView::documentChanged, this,
-          &MainWindow::on_documentChanged);
-  connect(hexeditor, &QHexView::documentStatusChanged, this,
-          &MainWindow::on_documentStatusChanged);
-
   AddStatusLabel(tr("sel:"));
   l->setMinimumWidth(50);
   l->setAlignment(Qt::AlignCenter);
@@ -607,11 +601,12 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   AddStausILable(infoSaved, "saved", iSaved, infoUnsaved, "unsaved", infoSaveg,
                  "saveg");
+  iSaved->setToolTip(tr("InfoSave"));
   AddStausILable(infoWriteable, "writable", iReadWrite, infoReadonly,
                  "readonly", inforwg, "rwg");
-
-  AddStausILable(infow, "works", iw, infouw, "uworks", infowg, "worksg");
-
+  iReadWrite->setToolTip(tr("InfoReadWrite"));
+  AddStausILable(infow, "works", iw, infouw, "unworks", infowg, "worksg");
+  iw->setToolTip(tr("InfoWorks"));
   infoUnLock = ICONRES("unlock");
   infoLock = ICONRES("lock");
   infoCanOver = ICONRES("canover");
@@ -751,6 +746,28 @@ MainWindow::MainWindow(DMainWindow *parent) {
   connect(gotobar, &GotoBar::pressEsc, [=] { // ToDo
   });
 
+  // connect hexeditor status
+  connect(hexeditor, &QHexView::canUndoChanged, [=](bool b) {
+    toolbartools[ToolBoxIndex::Undo]->setEnabled(b);
+    toolmenutools[ToolBoxIndex::Undo]->setEnabled(b);
+  });
+  connect(hexeditor, &QHexView::canRedoChanged, [=](bool b) {
+    toolmenutools[ToolBoxIndex::Redo]->setEnabled(b);
+    toolmenutools[ToolBoxIndex::Redo]->setEnabled(b);
+  });
+  connect(hexeditor, &QHexView::canMetaRedoChanged,
+          [=](bool b) { toolbartools[ToolBoxIndex::MetaRedo]->setEnabled(b); });
+  connect(hexeditor, &QHexView::canMetaUndoChanged,
+          [=](bool b) { toolbartools[ToolBoxIndex::MetaUndo]->setEnabled(b); });
+  connect(hexeditor, &QHexView::documentSaved,
+          [=](bool b) { iSaved->setPixmap(b ? infoSaved : infoUnsaved); });
+  connect(hexeditor, &QHexView::documentKeepSize, this,
+          [=](bool b) { iOver->setIcon(b ? infoCannotOver : infoCanOver); });
+  connect(hexeditor, &QHexView::documentLockedFile, this,
+          [=](bool b) { iLocked->setIcon(b ? infoLock : infoUnLock); });
+  connect(hexeditor, &QHexView::workspaceSaved,
+          [=](bool b) { iw->setPixmap(b ? infow : infouw); });
+
 #define ConnectShortCut(ShortCut, Slot)                                        \
   s = new QShortcut(ShortCut, this);                                           \
   connect(s, &QShortcut::activated, this, &Slot);
@@ -759,8 +776,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(QKeySequence::Open, MainWindow::on_openfile);
   ConnectShortCut(QKeySequence::Save, MainWindow::on_savefile);
   ConnectShortCut(keysaveas, MainWindow::on_saveasfile);
-  ConnectShortCut(QKeySequence::Undo, MainWindow::on_undofile);
-  ConnectShortCut(QKeySequence::Redo, MainWindow::on_redofile);
+  ConnectShortCut(keyundo, MainWindow::on_undofile);
+  ConnectShortCut(keyredo, MainWindow::on_redofile);
   ConnectShortCut(QKeySequence::Cut, MainWindow::on_cutfile);
   ConnectShortCut(QKeySequence::Copy, MainWindow::on_copyfile);
   ConnectShortCut(QKeySequence::Paste, MainWindow::on_pastefile);
@@ -782,6 +799,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keycuthex, MainWindow::on_cuthex);
   ConnectShortCut(keycopyhex, MainWindow::on_copyhex);
   ConnectShortCut(keypastehex, MainWindow::on_pastehex);
+  ConnectShortCut(keymredo, MainWindow::on_metaredo);
+  ConnectShortCut(keymundo, MainWindow::on_metaundo);
 
   logger->logMessage(INFOLOG(tr("SettingLoading")));
 
@@ -925,7 +944,7 @@ void MainWindow::connectShadow(HexViewShadow *shadow) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->isKeepSize(), true);
   });
   ConnectShadowLamba(HexViewShadow::isModified, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->isModified(), false);
+    PCHECKRETURN(!hexfiles[_pcurfile].doc->isSaved(), false);
   });
   ConnectShadowLamba(HexViewShadow::isReadOnly, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->isReadOnly(), true);
@@ -1589,11 +1608,18 @@ ErrFile MainWindow::openDriver(QString driver) {
   }
 }
 
-bool MainWindow::isModified(int index) {
+bool MainWindow::isSavedMeta(int index) {
   if (index < 0 || index >= hexfiles.count())
     return false;
   auto p = hexfiles.at(index);
-  return p.doc->isModified();
+  return p.doc->metadata()->isMetaSaved();
+}
+
+bool MainWindow::isSavedFile(int index) {
+  if (index < 0 || index >= hexfiles.count())
+    return false;
+  auto p = hexfiles.at(index);
+  return p.doc->isSaved();
 }
 
 ErrFile MainWindow::closeCurrentFile(bool force) {
@@ -1610,7 +1636,7 @@ ErrFile MainWindow::closeFile(int index, bool force) {
   if (index >= 0 && index < hexfiles.count()) {
     auto p = hexfiles.at(index);
     if (!force) {
-      if (isModified(index)) {
+      if (!isSavedFile(index) || !isSavedMeta(index)) {
         if (_enableplugin) {
           params[0].setValue(HookIndex::CloseFileEnd);
           params << ErrFile::UnSaved;
@@ -2002,24 +2028,6 @@ void MainWindow::on_setting_general() {
   m_settings->settings->sync();
 }
 
-void MainWindow::on_documentChanged() {
-  CheckEnabled;
-  iSaved->setPixmap(isModified(_currentfile) ? infoUnsaved : infoSaved);
-  auto canundo = hexeditor->document()->canUndo();
-  auto canredo = hexeditor->document()->canRedo();
-  toolbartools[ToolBoxIndex::Undo]->setEnabled(canundo);
-  toolbartools[ToolBoxIndex::Redo]->setEnabled(canredo);
-  toolmenutools[ToolBoxIndex::Undo]->setEnabled(canundo);
-  toolmenutools[ToolBoxIndex::Redo]->setEnabled(canredo);
-  conmenutools[ToolBoxIndex::Undo]->setEnabled(canundo);
-  conmenutools[ToolBoxIndex::Redo]->setEnabled(canredo);
-  if (hexfiles[_currentfile].workspace.length() > 0) {
-
-  } else {
-    iw->setPixmap(infowg);
-  }
-}
-
 void MainWindow::on_savesel() {
   CheckEnabled;
   auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"));
@@ -2037,7 +2045,7 @@ void MainWindow::on_savesel() {
 }
 
 void MainWindow::on_documentSwitched() {
-  CheckEnabled;
+  iReadWrite->setPixmap(hexeditor->isReadOnly() ? infoReadonly : infoWriteable);
   QList<BookMarkStruct> bookmaps;
   bookmarks->clear();
   hexeditor->document()->getBookMarks(bookmaps);
@@ -2048,14 +2056,6 @@ void MainWindow::on_documentSwitched() {
     litem->setToolTip(QString(tr("Addr : 0x%1")).arg(item.pos, 0, 16));
     bookmarks->addItem(litem);
   }
-}
-
-void MainWindow::on_documentStatusChanged() {
-  CheckEnabled;
-  iSaved->setPixmap(hexeditor->isModified() ? infoUnsaved : infoSaved);
-  iReadWrite->setPixmap(hexeditor->isReadOnly() ? infoReadonly : infoWriteable);
-  iLocked->setIcon(hexeditor->isLocked() ? infoLock : infoUnLock);
-  iOver->setIcon(hexeditor->isKeepSize() ? infoCannotOver : infoCanOver);
 }
 
 ErrFile MainWindow::saveFile(int index) {
@@ -2273,13 +2273,11 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
     enableDirverLimit(isdriver);
 
   status->setEnabled(b);
-  if (b) {
-    on_documentChanged();
-    on_documentStatusChanged();
-  } else {
+  if (!b) {
     iSaved->setPixmap(infoSaveg);
     iReadWrite->setPixmap(inforwg);
     iLocked->setIcon(infoLockg);
+    iw->setPixmap(infowg);
     iOver->setIcon(infoOverg);
     lblloc->setText("(0,0)");
     lblsellen->setText("0 - 0x0");
@@ -2383,6 +2381,11 @@ void MainWindow::on_exportfindresult() {
     DMessageManager::instance()->sendMessage(this, ICONRES("export"),
                                              tr("SaveFindResultError"));
   }
+}
+
+void MainWindow::on_wiki() {
+  QDesktopServices::openUrl(QUrl("https://code.gitlink.org.cn/wingsummer/"
+                                 "WingHexExplorer/wiki/%E7%AE%80%E4%BB%8B"));
 }
 
 void MainWindow::on_sponsor() {

@@ -46,7 +46,7 @@ public:
   bool isReadOnly();
   bool isKeepSize();
   bool isLocked();
-  bool isModified();
+  bool isSaved();
 
   void addBookMark(QString comment);
   BookMarkStruct bookMark(int index);
@@ -109,9 +109,19 @@ public:
 
 signals:
 
-  void documentSaved();
+  /*================================*/
 
   /*================================*/
+  // added by wingsummer
+
+  void documentSaved(bool saved);
+  void workspaceSaved(bool saved);
+
+  void canMetaUndoChanged(bool canUndo);
+  void canMetaRedoChanged(bool canRedo);
+
+  /*================================*/
+
   void canUndoChanged(bool canUndo);
   void canRedoChanged(bool canRedo);
   void documentChanged();

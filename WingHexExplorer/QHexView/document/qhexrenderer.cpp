@@ -342,12 +342,11 @@ void QHexRenderer::applyMetadata(QTextCursor &textcursor, quint64 line,
     return;
 
   const QHexLineMetadata &linemetadata = metadata->get(line);
-
   for (const QHexMetadataItem &mi : linemetadata) {
     QTextCharFormat charformat;
-    if (mi.background.isValid())
+    if (mi.background.isValid() && mi.background.rgba())
       charformat.setBackground(mi.background);
-    if (mi.foreground.isValid())
+    if (mi.foreground.isValid() && mi.foreground.rgba())
       charformat.setForeground(mi.foreground);
     if (!mi.comment.isEmpty())
       charformat.setUnderlineStyle(QTextCharFormat::SingleUnderline);

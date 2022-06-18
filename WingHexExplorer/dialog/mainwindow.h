@@ -76,6 +76,8 @@ class MainWindow : public DMainWindow {
     FillZero,
     Meta,
     MetaEdit,
+    MetaRedo,
+    MetaUndo,
     DelMeta,
     ClsMeta,
     BookMark,
@@ -132,7 +134,8 @@ private:
   ErrFile saveasFile(QString filename, int index);
   ErrFile closeCurrentFile(bool force = false);
   ErrFile saveCurrentFile();
-  bool isModified(int index);
+  bool isSavedFile(int index);
+  bool isSavedMeta(int index);
   void FindFileBytes(int index, QByteArray arr, QList<int> &indices);
   void FindAllBytes(QByteArray arr, QList<FindResult> &res);
   void gotoFileLine(int index, quint64 offset);
@@ -179,9 +182,7 @@ private:
   void on_setting_plugin();
   void on_gotobar(int pos, bool isline);
   void on_locChanged();
-  void on_documentChanged();
   void on_documentSwitched();
-  void on_documentStatusChanged();
   void on_metaundo();
   void on_metaredo();
   void on_metadata();
@@ -194,6 +195,7 @@ private:
   void on_restoreLayout();
   void on_about();
   void on_sponsor();
+  void on_wiki();
   void on_fillnop();
   void on_fillzero();
   void on_fill();

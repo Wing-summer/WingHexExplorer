@@ -21,8 +21,16 @@ QHexRenderer *QHexView::renderer() { return m_renderer; }
 void QHexView::switchDocument(QHexDocument *document, QHexRenderer *renderer,
                               int vBarValue) {
   if (document && renderer) {
+
+    if (m_document) {
+      m_document->disconnect();
+      m_document->cursor()->disconnect();
+    }
+
     m_document = document;
     m_renderer = renderer;
+
+    establishSignal(document);
 
     this->adjustScrollBars();
     this->viewport()->update();
@@ -31,9 +39,6 @@ void QHexView::switchDocument(QHexDocument *document, QHexRenderer *renderer,
       vbar->setValue(vBarValue);
 
     m_blinktimer->start(); // let mouse blink
-
-    emit documentStatusChanged();
-    emit documentSwitched();
   }
 }
 
@@ -43,13 +48,13 @@ bool QHexView::isLocked() { return m_document->isLocked(); }
 
 bool QHexView::setLockedFile(bool b) {
   bool res = m_document->setLockedFile(b);
-  emit documentStatusChanged();
+  emit documentLockedFile(b);
   return res;
 }
 
 bool QHexView::setKeepSize(bool b) {
   bool res = m_document->setKeepSize(b);
-  emit documentStatusChanged();
+  emit documentKeepSize(b);
   return res;
 }
 
@@ -99,7 +104,7 @@ void QHexView::setAddressBase(quint64 base) {
   m_document->setBaseAddress(base);
 }
 
-bool QHexView::isModified() { return m_document->isModified(); }
+bool QHexView::isSaved() { return m_document->isSaved(); }
 
 QFont QHexView::getHexeditorFont() {
   QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -108,6 +113,37 @@ QFont QHexView::getHexeditorFont() {
     f.setStyleHint(QFont::TypeWriter);
   }
   return f;
+}
+
+void QHexView::establishSignal(QHexDocument *doc) {
+  connect(doc, &QHexDocument::documentChanged, this, [&]() {
+    this->adjustScrollBars();
+    this->viewport()->update();
+  });
+
+  connect(doc->cursor(), &QHexCursor::positionChanged, this,
+          &QHexView::moveToSelection);
+  connect(doc->cursor(), &QHexCursor::insertionModeChanged, this,
+          &QHexView::renderCurrentLine);
+  connect(doc, &QHexDocument::canUndoChanged, this, &QHexView::canUndoChanged);
+  connect(doc, &QHexDocument::canRedoChanged, this, &QHexView::canRedoChanged);
+  connect(doc, &QHexDocument::canMetaRedoChanged, this,
+          &QHexView::canMetaRedoChanged);
+  connect(doc, &QHexDocument::canMetaUndoChanged, this,
+          &QHexView::canMetaUndoChanged);
+  connect(doc, &QHexDocument::documentSaved, this, &QHexView::documentSaved);
+  connect(doc, &QHexDocument::workspaceSaved, this, &QHexView::workspaceSaved);
+
+  emit canUndoChanged(doc->canUndo());
+  emit canRedoChanged(doc->canRedo());
+  emit canMetaRedoChanged(doc->metadata()->canRedo());
+  emit canMetaUndoChanged(doc->metadata()->canUndo());
+  emit cursorLocationChanged();
+  emit documentSwitched();
+  emit documentSaved(doc->isSaved());
+  emit documentKeepSize(doc->isKeepSize());
+  emit documentLockedFile(doc->isLocked());
+  emit workspaceSaved(doc->metadata()->isMetaSaved());
 }
 
 /*======================*/
@@ -138,6 +174,7 @@ QHexView::QHexView(QWidget *parent)
 
 QHexDocument *QHexView::document() { return m_document; }
 
+// modified by wingsummer
 void QHexView::setDocument(QHexDocument *document) {
 
   // modified by wingsummer
@@ -147,29 +184,18 @@ void QHexView::setDocument(QHexDocument *document) {
   //  if (m_document)
   //    m_document->deleteLater();
 
+  if (m_document) {
+    m_document->disconnect();
+    m_document->cursor()->disconnect();
+  }
+
   m_document = document;
   m_renderer = new QHexRenderer(m_document, this->fontMetrics(), this);
 
-  connect(m_document, &QHexDocument::documentChanged, this, [&]() {
-    this->adjustScrollBars();
-    this->viewport()->update();
-    emit documentChanged(); // added by wingsummer
-  });
-
-  connect(m_document, &QHexDocument::documentSaved, this,
-          [&]() { emit documentStatusChanged(); }); // added by wingsummer
-
-  connect(m_document->cursor(), &QHexCursor::positionChanged, this,
-          &QHexView::moveToSelection);
-  connect(m_document->cursor(), &QHexCursor::insertionModeChanged, this,
-          &QHexView::renderCurrentLine);
+  establishSignal(m_document);
 
   this->adjustScrollBars();
   this->viewport()->update();
-
-  emit documentChanged(); // added by wingsummer
-  emit documentStatusChanged();
-  emit documentSwitched();
 }
 
 bool QHexView::event(QEvent *e) {

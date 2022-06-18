@@ -70,6 +70,7 @@ public:
   void undo();
   bool canRedo();
   bool canUndo();
+  bool isMetaSaved();
 
   /*============================*/
 
@@ -105,6 +106,14 @@ private:
 signals:
   void metadataChanged(quint64 line);
   void metadataCleared();
+
+  /*============================*/
+  // added by wingsummer
+
+  void canMetaUndoChanged(bool canUndo);
+  void canMetaRedoChanged(bool canRedo);
+  void isSaved(bool saved);
+  /*============================*/
 
 private:
   quint8 m_lineWidth;

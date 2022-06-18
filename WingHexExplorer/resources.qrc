@@ -70,6 +70,8 @@
         <file>images/unworks.png</file>
         <file>images/metaredo.png</file>
         <file>images/metaundo.png</file>
+        <file>images/mark.png</file>
+        <file>images/wiki.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

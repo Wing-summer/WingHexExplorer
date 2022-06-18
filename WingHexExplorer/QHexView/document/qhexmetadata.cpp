@@ -4,7 +4,13 @@
 #include "commands/metaremovecommand.h"
 #include "commands/metareplacecommand.h"
 
-QHexMetadata::QHexMetadata(QObject *parent) : QObject(parent) {}
+QHexMetadata::QHexMetadata(QObject *parent) : QObject(parent) {
+  connect(&m_undo, &QUndoStack::canUndoChanged, this,
+          &QHexMetadata::canMetaUndoChanged);
+  connect(&m_undo, &QUndoStack::canRedoChanged, this,
+          &QHexMetadata::canMetaRedoChanged);
+  connect(&m_undo, &QUndoStack::cleanChanged, this, &QHexMetadata::isSaved);
+}
 
 const QHexLineMetadata &QHexMetadata::get(quint64 line) const {
   auto it = m_metadata.find(line);
@@ -23,10 +29,12 @@ QList<QHexMetadataAbsoluteItem> QHexMetadata::getallMetas() {
   return m_absoluteMetadata;
 }
 
+bool QHexMetadata::isMetaSaved() { return m_undo.isClean(); }
+
 void QHexMetadata::modifyMetadata(QHexMetadataAbsoluteItem newmeta,
                                   QHexMetadataAbsoluteItem oldmeta,
                                   bool reundo) {
-  removeMetadata(oldmeta);
+  removeMetadata(oldmeta, true);
   metadata(newmeta.begin, newmeta.end, newmeta.foreground, newmeta.background,
            newmeta.comment, false);
   if (!reundo)
@@ -165,7 +173,7 @@ void QHexMetadata::metadata(qint64 begin, qint64 end, const QColor &fgcolor,
     m_undo.push(new MetaAddCommand(this, absi));
   }
   m_absoluteMetadata.append(absi);
-  setAbsoluteMetadata(m_absoluteMetadata.back());
+  setAbsoluteMetadata(absi);
 }
 
 void QHexMetadata::setAbsoluteMetadata(const QHexMetadataAbsoluteItem &mai) {
@@ -183,8 +191,13 @@ void QHexMetadata::setAbsoluteMetadata(const QHexMetadataAbsoluteItem &mai) {
       const int lastChar = mai.end % m_lineWidth;
       length = lastChar - start;
     } else {
-      length = m_lineWidth;
+      // fix the bug by wingsummer
+      if (firstRow != lastRow)
+        length = m_lineWidth - start;
+      else
+        length = m_lineWidth;
     }
+
     if (length > 0) {
       setMetadata(
           {row, start, length, mai.foreground, mai.background, mai.comment});

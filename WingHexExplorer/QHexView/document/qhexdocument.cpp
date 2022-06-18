@@ -30,7 +30,7 @@ bool QHexDocument::setKeepSize(bool b) {
   return true;
 }
 
-bool QHexDocument::isModified() { return !m_undostack.isClean(); }
+bool QHexDocument::isSaved() { return m_undostack.isClean(); }
 
 void QHexDocument::getBookMarks(QList<BookMarkStruct> &bookmarks) {
   bookmarks.clear();
@@ -133,10 +133,21 @@ QHexDocument::QHexDocument(QHexBuffer *buffer, bool readonly, QObject *parent)
   connect(m_metadata, &QHexMetadata::metadataCleared, this,
           &QHexDocument::documentChanged);
 
+  /*=======================*/
+  // added by wingsummer
   connect(&m_undostack, &QUndoStack::canUndoChanged, this,
           &QHexDocument::canUndoChanged);
   connect(&m_undostack, &QUndoStack::canRedoChanged, this,
           &QHexDocument::canRedoChanged);
+  connect(m_metadata, &QHexMetadata::canMetaRedoChanged, this,
+          &QHexDocument::canMetaRedoChanged);
+  connect(m_metadata, &QHexMetadata::canMetaUndoChanged, this,
+          &QHexDocument::canMetaUndoChanged);
+  connect(&m_undostack, &QUndoStack::cleanChanged, this,
+          &QHexDocument::documentSaved);
+  connect(m_metadata, &QHexMetadata::isSaved, this,
+          &QHexDocument::workspaceSaved);
+  /*=======================*/
 }
 
 bool QHexDocument::isEmpty() const { return m_buffer->isEmpty(); }
@@ -289,8 +300,6 @@ bool QHexDocument::saveTo(QIODevice *device, bool cleanUndo) {
   m_buffer->write(device);
   if (cleanUndo)
     m_undostack.setClean(); // added by wingsummer
-
-  emit documentSaved();
   return true;
 }
 
