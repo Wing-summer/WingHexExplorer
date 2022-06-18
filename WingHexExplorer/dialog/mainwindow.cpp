@@ -127,6 +127,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
                                 Qt::KeyboardModifier::AltModifier | Qt::Key_P);
   auto keymetadata =
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_M);
+  auto keymetaedit =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::ShiftModifier | Qt::Key_M);
   auto keymetadatadel =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::AltModifier | Qt::Key_M);
@@ -262,6 +265,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolSubMenuShortcutAction("metadata", tr("MetaData"),
                                MainWindow::on_metadata, keymetadata);
   AddMenuDB(ToolBoxIndex::Meta);
+  AddToolSubMenuShortcutAction("metadataedit", tr("MetaDataEdit"),
+                               MainWindow::on_metadataedit, keymetaedit);
+  AddMenuDB(ToolBoxIndex::MetaEdit);
   AddToolSubMenuShortcutAction("metadatadel", tr("DeleteMetaData"),
                                MainWindow::on_metadatadel, keymetadatadel);
   AddMenuDB(ToolBoxIndex::DelMeta);
@@ -359,6 +365,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
   hexeditorMenu->addSeparator();
   AddContextMenuAction("metadata", tr("MetaData"), MainWindow::on_metadata,
                        keymetadata);
+  AddContextMenuAction("metadataedit", tr("MetaDataEdit"),
+                       MainWindow::on_metadataedit, keymetaedit);
   AddContextMenuAction("metadatadel", tr("DeleteMetaData"),
                        MainWindow::on_metadatadel, keymetadatadel);
   AddContextMenuAction("metadatacls", tr("ClearMetaData"),
@@ -417,28 +425,40 @@ MainWindow::MainWindow(DMainWindow *parent) {
   DToolButton *tbtn;
   DMenu *tmenu;
 
-#define AddToolBtn(DIcon, DTitle, DSlot, Icon, Title, Slot, Index)             \
+#define AddToolBtnBegin(DIcon)                                                 \
   tbtn = new DToolButton(this);                                                \
   tbtn->setEnabled(false);                                                     \
   tbtn->setIcon(ICONRES(DIcon));                                               \
-  tmenu = new DMenu(this);                                                     \
-  a = new QAction(ICONRES(DIcon), DTitle, this);                               \
-  connect(a, &QAction::triggered, this, &DSlot);                               \
-  tmenu->addAction(a);                                                         \
+  tmenu = new DMenu(this);
+
+#define AddToolBtnBtn(Icon, Title, Slot)                                       \
   a = new QAction(ICONRES(Icon), Title, this);                                 \
   connect(a, &QAction::triggered, this, &Slot);                                \
-  tmenu->addAction(a);                                                         \
+  tmenu->addAction(a);
+
+#define AddToolBtnEnd(Index)                                                   \
   tbtn->setMenu(tmenu);                                                        \
   tbtn->setPopupMode(DToolButton::ToolButtonPopupMode::InstantPopup);          \
   toolbar->addWidget(tbtn);                                                    \
   toolbtnstools.insert(Index, tbtn);
 
-  AddToolBtn("cut", tr("Cut"), MainWindow::on_cutfile, "cuthex", tr("CutHex"),
-             MainWindow::on_cuthex, ToolBoxIndex::Cut);
-  AddToolBtn("copy", tr("Copy"), MainWindow::on_copyfile, "copyhex",
-             tr("CopyHex"), MainWindow::on_copyhex, ToolBoxIndex::Copy);
-  AddToolBtn("paste", tr("Paste"), MainWindow::on_pastefile, "pastehex",
-             tr("PasteHex"), MainWindow::on_pastehex, ToolBoxIndex::Paste);
+  AddToolBtnBegin("cut") {
+    AddToolBtnBtn("cut", tr("Cut"), MainWindow::on_cutfile);
+    AddToolBtnBtn("cuthex", tr("CutHex"), MainWindow::on_cuthex);
+  }
+  AddToolBtnEnd(ToolBoxIndex::Cut);
+
+  AddToolBtnBegin("copy") {
+    AddToolBtnBtn("copy", tr("Copy"), MainWindow::on_copyfile);
+    AddToolBtnBtn("copyhex", tr("CopyHex"), MainWindow::on_copyhex)
+  }
+  AddToolBtnEnd(ToolBoxIndex::Copy);
+
+  AddToolBtnBegin("paste") {
+    AddToolBtnBtn("paste", tr("Paste"), MainWindow::on_pastefile);
+    AddToolBtnBtn("pastehex", tr("PasteHex"), MainWindow::on_pastehex);
+  }
+  AddToolBtnEnd(ToolBoxIndex::Paste);
 
   AddToolBarTool("del", MainWindow::on_delete, tr("Delete"));
   AddToolsDB(ToolBoxIndex::Del);
@@ -449,61 +469,36 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolsDB(ToolBoxIndex::Goto);
   toolbar->addSeparator();
 
-#define AddToolBtn3(DIcon, DTitle, DSlot, Icon, Title, Slot, Icon2, Title2,    \
-                    Slot2, Index)                                              \
-  tbtn = new DToolButton(this);                                                \
-  tbtn->setEnabled(false);                                                     \
-  tbtn->setIcon(ICONRES(DIcon));                                               \
-  tmenu = new DMenu(this);                                                     \
-  a = new QAction(ICONRES(DIcon), DTitle, this);                               \
-  connect(a, &QAction::triggered, this, &DSlot);                               \
-  tmenu->addAction(a);                                                         \
-  a = new QAction(ICONRES(Icon), Title, this);                                 \
-  connect(a, &QAction::triggered, this, &Slot);                                \
-  tmenu->addAction(a);                                                         \
-  a = new QAction(ICONRES(Icon2), Title2, this);                               \
-  connect(a, &QAction::triggered, this, &Slot2);                               \
-  tmenu->addAction(a);                                                         \
-  tbtn->setMenu(tmenu);                                                        \
-  tbtn->setPopupMode(DToolButton::ToolButtonPopupMode::InstantPopup);          \
-  toolbar->addWidget(tbtn);                                                    \
-  toolbtnstools.insert(Index, tbtn);
+  AddToolBtnBegin("fill") {
+    AddToolBtnBtn("fill", tr("Fill"), MainWindow::on_fill);
+    AddToolBtnBtn("fillNop", tr("FillNop"), MainWindow::on_fillnop);
+    AddToolBtnBtn("fillZero", tr("FillZero"), MainWindow::on_fillzero);
+  }
+  AddToolBtnEnd(ToolBoxIndex::Fill);
 
-#define AddToolBtn4(DIcon, DTitle, DSlot, Icon, Title, Slot, Icon2, Title2,    \
-                    Slot2, Icon3, Title3, Slot3, Index)                        \
-  tbtn = new DToolButton(this);                                                \
-  tbtn->setEnabled(false);                                                     \
-  tbtn->setIcon(ICONRES(DIcon));                                               \
-  tmenu = new DMenu(this);                                                     \
-  a = new QAction(ICONRES(DIcon), DTitle, this);                               \
-  connect(a, &QAction::triggered, this, &DSlot);                               \
-  tmenu->addAction(a);                                                         \
-  a = new QAction(ICONRES(Icon), Title, this);                                 \
-  connect(a, &QAction::triggered, this, &Slot);                                \
-  tmenu->addAction(a);                                                         \
-  a = new QAction(ICONRES(Icon2), Title2, this);                               \
-  connect(a, &QAction::triggered, this, &Slot2);                               \
-  tmenu->addAction(a);                                                         \
-  a = new QAction(ICONRES(Icon3), Title3, this);                               \
-  connect(a, &QAction::triggered, this, &Slot3);                               \
-  tmenu->addAction(a);                                                         \
-  tbtn->setMenu(tmenu);                                                        \
-  tbtn->setPopupMode(DToolButton::ToolButtonPopupMode::InstantPopup);          \
-  toolbar->addWidget(tbtn);                                                    \
-  toolbtnstools.insert(Index, tbtn);
+  AddToolBtnBegin("metadata") {
+    AddToolBtnBtn("metaundo", tr("Undo"), MainWindow::on_metaundo);
+    AddToolBtnBtn("metaredo", tr("Redo"), MainWindow::on_metaredo);
+    tmenu->addSeparator();
+    AddToolBtnBtn("metadata", tr("MetaData"), MainWindow::on_metadata);
+    AddToolBtnBtn("metadataedit", tr("MetaDataEdit"),
+                  MainWindow::on_metadataedit);
+    AddToolBtnBtn("metadatadel", tr("DeleteMetaData"),
+                  MainWindow::on_metadatadel);
+    AddToolBtnBtn("metadatacls", tr("ClearMetaData"),
+                  MainWindow::on_metadatacls);
+  }
+  AddToolBtnEnd(ToolBoxIndex::Meta);
 
-  AddToolBtn3("fill", tr("Fill"), MainWindow::on_fill, "fillNop", tr("FillNop"),
-              MainWindow::on_fillnop, "fillZero", tr("FillZero"),
-              MainWindow::on_fillzero, ToolBoxIndex::Fill);
-  AddToolBtn4("metadata", tr("MetaData"), MainWindow::on_metadata,
-              "metadataedit", tr("MetaDataEdit"), MainWindow::on_metadataedit,
-              "metadatadel", tr("DeleteMetaData"), MainWindow::on_metadatadel,
-              "metadatacls", tr("ClearMetaData"), MainWindow::on_metadatacls,
-              ToolBoxIndex::Meta);
-  AddToolBtn3("bookmark", tr("BookMark"), MainWindow::on_bookmark,
-              "bookmarkdel", tr("DeleteBookMark"), MainWindow::on_bookmarkdel,
-              "bookmarkcls", tr("ClearBookMark"), MainWindow::on_bookmarkcls,
-              ToolBoxIndex::BookMark);
+  AddToolBtnBegin("bookmark") {
+    AddToolBtnBtn("bookmark", tr("BookMark"), MainWindow::on_bookmark);
+    AddToolBtnBtn("bookmarkdel", tr("DeleteBookMark"),
+                  MainWindow::on_bookmarkdel);
+    AddToolBtnBtn("bookmarkcls", tr("ClearBookMark"),
+                  MainWindow::on_bookmarkcls);
+  }
+  AddToolBtnEnd(ToolBoxIndex::BookMark);
+
   AddToolBarTool("encoding", MainWindow::on_encoding, tr("Encoding"));
   AddToolsDB(ToolBoxIndex::Encoding);
   toolbar->addSeparator();
@@ -614,6 +609,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
                  "saveg");
   AddStausILable(infoWriteable, "writable", iReadWrite, infoReadonly,
                  "readonly", inforwg, "rwg");
+
+  AddStausILable(infow, "works", iw, infouw, "uworks", infowg, "worksg");
 
   infoUnLock = ICONRES("unlock");
   infoLock = ICONRES("lock");
@@ -2016,6 +2013,11 @@ void MainWindow::on_documentChanged() {
   toolmenutools[ToolBoxIndex::Redo]->setEnabled(canredo);
   conmenutools[ToolBoxIndex::Undo]->setEnabled(canundo);
   conmenutools[ToolBoxIndex::Redo]->setEnabled(canredo);
+  if (hexfiles[_currentfile].workspace.length() > 0) {
+
+  } else {
+    iw->setPixmap(infowg);
+  }
 }
 
 void MainWindow::on_savesel() {
@@ -2120,7 +2122,7 @@ void MainWindow::on_metadataedit() {
           hexeditor->document()->metadata()->gets(cur->position().offset());
 
       if (mc.length() > 0) {
-        auto meta = mc.first();
+        auto meta = mc.last();
         auto begin = meta.begin;
         auto end = meta.end;
         m.setForeGroundColor(meta.foreground);
@@ -2128,9 +2130,13 @@ void MainWindow::on_metadataedit() {
         m.setComment(meta.comment);
         if (m.exec()) {
           auto mi = hexeditor->document()->metadata();
-          mi->removeMetadata(meta);
-          mi->metadata(begin, end, m.foreGroundColor(), m.backGroundColor(),
-                       m.comment());
+          QHexMetadataAbsoluteItem o;
+          o.begin = begin;
+          o.end = end;
+          o.foreground = m.foreGroundColor();
+          o.background = m.backGroundColor();
+          o.comment = m.comment();
+          mi->modifyMetadata(meta, o);
         }
       } else {
         DMessageManager::instance()->sendMessage(this, ICONRES("metadata"),
@@ -2143,6 +2149,16 @@ void MainWindow::on_metadataedit() {
   }
 }
 
+void MainWindow::on_metaredo() {
+  CheckEnabled;
+  hexeditor->document()->metadata()->redo();
+}
+
+void MainWindow::on_metaundo() {
+  CheckEnabled;
+  hexeditor->document()->metadata()->undo();
+}
+
 void MainWindow::on_metadata() {
   CheckEnabled;
   if (hexeditor->documentBytes() > 0) {
@@ -2153,27 +2169,13 @@ void MainWindow::on_metadata() {
       auto mc =
           hexeditor->document()->metadata()->gets(cur->position().offset());
 
-      if (mc.length() > 0) {
-        auto meta = mc.first();
-        auto begin = cur->selectionStart().offset();
-        auto end = begin + cur->selectionLength();
-        m.setForeGroundColor(meta.foreground);
-        m.setBackGroundColor(meta.background);
-        m.setComment(meta.comment);
-        if (m.exec()) {
-          hexeditor->document()->metadata()->metadata(
-              begin, end, m.foreGroundColor(), m.backGroundColor(),
-              m.comment());
-        }
-      } else {
-        auto begin = qint64(cur->selectionStart().offset());
-        auto end = qint64(cur->selectionEnd().offset()) + 1;
-        if (m.exec()) {
-          hexeditor->document()->metadata()->metadata(
-              begin, end, m.foreGroundColor(), m.backGroundColor(),
-              m.comment());
-        }
+      auto begin = qint64(cur->selectionStart().offset());
+      auto end = qint64(cur->selectionEnd().offset()) + 1;
+      if (m.exec()) {
+        hexeditor->document()->metadata()->metadata(
+            begin, end, m.foreGroundColor(), m.backGroundColor(), m.comment());
       }
+
     } else {
       DMessageManager::instance()->sendMessage(this, ICONRES("metadata"),
                                                tr("NoSelection"));

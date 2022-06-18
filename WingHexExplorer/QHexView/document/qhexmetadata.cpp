@@ -1,4 +1,8 @@
 #include "qhexmetadata.h"
+#include "commands/metaaddcommand.h"
+#include "commands/metacommand.h"
+#include "commands/metaremovecommand.h"
+#include "commands/metareplacecommand.h"
 
 QHexMetadata::QHexMetadata(QObject *parent) : QObject(parent) {}
 
@@ -9,11 +13,27 @@ const QHexLineMetadata &QHexMetadata::get(quint64 line) const {
 
 /*==================================*/
 // added by wingsummer
+
+void QHexMetadata::undo() { m_undo.undo(); }
+void QHexMetadata::redo() { m_undo.redo(); }
+bool QHexMetadata::canUndo() { return m_undo.canUndo(); }
+bool QHexMetadata::canRedo() { return m_undo.canRedo(); }
+
 QList<QHexMetadataAbsoluteItem> QHexMetadata::getallMetas() {
   return m_absoluteMetadata;
 }
 
-void QHexMetadata::removeMetadata(QHexMetadataAbsoluteItem item) {
+void QHexMetadata::modifyMetadata(QHexMetadataAbsoluteItem newmeta,
+                                  QHexMetadataAbsoluteItem oldmeta,
+                                  bool reundo) {
+  removeMetadata(oldmeta);
+  metadata(newmeta.begin, newmeta.end, newmeta.foreground, newmeta.background,
+           newmeta.comment, false);
+  if (!reundo)
+    m_undo.push(new MetaReplaceCommand(this, newmeta, oldmeta));
+}
+
+void QHexMetadata::removeMetadata(QHexMetadataAbsoluteItem item, bool reundo) {
   quint64 firstRow = quint64(item.begin / m_lineWidth);
   quint64 lastRow = quint64(item.end / m_lineWidth);
 
@@ -34,6 +54,9 @@ void QHexMetadata::removeMetadata(QHexMetadataAbsoluteItem item) {
       m_absoluteMetadata.removeOne(item);
     }
   }
+
+  if (!reundo)
+    m_undo.push(new MetaRemoveCommand(this, item));
 }
 
 bool QHexMetadata::removeMetadata(qint64 offset,
@@ -67,6 +90,7 @@ bool QHexMetadata::removeMetadata(qint64 offset,
         it->remove(iitem);
       }
     }
+    m_undo.push(new MetaRemoveCommand(this, item));
   }
   return true;
 }
@@ -134,8 +158,13 @@ void QHexMetadata::clear() {
 }
 
 void QHexMetadata::metadata(qint64 begin, qint64 end, const QColor &fgcolor,
-                            const QColor &bgcolor, const QString &comment) {
-  m_absoluteMetadata.append({begin, end, fgcolor, bgcolor, comment});
+                            const QColor &bgcolor, const QString &comment,
+                            bool insert) {
+  QHexMetadataAbsoluteItem absi{begin, end, fgcolor, bgcolor, comment};
+  if (insert) {
+    m_undo.push(new MetaAddCommand(this, absi));
+  }
+  m_absoluteMetadata.append(absi);
   setAbsoluteMetadata(m_absoluteMetadata.back());
 }
 

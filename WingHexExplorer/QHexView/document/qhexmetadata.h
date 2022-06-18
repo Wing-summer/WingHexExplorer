@@ -10,6 +10,7 @@
 #endif
 #include <QColor>
 #include <QHash>
+#include <QUndoStack>
 #include <QVector>
 
 struct QHexMetadataAbsoluteItem {
@@ -58,10 +59,17 @@ public:
   /*============================*/
   // added by wingsummer
 
-  void removeMetadata(QHexMetadataAbsoluteItem item);
+  void modifyMetadata(QHexMetadataAbsoluteItem newmeta,
+                      QHexMetadataAbsoluteItem oldmeta, bool reundo = false);
+  void removeMetadata(QHexMetadataAbsoluteItem item, bool reundo = false);
   bool removeMetadata(qint64 offset, QList<QHexMetadataAbsoluteItem> refer);
   QList<QHexMetadataAbsoluteItem> gets(qint64 offset);
   void applyMetas(QList<QHexMetadataAbsoluteItem> metas);
+
+  void redo();
+  void undo();
+  bool canRedo();
+  bool canUndo();
 
   /*============================*/
 
@@ -74,11 +82,13 @@ public:
 public:
   // new interface with begin, end
   void metadata(qint64 begin, qint64 end, const QColor &fgcolor,
-                const QColor &bgcolor, const QString &comment);
+                const QColor &bgcolor, const QString &comment,
+                bool insert = true);
 
   // old interface with line, start, length
   void metadata(quint64 line, int start, int length, const QColor &fgcolor,
                 const QColor &bgcolor, const QString &comment);
+
   void color(quint64 line, int start, int length, const QColor &fgcolor,
              const QColor &bgcolor);
   void foreground(quint64 line, int start, int length, const QColor &fgcolor);
@@ -100,6 +110,8 @@ private:
   quint8 m_lineWidth;
   QHash<quint64, QHexLineMetadata> m_metadata;
   QList<QHexMetadataAbsoluteItem> m_absoluteMetadata;
+
+  QUndoStack m_undo; // added by wingsummer
 };
 
 #endif // QHEXMETADATA_H

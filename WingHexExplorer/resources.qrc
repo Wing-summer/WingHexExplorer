@@ -65,6 +65,11 @@
         <file>images/cuthex.png</file>
         <file>images/pastehex.png</file>
         <file>images/metadataedit.png</file>
+        <file>images/worksg.png</file>
+        <file>images/works.png</file>
+        <file>images/unworks.png</file>
+        <file>images/metaredo.png</file>
+        <file>images/metaundo.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

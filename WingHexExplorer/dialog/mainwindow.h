@@ -75,6 +75,7 @@ class MainWindow : public DMainWindow {
     FillNop,
     FillZero,
     Meta,
+    MetaEdit,
     DelMeta,
     ClsMeta,
     BookMark,
@@ -181,6 +182,8 @@ private:
   void on_documentChanged();
   void on_documentSwitched();
   void on_documentStatusChanged();
+  void on_metaundo();
+  void on_metaredo();
   void on_metadata();
   void on_metadataedit();
   void on_metadatadel();
@@ -241,8 +244,14 @@ private:
 
   DLabel *iReadWrite;
   DLabel *iSaved;
+  DLabel *iw;
+
   DIconButton *iLocked;
   DIconButton *iOver;
+
+  QPixmap infow;
+  QPixmap infouw;
+  QPixmap infowg;
 
   QPixmap infoSaved;
   QPixmap infoUnsaved;

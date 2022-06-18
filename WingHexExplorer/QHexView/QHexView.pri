@@ -12,7 +12,11 @@ HEADERS += $$PWD/document/commands/hexcommand.h \
            $$PWD/document/qhexdocument.h \
            $$PWD/document/qhexmetadata.h \
            $$PWD/document/qhexrenderer.h \
-           $$PWD/qhexview.h
+           $$PWD/qhexview.h \
+    $$PWD/document/commands/metacommand.h \
+    $$PWD/document/commands/metaaddcommand.h \
+    $$PWD/document/commands/metaremovecommand.h \
+    $$PWD/document/commands/metareplacecommand.h
 
 SOURCES += $$PWD/document/commands/hexcommand.cpp \
            $$PWD/document/commands/insertcommand.cpp \
@@ -26,6 +30,10 @@ SOURCES += $$PWD/document/commands/hexcommand.cpp \
            $$PWD/document/qhexdocument.cpp \
            $$PWD/document/qhexmetadata.cpp \
            $$PWD/document/qhexrenderer.cpp \
-           $$PWD/qhexview.cpp
+           $$PWD/qhexview.cpp \
+    $$PWD/document/commands/metacommand.cpp \
+    $$PWD/document/commands/metaaddcommand.cpp \
+    $$PWD/document/commands/metaremovecommand.cpp \
+    $$PWD/document/commands/metareplacecommand.cpp
 
 INCLUDEPATH += $$PWD
