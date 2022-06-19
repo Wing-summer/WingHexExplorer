@@ -125,6 +125,7 @@ public:
                    bool *oldworkspace = nullptr);
   ErrFile openWorkSpace(QString filename, bool readonly = false,
                         int *openedindex = nullptr);
+  void setFilePage(int index);
 
 private:
   void newFile();
@@ -153,7 +154,6 @@ private:
   void pasteCurrentBytes(quint64 pos, QByteArray arr, qint64 len = -1);
 
 private:
-  void setFilePage(int index);
   void on_newfile();
   void on_openfile();
   void on_redofile();

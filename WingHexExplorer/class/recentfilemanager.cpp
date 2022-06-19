@@ -45,6 +45,8 @@ void RecentFileManager::apply() {
   int i = 0;
   for (auto item : s) {
     if (QFile::exists(item)) {
+      if (m_recents.count() > 20)
+        break;
       m_recents << item;
       a = new QAction(m_menu);
       a->setText(QString("%1 : %2").arg(i++).arg(item));
@@ -61,15 +63,23 @@ RecentFileManager::~RecentFileManager() {
 }
 
 void RecentFileManager::addRecentFile(QString filename) {
+  if (m_recents.count() > 20)
+    return;
   if (QFile::exists(filename) && m_recents.indexOf(filename) < 0) {
     auto a = new QAction(m_menu);
     a = new QAction(m_menu);
-    a->setText(QString("%1 : %2").arg(m_recents.count()).arg(filename));
     a->setData(filename);
     connect(a, &QAction::triggered, this, &RecentFileManager::trigger);
-    m_recents << filename;
-    hitems.push_back(a);
-    m_menu->addAction(a);
+    m_recents.push_front(filename);
+    if (hitems.count())
+      m_menu->insertAction(hitems.first(), a);
+    else
+      m_menu->addAction(a);
+    hitems.push_front(a);
+    auto i = 0;
+    for (auto item : hitems) {
+      item->setText(QString("%1 : %2").arg(i++).arg(item->data().toString()));
+    }
   }
 }
 

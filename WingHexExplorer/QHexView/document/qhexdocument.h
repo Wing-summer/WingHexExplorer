@@ -112,13 +112,7 @@ signals:
 
   /*================================*/
 
-  /*================================*/
-  // added by wingsummer
-
-  void documentSaved(bool saved);
-
-  /*================================*/
-
+  void documentSaved(bool saved); // added by wingsummer
   void canUndoChanged(bool canUndo);
   void canRedoChanged(bool canRedo);
   void documentChanged();

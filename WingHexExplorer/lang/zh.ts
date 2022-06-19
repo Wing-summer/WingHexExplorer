@@ -578,17 +578,17 @@
         <translation>导出结果失败！</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="2423"/>
+        <location filename="../dialog/mainwindow.cpp" line="2424"/>
         <source>ProjectFile (*.wingpro)</source>
         <translation>项目文件 (*.wingpro)</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="2432"/>
+        <location filename="../dialog/mainwindow.cpp" line="2433"/>
         <source>WSOpenedUnSuccessfully</source>
         <translation>因工作区打开包含文件已被打开，故打开工作区失败！</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="2435"/>
+        <location filename="../dialog/mainwindow.cpp" line="2436"/>
         <source>WorkSpaceOpenUnSuccessfully</source>
         <translation>工作区打开失败！</translation>
     </message>
@@ -677,7 +677,7 @@
     </message>
     <message>
         <location filename="../dialog/mainwindow.cpp" line="1635"/>
-        <location filename="../dialog/mainwindow.cpp" line="2423"/>
+        <location filename="../dialog/mainwindow.cpp" line="2424"/>
         <source>ChooseFile</source>
         <translation>选择文件</translation>
     </message>
@@ -969,17 +969,23 @@
         <translation>删除项目</translation>
     </message>
     <message>
-        <location filename="../class/recentfilemanager.cpp" line="25"/>
+        <location filename="../class/recentfilemanager.cpp" line="31"/>
         <source>Input</source>
         <translation>请输入</translation>
     </message>
     <message>
-        <location filename="../class/recentfilemanager.cpp" line="25"/>
+        <location filename="../class/recentfilemanager.cpp" line="31"/>
         <source>InputIndex</source>
         <translation>请输入删除索引</translation>
     </message>
     <message>
-        <location filename="../class/recentfilemanager.cpp" line="71"/>
+        <location filename="../class/recentfilemanager.cpp" line="115"/>
+        <source>HistoryClearFinished</source>
+        <translation>打开历史记录完成！</translation>
+    </message>
+    <message>
+        <location filename="../class/recentfilemanager.cpp" line="27"/>
+        <location filename="../class/recentfilemanager.cpp" line="106"/>
         <source>NoHistoryDel</source>
         <translation>无打开历史项目可删除！</translation>
     </message>

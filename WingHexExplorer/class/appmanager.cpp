@@ -13,12 +13,24 @@ AppManager *AppManager::instance() {
   return m_instance;
 }
 
-ErrFile AppManager::openFile(QString file) {
+ErrFile AppManager::openFile(QString file, bool readonly) {
   auto res = ErrFile::Error;
+  int oldindex = 0;
   if (mWindow) {
-    res = mWindow->openWorkSpace(file);
-    if (res != ErrFile::Success)
-      return mWindow->openFile(file);
+    res = mWindow->openWorkSpace(file, readonly, &oldindex);
+    if (res != ErrFile::Success) {
+      if (res == ErrFile::AlreadyOpened || res == ErrFile::WorkSpaceUnSaved) {
+        mWindow->setFilePage(oldindex);
+      } else {
+        res = mWindow->openFile(file, readonly, &oldindex);
+        if (res != ErrFile::Success) {
+          if (res == ErrFile::AlreadyOpened ||
+              res == ErrFile::WorkSpaceUnSaved) {
+            mWindow->setFilePage(oldindex);
+          }
+        }
+      }
+    }
   }
   return res;
 }

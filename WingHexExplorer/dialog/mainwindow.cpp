@@ -2403,7 +2403,8 @@ ErrFile MainWindow::openWorkSpace(QString filename, bool readonly,
     int index;
     res = openFile(file, readonly, &index, filename, &b);
     if (res == ErrFile::AlreadyOpened) {
-      *openedindex = index;
+      if (openedindex)
+        *openedindex = index;
       return res;
     } else {
       if (res != ErrFile::Success)
