@@ -20,13 +20,21 @@ DWIDGET_USE_NAMESPACE
 
 int main(int argc, char *argv[]) {
 
-  //解决 root 主题样式走形
-  if (qEnvironmentVariableIsEmpty("XDG_CURRENT_DESKTOP")) {
+  //解决 root/ubuntu 主题样式走形 
+
     qputenv("XDG_CURRENT_DESKTOP", "Deepin");
-  }
 
   QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-  WingHexApplication a(argc, argv);
+    // 程序内强制添加"-platformtheme deepin"参数喂给Qt让Qt正确使用Deepin主题修复各种奇怪样式问题
+    QVector<char*> fakeArgs(argc + 2);
+    fakeArgs[0] = argv[0];
+    fakeArgs[1] = "-platformtheme";
+    fakeArgs[2] = "deepin";
+    for(int i = 1; i < argc; i++) fakeArgs[i + 2] = argv[i];
+    int fakeArgc = argc + 2; 
+    WingHexApplication a(fakeArgc, fakeArgs.data());
+
+
   QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
 
   auto s = a.applicationDirPath() + "/lang/default.qm";
