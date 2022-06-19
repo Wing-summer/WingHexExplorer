@@ -187,7 +187,6 @@ signals:
   bool lineHasMetadata(quint64 line) const;
   bool removeMetadata(qint64 offset, QList<HexMetadataAbsoluteItem> refer);
   QList<HexMetadataAbsoluteItem> getMetadatas(qint64 offset);
-  void clear(quint64 line);
   void clear();
   HexLineMetadata getMetaLine(quint64 line) const;
   void color(quint64 line, int start, int length, const QColor &fgcolor,
@@ -229,7 +228,7 @@ signals:
   void setCurrentEncoding(QString encoding);
 
   // workspace
-  bool openWorkSpace(QString filename);
+  bool openWorkSpace(QString filename, bool readonly = false);
   bool saveWorkSpace();
   bool saveAsWorkSpace(QString filename);
 };

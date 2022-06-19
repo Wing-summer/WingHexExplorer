@@ -61,6 +61,7 @@ public:
   void FindAllBytes(qint64 begin, qint64 end, QByteArray b,
                     QList<quint64> &results, int maxCount = -1);
 
+  bool isWorkspace = false;
   /*======================*/
 
 public:
@@ -115,10 +116,6 @@ signals:
   // added by wingsummer
 
   void documentSaved(bool saved);
-  void workspaceSaved(bool saved);
-
-  void canMetaUndoChanged(bool canUndo);
-  void canMetaRedoChanged(bool canRedo);
 
   /*================================*/
 

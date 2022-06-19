@@ -14,9 +14,6 @@ public:
 
   void undo() override;
   void redo() override;
-
-private:
-  QList<QHexMetadataAbsoluteItem> others;
 };
 
 #endif // METAREMOVECOMMAND_H

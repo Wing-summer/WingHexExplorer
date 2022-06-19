@@ -46,6 +46,7 @@ public:
   void setAddressBase(quint64 base);
 
   bool isSaved();
+  int getWorkSpaceState(QHexDocument *doc, bool b);
   void establishSignal(QHexDocument *doc);
 
   static QFont getHexeditorFont();
@@ -53,9 +54,6 @@ public:
 signals:
   void cursorLocationChanged();
   void documentSwitched();
-  void workspaceSaved(bool saved);
-  void canMetaUndoChanged(bool canUndo);
-  void canMetaRedoChanged(bool canRedo);
   void canUndoChanged(bool canUndo);
   void canRedoChanged(bool canRedo);
   void documentSaved(bool saved);

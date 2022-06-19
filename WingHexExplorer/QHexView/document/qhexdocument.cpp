@@ -125,7 +125,7 @@ QHexDocument::QHexDocument(QHexBuffer *buffer, bool readonly, QObject *parent)
 
   m_cursor = new QHexCursor(this);
   m_cursor->setLineWidth(m_hexlinewidth);
-  m_metadata = new QHexMetadata(this);
+  m_metadata = new QHexMetadata(&m_undostack, this);
   m_metadata->setLineWidth(m_hexlinewidth);
 
   connect(m_metadata, &QHexMetadata::metadataChanged, this,
@@ -139,14 +139,8 @@ QHexDocument::QHexDocument(QHexBuffer *buffer, bool readonly, QObject *parent)
           &QHexDocument::canUndoChanged);
   connect(&m_undostack, &QUndoStack::canRedoChanged, this,
           &QHexDocument::canRedoChanged);
-  connect(m_metadata, &QHexMetadata::canMetaRedoChanged, this,
-          &QHexDocument::canMetaRedoChanged);
-  connect(m_metadata, &QHexMetadata::canMetaUndoChanged, this,
-          &QHexDocument::canMetaUndoChanged);
   connect(&m_undostack, &QUndoStack::cleanChanged, this,
           &QHexDocument::documentSaved);
-  connect(m_metadata, &QHexMetadata::isSaved, this,
-          &QHexDocument::workspaceSaved);
   /*=======================*/
 }
 

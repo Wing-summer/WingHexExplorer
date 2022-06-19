@@ -1,16 +1,12 @@
 #include "qhexmetadata.h"
 #include "commands/metaaddcommand.h"
+#include "commands/metaclearcommand.h"
 #include "commands/metacommand.h"
 #include "commands/metaremovecommand.h"
 #include "commands/metareplacecommand.h"
 
-QHexMetadata::QHexMetadata(QObject *parent) : QObject(parent) {
-  connect(&m_undo, &QUndoStack::canUndoChanged, this,
-          &QHexMetadata::canMetaUndoChanged);
-  connect(&m_undo, &QUndoStack::canRedoChanged, this,
-          &QHexMetadata::canMetaRedoChanged);
-  connect(&m_undo, &QUndoStack::cleanChanged, this, &QHexMetadata::isSaved);
-}
+QHexMetadata::QHexMetadata(QUndoStack *undo, QObject *parent)
+    : QObject(parent), m_undo(undo) {}
 
 const QHexLineMetadata &QHexMetadata::get(quint64 line) const {
   auto it = m_metadata.find(line);
@@ -20,16 +16,16 @@ const QHexLineMetadata &QHexMetadata::get(quint64 line) const {
 /*==================================*/
 // added by wingsummer
 
-void QHexMetadata::undo() { m_undo.undo(); }
-void QHexMetadata::redo() { m_undo.redo(); }
-bool QHexMetadata::canUndo() { return m_undo.canUndo(); }
-bool QHexMetadata::canRedo() { return m_undo.canRedo(); }
+void QHexMetadata::undo() { m_undo->undo(); }
+void QHexMetadata::redo() { m_undo->redo(); }
+bool QHexMetadata::canUndo() { return m_undo->canUndo(); }
+bool QHexMetadata::canRedo() { return m_undo->canRedo(); }
 
 QList<QHexMetadataAbsoluteItem> QHexMetadata::getallMetas() {
   return m_absoluteMetadata;
 }
 
-bool QHexMetadata::isMetaSaved() { return m_undo.isClean(); }
+bool QHexMetadata::isMetaSaved() { return m_undo->isClean(); }
 
 void QHexMetadata::modifyMetadata(QHexMetadataAbsoluteItem newmeta,
                                   QHexMetadataAbsoluteItem oldmeta,
@@ -38,7 +34,7 @@ void QHexMetadata::modifyMetadata(QHexMetadataAbsoluteItem newmeta,
   metadata(newmeta.begin, newmeta.end, newmeta.foreground, newmeta.background,
            newmeta.comment, false);
   if (!reundo)
-    m_undo.push(new MetaReplaceCommand(this, newmeta, oldmeta));
+    m_undo->push(new MetaReplaceCommand(this, newmeta, oldmeta));
 }
 
 void QHexMetadata::removeMetadata(QHexMetadataAbsoluteItem item, bool reundo) {
@@ -64,7 +60,7 @@ void QHexMetadata::removeMetadata(QHexMetadataAbsoluteItem item, bool reundo) {
   }
 
   if (!reundo)
-    m_undo.push(new MetaRemoveCommand(this, item));
+    m_undo->push(new MetaRemoveCommand(this, item));
 }
 
 bool QHexMetadata::removeMetadata(qint64 offset,
@@ -98,7 +94,7 @@ bool QHexMetadata::removeMetadata(qint64 offset,
         it->remove(iitem);
       }
     }
-    m_undo.push(new MetaRemoveCommand(this, item));
+    m_undo->push(new MetaRemoveCommand(this, item));
   }
   return true;
 }
@@ -116,7 +112,7 @@ QList<QHexMetadataAbsoluteItem> QHexMetadata::gets(qint64 offset) {
 void QHexMetadata::applyMetas(QList<QHexMetadataAbsoluteItem> metas) {
   for (auto item : metas) {
     metadata(item.begin, item.end, item.foreground, item.background,
-             item.comment);
+             item.comment, false);
   }
 }
 
@@ -160,6 +156,7 @@ void QHexMetadata::clear(quint64 line) {
 }
 
 void QHexMetadata::clear() {
+  m_undo->push(new MetaClearCommand(this, getallMetas()));
   m_absoluteMetadata.clear();
   m_metadata.clear();
   emit metadataCleared();
@@ -170,7 +167,7 @@ void QHexMetadata::metadata(qint64 begin, qint64 end, const QColor &fgcolor,
                             bool insert) {
   QHexMetadataAbsoluteItem absi{begin, end, fgcolor, bgcolor, comment};
   if (insert) {
-    m_undo.push(new MetaAddCommand(this, absi));
+    m_undo->push(new MetaAddCommand(this, absi));
   }
   m_absoluteMetadata.append(absi);
   setAbsoluteMetadata(absi);

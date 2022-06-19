@@ -226,3 +226,27 @@ void Settings::loadWindowState(DMainWindow *wnd, bool isorign) {
                       isorign ? 0 : 1);
   }
 }
+
+void Settings::saveFileDialogCurrent(QString path) {
+  QSettings settings(QApplication::organizationName(),
+                     QApplication::applicationName());
+  settings.setValue("curpath", path);
+}
+
+QString Settings::loadFileDialogCurrent() {
+  QSettings settings(QApplication::organizationName(),
+                     QApplication::applicationName());
+  return settings.value("curpath").toString();
+}
+
+void Settings::saveRecent(QStringList recent) {
+  QSettings settings(QApplication::organizationName(),
+                     QApplication::applicationName());
+  settings.setValue("recent", recent);
+}
+
+QStringList Settings::loadRecent() {
+  QSettings settings(QApplication::organizationName(),
+                     QApplication::applicationName());
+  return settings.value("recent").toStringList();
+}

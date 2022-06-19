@@ -16,7 +16,8 @@ HEADERS += $$PWD/document/commands/hexcommand.h \
     $$PWD/document/commands/metacommand.h \
     $$PWD/document/commands/metaaddcommand.h \
     $$PWD/document/commands/metaremovecommand.h \
-    $$PWD/document/commands/metareplacecommand.h
+    $$PWD/document/commands/metareplacecommand.h \
+    $$PWD/document/commands/metaclearcommand.h
 
 SOURCES += $$PWD/document/commands/hexcommand.cpp \
            $$PWD/document/commands/insertcommand.cpp \
@@ -34,6 +35,7 @@ SOURCES += $$PWD/document/commands/hexcommand.cpp \
     $$PWD/document/commands/metacommand.cpp \
     $$PWD/document/commands/metaaddcommand.cpp \
     $$PWD/document/commands/metaremovecommand.cpp \
-    $$PWD/document/commands/metareplacecommand.cpp
+    $$PWD/document/commands/metareplacecommand.cpp \
+    $$PWD/document/commands/metaclearcommand.cpp
 
 INCLUDEPATH += $$PWD

@@ -13,6 +13,16 @@ AppManager *AppManager::instance() {
   return m_instance;
 }
 
+ErrFile AppManager::openFile(QString file) {
+  auto res = ErrFile::Error;
+  if (mWindow) {
+    res = mWindow->openWorkSpace(file);
+    if (res != ErrFile::Success)
+      return mWindow->openFile(file);
+  }
+  return res;
+}
+
 void AppManager::openFiles(QStringList files) {
   if (mWindow) {
     for (auto file : files) {

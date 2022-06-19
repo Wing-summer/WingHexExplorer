@@ -4,6 +4,7 @@
 #include "QHexView/document/qhexcursor.h"
 #include "QHexView/document/qhexmetadata.h"
 #include "aboutsoftwaredialog.h"
+#include "class/recentfilemanager.h"
 #include "driverselectordialog.h"
 #include "encodingdialog.h"
 #include "finddialog.h"
@@ -113,15 +114,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolSubMenuShortcutAction("open", tr("OpenF"), MainWindow::on_openfile,
                                QKeySequence::Open);
 
-  auto keyundo =
-      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_Z);
-  auto keymundo = QKeySequence(Qt::KeyboardModifier::ControlModifier |
-                               Qt::KeyboardModifier::ShiftModifier | Qt::Key_Z);
-  auto keyredo =
-      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_Y);
-  auto keymredo = QKeySequence(Qt::KeyboardModifier::ControlModifier |
-                               Qt::KeyboardModifier::ShiftModifier | Qt::Key_Y);
-
   auto keysaveas =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::ShiftModifier | Qt::Key_S);
@@ -219,6 +211,13 @@ MainWindow::MainWindow(DMainWindow *parent) {
                                MainWindow::on_saveasworkspace, keysaveasws);
   AddMenuDB(ToolBoxIndex::SaveAsWorkSpace);
   tm->addSeparator();
+
+  auto tmm = new DMenu(this);
+  tmm->setTitle(tr("RecentFile"));
+  tm->addMenu(tmm);
+  recentmanager = new RecentFileManager(tmm, this);
+  recentmanager->apply();
+
   AddToolSubMenuShortcutAction("exit", tr("Exit"), MainWindow::on_exit,
                                QKeySequence::Quit);
   menu->addMenu(tm);
@@ -227,10 +226,10 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm->setTitle(tr("Edit"));
   tm->setIcon(ICONRES("edit"));
   AddToolSubMenuShortcutAction("undo", tr("Undo"), MainWindow::on_undofile,
-                               keyundo);
+                               QKeySequence::Undo);
   AddMenuDB(ToolBoxIndex::Undo);
   AddToolSubMenuShortcutAction("redo", tr("Redo"), MainWindow::on_redofile,
-                               keyredo);
+                               QKeySequence::Redo);
   AddMenuDB(ToolBoxIndex::Redo);
   tm->addSeparator();
   AddToolSubMenuShortcutAction("cut", tr("Cut"), MainWindow::on_cutfile,
@@ -280,13 +279,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm = new DMenu(this);
   tm->setTitle(tr("Mark"));
   tm->setIcon(ICONRES("mark"));
-  AddToolSubMenuShortcutAction("metaundo", tr("Undo"), MainWindow::on_metaundo,
-                               keymundo);
-  AddMenuDB(ToolBoxIndex::MetaUndo);
-  AddToolSubMenuShortcutAction("metaredo", tr("Redo"), MainWindow::on_metaredo,
-                               keymredo);
-  AddMenuDB(ToolBoxIndex::MetaRedo);
-  tm->addSeparator();
   AddToolSubMenuShortcutAction("metadata", tr("MetaData"),
                                MainWindow::on_metadata, keymetadata);
   AddMenuDB(ToolBoxIndex::Meta);
@@ -474,11 +466,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolBtnEnd(ToolBoxIndex::Fill);
 
   AddToolBtnBegin("metadata") {
-    AddToolBtnBtn("metaundo", tr("Undo"), MainWindow::on_metaundo);
-    AddToolsDB(ToolBoxIndex::MetaUndo);
-    AddToolBtnBtn("metaredo", tr("Redo"), MainWindow::on_metaredo);
-    AddToolsDB(ToolBoxIndex::MetaRedo);
-    tmenu->addSeparator();
     AddToolBtnBtn("metadata", tr("MetaData"), MainWindow::on_metadata);
     AddToolBtnBtn("metadataedit", tr("MetaDataEdit"),
                   MainWindow::on_metadataedit);
@@ -755,18 +742,12 @@ MainWindow::MainWindow(DMainWindow *parent) {
     toolmenutools[ToolBoxIndex::Redo]->setEnabled(b);
     toolmenutools[ToolBoxIndex::Redo]->setEnabled(b);
   });
-  connect(hexeditor, &QHexView::canMetaRedoChanged,
-          [=](bool b) { toolbartools[ToolBoxIndex::MetaRedo]->setEnabled(b); });
-  connect(hexeditor, &QHexView::canMetaUndoChanged,
-          [=](bool b) { toolbartools[ToolBoxIndex::MetaUndo]->setEnabled(b); });
   connect(hexeditor, &QHexView::documentSaved,
           [=](bool b) { iSaved->setPixmap(b ? infoSaved : infoUnsaved); });
   connect(hexeditor, &QHexView::documentKeepSize, this,
           [=](bool b) { iOver->setIcon(b ? infoCannotOver : infoCanOver); });
   connect(hexeditor, &QHexView::documentLockedFile, this,
           [=](bool b) { iLocked->setIcon(b ? infoLock : infoUnLock); });
-  connect(hexeditor, &QHexView::workspaceSaved,
-          [=](bool b) { iw->setPixmap(b ? infow : infouw); });
 
 #define ConnectShortCut(ShortCut, Slot)                                        \
   s = new QShortcut(ShortCut, this);                                           \
@@ -776,8 +757,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(QKeySequence::Open, MainWindow::on_openfile);
   ConnectShortCut(QKeySequence::Save, MainWindow::on_savefile);
   ConnectShortCut(keysaveas, MainWindow::on_saveasfile);
-  ConnectShortCut(keyundo, MainWindow::on_undofile);
-  ConnectShortCut(keyredo, MainWindow::on_redofile);
+  ConnectShortCut(QKeySequence::Undo, MainWindow::on_undofile);
+  ConnectShortCut(QKeySequence::Redo, MainWindow::on_redofile);
   ConnectShortCut(QKeySequence::Cut, MainWindow::on_cutfile);
   ConnectShortCut(QKeySequence::Copy, MainWindow::on_copyfile);
   ConnectShortCut(QKeySequence::Paste, MainWindow::on_pastefile);
@@ -799,8 +780,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keycuthex, MainWindow::on_cuthex);
   ConnectShortCut(keycopyhex, MainWindow::on_copyhex);
   ConnectShortCut(keypastehex, MainWindow::on_pastehex);
-  ConnectShortCut(keymredo, MainWindow::on_metaredo);
-  ConnectShortCut(keymundo, MainWindow::on_metaundo);
 
   logger->logMessage(INFOLOG(tr("SettingLoading")));
 
@@ -882,6 +861,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   m_settings->saveWindowState(this, true);
   m_settings->loadWindowState(this);
+  lastusedpath = m_settings->loadFileDialogCurrent();
 }
 
 MainWindow::~MainWindow() {
@@ -1255,12 +1235,8 @@ void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
                      });
 
   void (HexViewShadow::*clear)() = &HexViewShadow::clear;
-  void (HexViewShadow::*clearl)(quint64 line) = &HexViewShadow::clear;
   ConnectShadowLamba2(clear,
                       [=]() { hexfiles[_pcurfile].doc->metadata()->clear(); });
-  ConnectShadowLamba2(clearl, [=](quint64 line) {
-    hexfiles[_pcurfile].doc->metadata()->clear(line);
-  });
 
   ConnectShadowLamba(HexViewShadow::color,
                      [=](quint64 line, int start, int length,
@@ -1290,7 +1266,10 @@ void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
     hexfiles[_pcurfile].render->setEncoding(encoding);
   });
 
-  ConnectShadows(HexViewShadow::openWorkSpace, MainWindow::openWorkSpace);
+  ConnectShadowLamba(HexViewShadow::openWorkSpace,
+                     [=](QString filename, bool readonly) {
+                       openWorkSpace(filename, readonly);
+                     });
   ConnectShadows(HexViewShadow::saveWorkSpace, MainWindow::saveWorkSpace);
   ConnectShadows(HexViewShadow::saveAsWorkSpace, MainWindow::saveAsWorkSpace);
   ConnectShadows(HexViewShadow::newFile, MainWindow::newFile);
@@ -1410,8 +1389,8 @@ void MainWindow::newFile() {
   }
 }
 
-ErrFile MainWindow::openFile(QString filename, bool readonly,
-                             QString workspace) {
+ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
+                             QString workspace, bool *oldworkspace) {
   QList<QVariant> params;
   if (_enableplugin) {
     params << HookIndex::OpenFileBegin << filename << readonly;
@@ -1438,8 +1417,15 @@ ErrFile MainWindow::openFile(QString filename, bool readonly,
       return ErrFile::Permission;
     }
 
+    int i = 0;
     for (auto item : hexfiles) {
       if (item.filename == filename) {
+        if (oldworkspace) {
+          *oldworkspace = item.workspace.length() > 0;
+        }
+        if (openedindex) {
+          *openedindex = i;
+        }
         if (_enableplugin) {
           params[0].setValue(HookIndex::OpenFileEnd);
           params << ErrFile::AlreadyOpened;
@@ -1447,6 +1433,7 @@ ErrFile MainWindow::openFile(QString filename, bool readonly,
         }
         return ErrFile::AlreadyOpened;
       }
+      i++;
     }
 
     hexeditor->setVisible(true);
@@ -1467,20 +1454,21 @@ ErrFile MainWindow::openFile(QString filename, bool readonly,
     }
 
     hf.doc = p;
+    hf.filename = filename;
+    hf.workspace = workspace;
+    hf.vBarValue = -1;
+    p->isWorkspace = workspace.length() > 0;
     hexeditor->setLockedFile(readonly);
     hexeditor->setDocument(p);
     hexeditor->setKeepSize(true);
     hf.isdriver = false;
-
     hexeditor->renderer()->setEncoding(_encoding);
     hf.render = hexeditor->renderer();
-    hf.vBarValue = -1;
-    hf.filename = filename;
-    hf.workspace = workspace;
+
     hexfiles.push_back(hf);
 
     QMimeDatabase db;
-    auto t = db.mimeTypeForFile(filename);
+    auto t = db.mimeTypeForFile(p->isWorkspace ? workspace : filename);
     auto ico = t.iconName();
     tabs->addTab(QIcon::fromTheme(ico, QIcon(ico)), info.fileName());
     auto index = hexfiles.count() - 1;
@@ -1686,22 +1674,18 @@ void MainWindow::gotoCurrentLine(quint64 offset) {
 }
 
 void MainWindow::on_openfile() {
-  auto filename = QFileDialog::getOpenFileName(this, tr("ChooseFile"));
+  auto filename =
+      QFileDialog::getOpenFileName(this, tr("ChooseFile"), lastusedpath);
   if (!filename.isEmpty()) {
-    auto res = openFile(filename);
+    lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
+    int index;
+    auto res = openFile(filename, false, &index);
     if (res == ErrFile::NotExist) {
       QMessageBox::critical(this, tr("Error"), tr("FileNotExist"));
       return;
     }
     if (res == ErrFile::AlreadyOpened) {
-      int i = 0;
-      for (auto item : hexfiles) {
-        if (filename == item.filename) {
-          break;
-        }
-        i++;
-      }
-      setFilePage(i);
+      setFilePage(index);
     }
     if (res == ErrFile::Permission &&
         openFile(filename, true) == ErrFile::Permission) {
@@ -1793,9 +1777,11 @@ void MainWindow::on_opendriver() {
 
 void MainWindow::on_exportfile() {
   CheckEnabled;
-  auto filename = QFileDialog::getSaveFileName(this, tr("ChooseExportFile"));
+  auto filename =
+      QFileDialog::getSaveFileName(this, tr("ChooseExportFile"), lastusedpath);
   if (filename.isEmpty())
     return;
+  lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
   exportFile(filename, _currentfile);
 }
 
@@ -1822,6 +1808,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     }
   }
   m_settings->saveWindowState(this);
+  m_settings->saveFileDialogCurrent(lastusedpath);
   event->accept();
 }
 
@@ -1846,9 +1833,11 @@ void MainWindow::on_delete() {
 
 void MainWindow::on_saveasfile() {
   CheckEnabled;
-  auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"));
+  auto filename =
+      QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"), lastusedpath);
   if (filename.isEmpty())
     return;
+  lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
   if (saveasFile(filename, _currentfile) == ErrFile::Success) {
     DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                              tr("SaveSuccessfully"));
@@ -2030,9 +2019,11 @@ void MainWindow::on_setting_general() {
 
 void MainWindow::on_savesel() {
   CheckEnabled;
-  auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"));
+  auto filename =
+      QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"), lastusedpath);
   if (filename.isEmpty())
     return;
+  lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
   QFile qfile(filename);
   if (qfile.open(QFile::WriteOnly)) {
     auto buffer = hexeditor->document()->selectedBytes();
@@ -2048,7 +2039,15 @@ void MainWindow::on_documentSwitched() {
   iReadWrite->setPixmap(hexeditor->isReadOnly() ? infoReadonly : infoWriteable);
   QList<BookMarkStruct> bookmaps;
   bookmarks->clear();
-  hexeditor->document()->getBookMarks(bookmaps);
+  auto doc = hexeditor->document();
+  doc->getBookMarks(bookmaps);
+
+  if (hexfiles.count()) {
+    iw->setPixmap(doc->isWorkspace ? infow : infouw);
+  } else {
+    iw->setPixmap(infouw);
+  }
+
   for (auto item : bookmaps) {
     QListWidgetItem *litem = new QListWidgetItem;
     litem->setIcon(ICONRES("bookmark"));
@@ -2147,16 +2146,6 @@ void MainWindow::on_metadataedit() {
                                                tr("NoSelection"));
     }
   }
-}
-
-void MainWindow::on_metaredo() {
-  CheckEnabled;
-  hexeditor->document()->metadata()->redo();
-}
-
-void MainWindow::on_metaundo() {
-  CheckEnabled;
-  hexeditor->document()->metadata()->undo();
 }
 
 void MainWindow::on_metadata() {
@@ -2269,8 +2258,14 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
   for (auto item : toolbtnstools.values()) {
     item->setEnabled(b);
   }
-  if (b)
+
+  if (b) {
     enableDirverLimit(isdriver);
+    auto dm = hexeditor->document()->isWorkspace;
+    iw->setPixmap(dm ? infow : infouw);
+  } else {
+    iw->setPixmap(infouw);
+  }
 
   status->setEnabled(b);
   if (!b) {
@@ -2339,9 +2334,11 @@ void MainWindow::on_loadplg() {
   if (!_enableplugin)
     return;
   auto filename = QFileDialog::getOpenFileName(
-      this, tr("ChoosePlugin"), QString(), tr("PluginFile (*.wingplg)"));
+      this, tr("ChoosePlugin"), lastusedpath, tr("PluginFile (*.wingplg)"));
   if (!filename.isEmpty()) {
-    plgsys->loadPlugin(QFileInfo(filename));
+    auto info = QFileInfo(filename);
+    lastusedpath = info.absoluteDir().absolutePath();
+    plgsys->loadPlugin(info);
   }
 }
 
@@ -2358,9 +2355,11 @@ void MainWindow::on_exportfindresult() {
                                              tr("EmptyFindResult"));
     return;
   }
-  auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"));
+  auto filename =
+      QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"), lastusedpath);
   if (filename.isEmpty())
     return;
+  lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
   QFile f(filename);
   if (f.open(QFile::WriteOnly)) {
     QJsonArray arr;
@@ -2398,15 +2397,24 @@ void MainWindow::on_about() {
   d.exec();
 }
 
-ErrFile MainWindow::openWorkSpace(QString filename) {
+ErrFile MainWindow::openWorkSpace(QString filename, bool readonly,
+                                  int *openedindex) {
   QString file;
   QList<BookMarkStruct> bookmarks;
   QList<QHexMetadataAbsoluteItem> metas;
   auto res = ErrFile::Error;
   if (WorkSpaceManager::loadWorkSpace(filename, file, bookmarks, metas)) {
-    res = openFile(file, false, filename);
-    if (res != ErrFile::Success)
+    bool b;
+    int index;
+    res = openFile(file, readonly, &index, filename, &b);
+    if (res == ErrFile::AlreadyOpened) {
+      *openedindex = index;
       return res;
+    } else {
+      if (res != ErrFile::Success)
+        return res;
+    }
+
     auto doc = hexeditor->document();
     doc->applyBookMarks(bookmarks);
     on_documentSwitched();
@@ -2417,12 +2425,20 @@ ErrFile MainWindow::openWorkSpace(QString filename) {
 
 void MainWindow::on_openworkspace() {
   auto filename = QFileDialog::getOpenFileName(
-      this, tr("ChooseFile"), QString(), tr("ProjectFile (*.wingpro)"));
+      this, tr("ChooseFile"), lastusedpath, tr("ProjectFile (*.wingpro)"));
   if (filename.isEmpty())
     return;
-  if (openWorkSpace(filename) != ErrFile::Success)
+  lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
+  int index;
+  auto res = openWorkSpace(filename, false, &index);
+  if (res == ErrFile::AlreadyOpened) {
+    if (hexfiles[index].workspace.length() == 0)
+      DMessageManager::instance()->sendMessage(this, ICONRES("workspace"),
+                                               tr("WSOpenedUnSuccessfully"));
+  } else if (res != ErrFile::Success) {
     DMessageManager::instance()->sendMessage(this, ICONRES("workspace"),
-                                             tr("SaveUnSuccessfully"));
+                                             tr("WorkSpaceOpenUnSuccessfully"));
+  }
 }
 
 bool MainWindow::saveWorkSpace() {
@@ -2472,9 +2488,10 @@ void MainWindow::on_saveasworkspace() {
     return;
   }
   auto filename = QFileDialog::getSaveFileName(
-      this, tr("ChooseSaveFile"), QString(), tr("ProjectFile (*.wingpro)"));
+      this, tr("ChooseSaveFile"), lastusedpath, tr("ProjectFile (*.wingpro)"));
   if (filename.isEmpty())
     return;
+  lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
   if (!filename.endsWith(QLatin1String(".wingpro"))) {
     filename += ".wingpro";
   }

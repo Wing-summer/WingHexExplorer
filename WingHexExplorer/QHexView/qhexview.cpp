@@ -18,6 +18,17 @@
 
 QHexRenderer *QHexView::renderer() { return m_renderer; }
 
+int QHexView::getWorkSpaceState(QHexDocument *doc, bool b) {
+  if (doc->isWorkspace) {
+    if (b)
+      return 1;
+    else
+      return 0;
+  } else {
+    return -1;
+  }
+}
+
 void QHexView::switchDocument(QHexDocument *document, QHexRenderer *renderer,
                               int vBarValue) {
   if (document && renderer) {
@@ -127,23 +138,15 @@ void QHexView::establishSignal(QHexDocument *doc) {
           &QHexView::renderCurrentLine);
   connect(doc, &QHexDocument::canUndoChanged, this, &QHexView::canUndoChanged);
   connect(doc, &QHexDocument::canRedoChanged, this, &QHexView::canRedoChanged);
-  connect(doc, &QHexDocument::canMetaRedoChanged, this,
-          &QHexView::canMetaRedoChanged);
-  connect(doc, &QHexDocument::canMetaUndoChanged, this,
-          &QHexView::canMetaUndoChanged);
   connect(doc, &QHexDocument::documentSaved, this, &QHexView::documentSaved);
-  connect(doc, &QHexDocument::workspaceSaved, this, &QHexView::workspaceSaved);
 
   emit canUndoChanged(doc->canUndo());
   emit canRedoChanged(doc->canRedo());
-  emit canMetaRedoChanged(doc->metadata()->canRedo());
-  emit canMetaUndoChanged(doc->metadata()->canUndo());
   emit cursorLocationChanged();
   emit documentSwitched();
   emit documentSaved(doc->isSaved());
   emit documentKeepSize(doc->isKeepSize());
   emit documentLockedFile(doc->isLocked());
-  emit workspaceSaved(doc->metadata()->isMetaSaved());
 }
 
 /*======================*/

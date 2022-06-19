@@ -4,6 +4,7 @@
 #include "QHexView/document/qhexdocument.h"
 #include "QHexView/qhexview.h"
 #include "class/logger.h"
+#include "class/recentfilemanager.h"
 #include "class/workspacemanager.h"
 #include "control/gotobar.h"
 #include "plugin/pluginsystem.h"
@@ -76,8 +77,6 @@ class MainWindow : public DMainWindow {
     FillZero,
     Meta,
     MetaEdit,
-    MetaRedo,
-    MetaUndo,
     DelMeta,
     ClsMeta,
     BookMark,
@@ -122,8 +121,10 @@ private:
 
 public:
   ErrFile openFile(QString filename, bool readonly = false,
-                   QString workspace = "");
-  ErrFile openWorkSpace(QString filename);
+                   int *openedindex = nullptr, QString workspace = "",
+                   bool *oldworkspace = nullptr);
+  ErrFile openWorkSpace(QString filename, bool readonly = false,
+                        int *openedindex = nullptr);
 
 private:
   void newFile();
@@ -183,8 +184,6 @@ private:
   void on_gotobar(int pos, bool isline);
   void on_locChanged();
   void on_documentSwitched();
-  void on_metaundo();
-  void on_metaredo();
   void on_metadata();
   void on_metadataedit();
   void on_metadatadel();
@@ -275,6 +274,7 @@ private:
   QTableWidgetItem *numsitem = nullptr;
   QTableWidgetItem (*findresitem)[3] = {nullptr};
   Logger *logger;
+  RecentFileManager *recentmanager;
 
 private:
   // hexview default setting
@@ -290,8 +290,9 @@ private:
   bool _rootenableplugin = false;
 
   int _findmax = 100;
-
   int findres = 0;
+
+  QString lastusedpath;
 };
 
 #endif // MAINWINDOW_H

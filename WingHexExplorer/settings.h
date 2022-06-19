@@ -32,6 +32,10 @@ public:
   void applySetting();
   void saveWindowState(DMainWindow *wnd, bool isorign = false);
   void loadWindowState(DMainWindow *wnd, bool isorign = false);
+  QString loadFileDialogCurrent();
+  void saveFileDialogCurrent(QString path);
+  QStringList loadRecent();
+  void saveRecent(QStringList recent);
 
   int m_iDefaultFontSize = 12;
   int m_iMaxFontSize = 50;

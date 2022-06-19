@@ -51,7 +51,7 @@ class QHexMetadata : public QObject {
   Q_OBJECT
 
 public:
-  explicit QHexMetadata(QObject *parent = nullptr);
+  explicit QHexMetadata(QUndoStack *undo, QObject *parent = nullptr);
   const QHexLineMetadata &get(quint64 line) const;
   QString comments(quint64 line, int column) const;
   bool lineHasMetadata(quint64 line) const; // modified by wingsummer
@@ -107,20 +107,12 @@ signals:
   void metadataChanged(quint64 line);
   void metadataCleared();
 
-  /*============================*/
-  // added by wingsummer
-
-  void canMetaUndoChanged(bool canUndo);
-  void canMetaRedoChanged(bool canRedo);
-  void isSaved(bool saved);
-  /*============================*/
-
 private:
   quint8 m_lineWidth;
   QHash<quint64, QHexLineMetadata> m_metadata;
   QList<QHexMetadataAbsoluteItem> m_absoluteMetadata;
 
-  QUndoStack m_undo; // added by wingsummer
+  QUndoStack *m_undo; // added by wingsummer
 };
 
 #endif // QHEXMETADATA_H
