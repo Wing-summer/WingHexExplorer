@@ -4,10 +4,11 @@
 #include "utilities.h"
 #include <DInputDialog>
 #include <DMenu>
+#include <DMessageManager>
 #include <QFile>
 
-RecentFileManager::RecentFileManager(DMenu *menu, QObject *parent)
-    : QObject(parent), m_menu(menu) {}
+RecentFileManager::RecentFileManager(DMenu *menu, DMainWindow *parent)
+    : QObject(parent), m_menu(menu), m_parent(parent) {}
 
 void RecentFileManager::apply() {
   QAction *a;
@@ -21,12 +22,20 @@ void RecentFileManager::apply() {
   a->setText(tr("RemoveItem"));
   a->setIcon(ICONRES("del"));
   connect(a, &QAction::triggered, [=] {
+    if (hitems.count() == 0) {
+      DMessageManager::instance()->sendMessage(m_parent, ICONRES("clearhis"),
+                                               tr("NoHistoryDel"));
+      return;
+    }
+    bool ok;
     auto d = DInputDialog::getInt(nullptr, tr("Input"), tr("InputIndex"), 0, 0,
-                                  m_recents.count());
-    m_menu->removeAction(hitems.at(d));
-    m_recents.removeAt(d);
-    for (auto it = hitems.begin() + d; it != hitems.end(); it++) {
-      (*it)->setIconText(QString::number(d++));
+                                  m_recents.count(), 1, &ok);
+    if (ok) {
+      m_menu->removeAction(hitems.at(d));
+      m_recents.removeAt(d);
+      for (auto it = hitems.begin() + d; it != hitems.end(); it++) {
+        (*it)->setIconText(QString::number(d++));
+      }
     }
   });
   m_menu->addAction(a);
@@ -37,26 +46,10 @@ void RecentFileManager::apply() {
   for (auto item : s) {
     if (QFile::exists(item)) {
       m_recents << item;
-
       a = new QAction(m_menu);
-      a->setText(item);
-      a->setIconText(QString::number(i++));
-      connect(a, &QAction::triggered, [=] {
-        auto send = qobject_cast<QAction *>(sender());
-        if (send) {
-          auto f = send->text();
-          if (QFile::exists(f)) {
-            AppManager::openFile(f);
-            return;
-          }
-        }
-        auto index = hitems.indexOf(send);
-        if (index >= 0) {
-          m_menu->removeAction(send);
-          hitems.removeAt(index);
-          m_recents.removeAt(index);
-        }
-      });
+      a->setText(QString("%1 : %2").arg(i++).arg(item));
+      a->setData(item);
+      connect(a, &QAction::triggered, this, &RecentFileManager::trigger);
       hitems.push_back(a);
       m_menu->addAction(a);
     }
@@ -71,34 +64,43 @@ void RecentFileManager::addRecentFile(QString filename) {
   if (QFile::exists(filename) && m_recents.indexOf(filename) < 0) {
     auto a = new QAction(m_menu);
     a = new QAction(m_menu);
-    a->setText(filename);
-    a->setIconText(QString::number(m_recents.count()));
-    connect(a, &QAction::triggered, [=] {
-      auto send = qobject_cast<QAction *>(sender());
-      if (send) {
-        auto f = send->text();
-        if (QFile::exists(f)) {
-          AppManager::openFile(f);
-          return;
-        }
-      }
-      auto index = hitems.indexOf(send);
-      if (index >= 0) {
-        m_menu->removeAction(send);
-        hitems.removeAt(index);
-        m_recents.removeAt(index);
-      }
-    });
+    a->setText(QString("%1 : %2").arg(m_recents.count()).arg(filename));
+    a->setData(filename);
+    connect(a, &QAction::triggered, this, &RecentFileManager::trigger);
     m_recents << filename;
     hitems.push_back(a);
     m_menu->addAction(a);
   }
 }
 
+void RecentFileManager::trigger() {
+  auto send = qobject_cast<QAction *>(sender());
+  if (send) {
+    auto f = send->data().toString();
+    if (QFile::exists(f)) {
+      AppManager::openFile(f);
+      return;
+    }
+  }
+  auto index = hitems.indexOf(send);
+  if (index >= 0) {
+    m_menu->removeAction(send);
+    hitems.removeAt(index);
+    m_recents.removeAt(index);
+  }
+}
+
 void RecentFileManager::clearFile() {
+  if (hitems.count() == 0) {
+    DMessageManager::instance()->sendMessage(m_parent, ICONRES("clearhis"),
+                                             tr("NoHistoryDel"));
+    return;
+  }
   for (auto item : hitems) {
     m_menu->removeAction(item);
   }
   m_recents.clear();
   hitems.clear();
+  DMessageManager::instance()->sendMessage(m_parent, ICONRES("clearhis"),
+                                           tr("HistoryClearFinished"));
 }

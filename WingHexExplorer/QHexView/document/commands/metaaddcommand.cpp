@@ -7,7 +7,7 @@ MetaAddCommand::MetaAddCommand(QHexMetadata *hexmeta,
 
 void MetaAddCommand::redo() {
   m_hexmeta->metadata(m_meta.begin, m_meta.end, m_meta.foreground,
-                      m_meta.background, m_meta.comment, false);
+                      m_meta.background, m_meta.comment);
 }
 
-void MetaAddCommand::undo() { m_hexmeta->removeMetadata(m_meta, true); }
+void MetaAddCommand::undo() { m_hexmeta->removeMetadata(m_meta); }

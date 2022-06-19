@@ -59,10 +59,20 @@ public:
   /*============================*/
   // added by wingsummer
 
+  void ModifyMetadata(QHexMetadataAbsoluteItem newmeta,
+                      QHexMetadataAbsoluteItem oldmeta);
+  void RemoveMetadata(QHexMetadataAbsoluteItem item);
+  void RemoveMetadata(qint64 offset);
+  void Metadata(qint64 begin, qint64 end, const QColor &fgcolor,
+                const QColor &bgcolor, const QString &comment);
+  void Clear();
+
+  //---------------------------------------------------------
+
   void modifyMetadata(QHexMetadataAbsoluteItem newmeta,
-                      QHexMetadataAbsoluteItem oldmeta, bool reundo = false);
-  void removeMetadata(QHexMetadataAbsoluteItem item, bool reundo = false);
-  bool removeMetadata(qint64 offset, QList<QHexMetadataAbsoluteItem> refer);
+                      QHexMetadataAbsoluteItem oldmeta);
+  void removeMetadata(QHexMetadataAbsoluteItem item);
+  void removeMetadata(qint64 offset);
   QList<QHexMetadataAbsoluteItem> gets(qint64 offset);
   void applyMetas(QList<QHexMetadataAbsoluteItem> metas);
 
@@ -70,7 +80,7 @@ public:
   void undo();
   bool canRedo();
   bool canUndo();
-  bool isMetaSaved();
+  bool hasMetadata();
 
   /*============================*/
 
@@ -83,8 +93,7 @@ public:
 public:
   // new interface with begin, end
   void metadata(qint64 begin, qint64 end, const QColor &fgcolor,
-                const QColor &bgcolor, const QString &comment,
-                bool insert = true);
+                const QColor &bgcolor, const QString &comment);
 
   // old interface with line, start, length
   void metadata(quint64 line, int start, int length, const QColor &fgcolor,

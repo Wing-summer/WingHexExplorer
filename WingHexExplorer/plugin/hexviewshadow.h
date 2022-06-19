@@ -14,7 +14,8 @@ enum ErrFile {
   NotExist,
   AlreadyOpened,
   IsNewFile,
-  IsDirver
+  IsDirver,
+  WorkSpaceUnSaved
 };
 
 struct FindResult {
@@ -185,7 +186,7 @@ signals:
   void metadata(quint64 line, int start, int length, const QColor &fgcolor,
                 const QColor &bgcolor, const QString &comment);
   bool lineHasMetadata(quint64 line) const;
-  bool removeMetadata(qint64 offset, QList<HexMetadataAbsoluteItem> refer);
+  bool removeMetadata(qint64 offset);
   QList<HexMetadataAbsoluteItem> getMetadatas(qint64 offset);
   void clear();
   HexLineMetadata getMetaLine(quint64 line) const;
@@ -229,8 +230,6 @@ signals:
 
   // workspace
   bool openWorkSpace(QString filename, bool readonly = false);
-  bool saveWorkSpace();
-  bool saveAsWorkSpace(QString filename);
 };
 
 #endif // HEXVIEWSHADOW_H

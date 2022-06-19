@@ -166,12 +166,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
                    Qt::KeyboardModifier::AltModifier | Qt::Key_E);
   auto keyopenws =
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_W);
-  auto keysavews =
-      QKeySequence(Qt::KeyboardModifier::ControlModifier |
-                   Qt::KeyboardModifier::ShiftModifier | Qt::Key_W);
-  auto keysaveasws =
-      QKeySequence(Qt::KeyboardModifier::ControlModifier |
-                   Qt::KeyboardModifier::AltModifier | Qt::Key_W);
 
   auto keycopyhex =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
@@ -187,29 +181,22 @@ MainWindow::MainWindow(DMainWindow *parent) {
   a->setEnabled(false);                                                        \
   toolmenutools.insert(index, a);
 
+  AddToolSubMenuShortcutAction("workspace", tr("OpenWorkSpace"),
+                               MainWindow::on_openworkspace, keyopenws);
   AddToolSubMenuShortcutAction("opendriver", tr("OpenD"),
                                MainWindow::on_opendriver, keyOpenDriver);
   tm->addSeparator();
-  AddToolSubMenuShortcutAction("save", tr("Save"), MainWindow::on_savefile,
+  AddToolSubMenuShortcutAction("save", tr("Save"), MainWindow::on_save,
                                QKeySequence::Save);
   AddMenuDB(ToolBoxIndex::Save);
-  AddToolSubMenuShortcutAction("saveas", tr("SaveAs"),
-                               MainWindow::on_saveasfile, keysaveas);
+  AddToolSubMenuShortcutAction("saveas", tr("SaveAs"), MainWindow::on_saveas,
+                               keysaveas);
   AddMenuDB(ToolBoxIndex::SaveAs);
   AddToolSubMenuShortcutAction("export", tr("Export"),
                                MainWindow::on_exportfile, keyexport);
   AddMenuDB(ToolBoxIndex::Export);
   AddToolSubMenuAction("savesel", tr("SaveSel"), MainWindow::on_savesel);
   AddMenuDB(ToolBoxIndex::SaveSel);
-  tm->addSeparator();
-  AddToolSubMenuShortcutAction("workspace", tr("OpenWorkSpace"),
-                               MainWindow::on_openworkspace, keyopenws);
-  AddToolSubMenuShortcutAction("workspacesave", tr("SaveWorkSpace"),
-                               MainWindow::on_saveworkspace, keysavews);
-  AddMenuDB(ToolBoxIndex::SaveWorkSpace);
-  AddToolSubMenuShortcutAction("workspacesaveas", tr("SaveAsWorkSpace"),
-                               MainWindow::on_saveasworkspace, keysaveasws);
-  AddMenuDB(ToolBoxIndex::SaveAsWorkSpace);
   tm->addSeparator();
 
   auto tmm = new DMenu(this);
@@ -388,23 +375,16 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   AddToolBarTool("new", MainWindow::on_newfile, tr("New"));
   AddToolBarTool("open", MainWindow::on_openfile, tr("OpenF"));
+  AddToolBarTool("workspace", MainWindow::on_openworkspace,
+                 tr("OpenWorkSpace"));
   AddToolBarTool("opendriver", MainWindow::on_opendriver, tr("OpenD"));
   toolbar->addSeparator();
-  AddToolBarTool("save", MainWindow::on_savefile, tr("Save"));
+  AddToolBarTool("save", MainWindow::on_save, tr("Save"));
   AddToolsDB(ToolBoxIndex::Save);
-  AddToolBarTool("saveas", MainWindow::on_saveasfile, tr("SaveAs"));
+  AddToolBarTool("saveas", MainWindow::on_saveas, tr("SaveAs"));
   AddToolsDB(ToolBoxIndex::SaveAs);
   AddToolBarTool("export", MainWindow::on_exportfile, tr("Export"));
   AddToolsDB(ToolBoxIndex::Export);
-  toolbar->addSeparator();
-  AddToolBarTool("workspace", MainWindow::on_openworkspace,
-                 tr("OpenWorkSpace"));
-  AddToolBarTool("workspacesave", MainWindow::on_saveworkspace,
-                 tr("SaveWorkSpace"));
-  AddToolsDB(ToolBoxIndex::SaveWorkSpace);
-  AddToolBarTool("workspacesaveas", MainWindow::on_saveasworkspace,
-                 tr("SaveAsWorkSpace"));
-  AddToolsDB(ToolBoxIndex::SaveAsWorkSpace);
   toolbar->addSeparator();
   AddToolBarTool("undo", MainWindow::on_undofile, tr("Undo"));
   AddToolsDB(ToolBoxIndex::Undo);
@@ -739,7 +719,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
     toolmenutools[ToolBoxIndex::Undo]->setEnabled(b);
   });
   connect(hexeditor, &QHexView::canRedoChanged, [=](bool b) {
-    toolmenutools[ToolBoxIndex::Redo]->setEnabled(b);
+    toolbartools[ToolBoxIndex::Redo]->setEnabled(b);
     toolmenutools[ToolBoxIndex::Redo]->setEnabled(b);
   });
   connect(hexeditor, &QHexView::documentSaved,
@@ -755,8 +735,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
   QShortcut *s;
   ConnectShortCut(QKeySequence::New, MainWindow::on_newfile);
   ConnectShortCut(QKeySequence::Open, MainWindow::on_openfile);
-  ConnectShortCut(QKeySequence::Save, MainWindow::on_savefile);
-  ConnectShortCut(keysaveas, MainWindow::on_saveasfile);
+  ConnectShortCut(QKeySequence::Save, MainWindow::on_save);
+  ConnectShortCut(keysaveas, MainWindow::on_saveas);
   ConnectShortCut(QKeySequence::Undo, MainWindow::on_undofile);
   ConnectShortCut(QKeySequence::Redo, MainWindow::on_redofile);
   ConnectShortCut(QKeySequence::Cut, MainWindow::on_cutfile);
@@ -775,8 +755,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keyloadplg, MainWindow::on_loadplg);
   ConnectShortCut(keyencoding, MainWindow::on_encoding);
   ConnectShortCut(keyopenws, MainWindow::on_openworkspace);
-  ConnectShortCut(keysavews, MainWindow::on_saveworkspace);
-  ConnectShortCut(keysaveas, MainWindow::on_saveasworkspace);
   ConnectShortCut(keycuthex, MainWindow::on_cuthex);
   ConnectShortCut(keycopyhex, MainWindow::on_copyhex);
   ConnectShortCut(keypastehex, MainWindow::on_pastehex);
@@ -1218,21 +1196,9 @@ void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
             line, start, length, fgcolor, bgcolor, comment);
       });
 
-  ConnectShadowLamba(HexViewShadow::removeMetadata,
-                     [=](qint64 offset, QList<HexMetadataAbsoluteItem> refer) {
-                       QList<QHexMetadataAbsoluteItem> nrefer;
-                       for (auto item : refer) {
-                         QHexMetadataAbsoluteItem m;
-                         m.begin = item.begin;
-                         m.end = item.end;
-                         m.comment = item.comment;
-                         m.background = item.background;
-                         m.foreground = item.foreground;
-                         nrefer.push_back(m);
-                       }
-                       hexfiles[_pcurfile].doc->metadata()->removeMetadata(
-                           offset, nrefer);
-                     });
+  ConnectShadowLamba(HexViewShadow::removeMetadata, [=](qint64 offset) {
+    hexfiles[_pcurfile].doc->metadata()->removeMetadata(offset);
+  });
 
   void (HexViewShadow::*clear)() = &HexViewShadow::clear;
   ConnectShadowLamba2(clear,
@@ -1270,21 +1236,19 @@ void MainWindow::connectShadowSlot(HexViewShadow *shadow) {
                      [=](QString filename, bool readonly) {
                        openWorkSpace(filename, readonly);
                      });
-  ConnectShadows(HexViewShadow::saveWorkSpace, MainWindow::saveWorkSpace);
-  ConnectShadows(HexViewShadow::saveAsWorkSpace, MainWindow::saveAsWorkSpace);
   ConnectShadows(HexViewShadow::newFile, MainWindow::newFile);
   ConnectShadowLamba(
       HexViewShadow::openFile,
       [=](QString filename, bool readonly) { openFile(filename, readonly); });
   ConnectShadows(HexViewShadow::openDriver, MainWindow::openDriver);
   ConnectShadows(HexViewShadow::closeFile, MainWindow::closeFile);
-  ConnectShadows(HexViewShadow::saveFile, MainWindow::saveFile);
+  ConnectShadows(HexViewShadow::saveFile, MainWindow::save);
   ConnectShadows(HexViewShadow::exportFile, MainWindow::exportFile);
   ConnectShadows(HexViewShadow::exportFileGUI, MainWindow::on_exportfile);
-  ConnectShadows(HexViewShadow::saveasFile, MainWindow::saveasFile);
-  ConnectShadows(HexViewShadow::saveasFileGUI, MainWindow::on_saveasfile);
+  ConnectShadows(HexViewShadow::saveasFile, MainWindow::saveAs);
+  ConnectShadows(HexViewShadow::saveasFileGUI, MainWindow::on_saveas);
   ConnectShadows(HexViewShadow::closeCurrentFile, MainWindow::closeCurrentFile);
-  ConnectShadows(HexViewShadow::saveCurrentFile, MainWindow::saveCurrentFile);
+  ConnectShadows(HexViewShadow::saveCurrentFile, MainWindow::saveCurrent);
   ConnectShadows(HexViewShadow::openFileGUI, MainWindow::on_openfile);
   ConnectShadows(HexViewShadow::openDriverGUI, MainWindow::on_opendriver);
   ConnectShadows(HexViewShadow::gotoGUI, MainWindow::on_gotoline);
@@ -1596,13 +1560,6 @@ ErrFile MainWindow::openDriver(QString driver) {
   }
 }
 
-bool MainWindow::isSavedMeta(int index) {
-  if (index < 0 || index >= hexfiles.count())
-    return false;
-  auto p = hexfiles.at(index);
-  return p.doc->metadata()->isMetaSaved();
-}
-
 bool MainWindow::isSavedFile(int index) {
   if (index < 0 || index >= hexfiles.count())
     return false;
@@ -1624,7 +1581,7 @@ ErrFile MainWindow::closeFile(int index, bool force) {
   if (index >= 0 && index < hexfiles.count()) {
     auto p = hexfiles.at(index);
     if (!force) {
-      if (!isSavedFile(index) || !isSavedMeta(index)) {
+      if (!isSavedFile(index)) {
         if (_enableplugin) {
           params[0].setValue(HookIndex::CloseFileEnd);
           params << ErrFile::UnSaved;
@@ -1686,12 +1643,14 @@ void MainWindow::on_openfile() {
     }
     if (res == ErrFile::AlreadyOpened) {
       setFilePage(index);
+      return;
     }
     if (res == ErrFile::Permission &&
         openFile(filename, true) == ErrFile::Permission) {
       QMessageBox::critical(this, tr("Error"), tr("FilePermission"));
       return;
     }
+    recentmanager->addRecentFile(filename);
   }
 }
 
@@ -1801,7 +1760,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         closeFile(0, true);
         tabs->removeTab(0);
       } else {
-        on_savefile();
+        on_save();
         event->ignore();
         return;
       }
@@ -1812,14 +1771,17 @@ void MainWindow::closeEvent(QCloseEvent *event) {
   event->accept();
 }
 
-void MainWindow::on_savefile() {
+void MainWindow::on_save() {
   CheckEnabled;
-  auto res = saveCurrentFile();
+  auto res = saveCurrent();
   if (res == ErrFile::IsNewFile)
-    on_saveasfile();
+    on_saveas();
   else if (res == ErrFile::Success) {
     DMessageManager::instance()->sendMessage(this, ICONRES("save"),
                                              tr("SaveSuccessfully"));
+  } else if (res == ErrFile::WorkSpaceUnSaved) {
+    DMessageManager::instance()->sendMessage(this, ICONRES("save"),
+                                             tr("SaveWSError"));
   } else {
     DMessageManager::instance()->sendMessage(this, ICONRES("save"),
                                              tr("SaveUnSuccessfully"));
@@ -1831,16 +1793,20 @@ void MainWindow::on_delete() {
   hexeditor->document()->removeSelection();
 }
 
-void MainWindow::on_saveasfile() {
+void MainWindow::on_saveas() {
   CheckEnabled;
   auto filename =
       QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"), lastusedpath);
   if (filename.isEmpty())
     return;
   lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
-  if (saveasFile(filename, _currentfile) == ErrFile::Success) {
+  auto res = saveAs(filename, _currentfile);
+  if (res == ErrFile::Success) {
     DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                              tr("SaveSuccessfully"));
+  } else if (res == ErrFile::WorkSpaceUnSaved) {
+    DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
+                                             tr("SaveWSError"));
   } else {
     DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                              tr("SaveUnSuccessfully"));
@@ -2057,7 +2023,7 @@ void MainWindow::on_documentSwitched() {
   }
 }
 
-ErrFile MainWindow::saveFile(int index) {
+ErrFile MainWindow::save(int index) {
   if (index >= 0 && index < hexfiles.count()) {
     auto f = hexfiles.at(index);
     if (f.isdriver)
@@ -2067,6 +2033,25 @@ ErrFile MainWindow::saveFile(int index) {
     QFile file(f.filename);
     file.open(QFile::WriteOnly);
     if (f.doc->saveTo(&file, true)) {
+      file.close();
+      if (f.doc->metadata()->hasMetadata()) {
+        auto w = f.workspace;
+        if (QFile::exists(w)) {
+          auto b = WorkSpaceManager::saveWorkSpace(
+              w, f.filename, hexeditor->document()->getAllBookMarks(),
+              hexeditor->document()->metadata()->getallMetas());
+          if (!b)
+            return ErrFile::WorkSpaceUnSaved;
+        } else {
+          auto b = WorkSpaceManager::saveWorkSpace(
+              f.filename + PROEXT, f.filename,
+              hexeditor->document()->getAllBookMarks(),
+              hexeditor->document()->metadata()->getallMetas());
+          if (!b)
+            return ErrFile::WorkSpaceUnSaved;
+          hexfiles[index].workspace = f.filename + PROEXT;
+        }
+      }
       return ErrFile::Success;
     }
     return ErrFile::Permission;
@@ -2091,7 +2076,7 @@ ErrFile MainWindow::exportFile(QString filename, int index) {
   return ErrFile::Error;
 }
 
-ErrFile MainWindow::saveasFile(QString filename, int index) {
+ErrFile MainWindow::saveAs(QString filename, int index) {
   if (index >= 0 && index < hexfiles.count()) {
     auto f = hexfiles.at(index);
     if (f.isdriver)
@@ -2101,6 +2086,15 @@ ErrFile MainWindow::saveasFile(QString filename, int index) {
     if (f.doc->saveTo(&file, true)) {
       hexfiles[index].filename = filename;
       file.close();
+      if (f.doc->metadata()->hasMetadata()) {
+        auto b = WorkSpaceManager::saveWorkSpace(
+            filename + PROEXT, filename,
+            hexeditor->document()->getAllBookMarks(),
+            hexeditor->document()->metadata()->getallMetas());
+        if (!b)
+          return ErrFile::WorkSpaceUnSaved;
+        hexfiles[index].workspace = filename + PROEXT;
+      }
       return ErrFile::Success;
     }
     file.close();
@@ -2109,7 +2103,7 @@ ErrFile MainWindow::saveasFile(QString filename, int index) {
   return ErrFile::Error;
 }
 
-ErrFile MainWindow::saveCurrentFile() { return saveFile(_currentfile); }
+ErrFile MainWindow::saveCurrent() { return save(_currentfile); }
 
 void MainWindow::on_metadataedit() {
   CheckEnabled;
@@ -2135,7 +2129,7 @@ void MainWindow::on_metadataedit() {
           o.foreground = m.foreGroundColor();
           o.background = m.backGroundColor();
           o.comment = m.comment();
-          mi->modifyMetadata(meta, o);
+          mi->ModifyMetadata(meta, o);
         }
       } else {
         DMessageManager::instance()->sendMessage(this, ICONRES("metadata"),
@@ -2155,13 +2149,10 @@ void MainWindow::on_metadata() {
     auto cur = hexeditor->document()->cursor();
 
     if (cur->selectionLength() > 0) {
-      auto mc =
-          hexeditor->document()->metadata()->gets(cur->position().offset());
-
       auto begin = qint64(cur->selectionStart().offset());
       auto end = qint64(cur->selectionEnd().offset()) + 1;
       if (m.exec()) {
-        hexeditor->document()->metadata()->metadata(
+        hexeditor->document()->metadata()->Metadata(
             begin, end, m.foreGroundColor(), m.backGroundColor(), m.comment());
       }
 
@@ -2177,12 +2168,12 @@ void MainWindow::on_metadatadel() {
   auto doc = hexeditor->document();
   auto meta = doc->metadata();
   auto pos = doc->cursor()->position().offset();
-  meta->removeMetadata(pos, meta->gets(pos));
+  meta->RemoveMetadata(pos);
 }
 
 void MainWindow::on_metadatacls() {
   CheckEnabled;
-  hexeditor->document()->metadata()->clear();
+  hexeditor->document()->metadata()->Clear();
 }
 
 void MainWindow::on_setting_plugin() {
@@ -2266,8 +2257,12 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
   } else {
     iw->setPixmap(infouw);
   }
-
   status->setEnabled(b);
+
+  auto doc = hexeditor->document();
+  doc->canRedoChanged(doc->canRedo());
+  doc->canUndoChanged(doc->canUndo());
+
   if (!b) {
     iSaved->setPixmap(infoSaveg);
     iReadWrite->setPixmap(inforwg);
@@ -2439,68 +2434,5 @@ void MainWindow::on_openworkspace() {
     DMessageManager::instance()->sendMessage(this, ICONRES("workspace"),
                                              tr("WorkSpaceOpenUnSuccessfully"));
   }
-}
-
-bool MainWindow::saveWorkSpace() {
-  if (hexfiles.count() > 0) {
-    auto f = hexfiles[_currentfile];
-    if (f.workspace.length() == 0) {
-      return false;
-    }
-    return WorkSpaceManager::saveWorkSpace(
-        f.workspace, f.filename, hexeditor->document()->getAllBookMarks(),
-        hexeditor->document()->metadata()->getallMetas());
-  }
-  return false;
-}
-
-bool MainWindow::saveAsWorkSpace(QString filename) {
-  if (hexfiles.count() > 0) {
-    auto f = hexfiles[_currentfile];
-    return WorkSpaceManager::saveWorkSpace(
-        filename, f.filename, hexeditor->document()->getAllBookMarks(),
-        hexeditor->document()->metadata()->getallMetas());
-  }
-  return false;
-}
-
-void MainWindow::on_saveworkspace() {
-  CheckEnabled;
-  auto f = hexfiles[_currentfile];
-  if (f.workspace.length() == 0) {
-    on_saveasworkspace();
-    return;
-  }
-  if (saveWorkSpace()) {
-    DMessageManager::instance()->sendMessage(this, ICONRES("workspacesave"),
-                                             tr("SaveSuccessfully"));
-  } else {
-    DMessageManager::instance()->sendMessage(this, ICONRES("workspacesave"),
-                                             tr("SaveUnSuccessfully"));
-  }
-}
-
-void MainWindow::on_saveasworkspace() {
-  CheckEnabled;
-  auto f = hexfiles[_currentfile];
-  if (f.filename[0] == ':') {
-    QMessageBox::warning(this, tr("Warn"), tr("PleaseSaveNewFile"));
-    return;
-  }
-  auto filename = QFileDialog::getSaveFileName(
-      this, tr("ChooseSaveFile"), lastusedpath, tr("ProjectFile (*.wingpro)"));
-  if (filename.isEmpty())
-    return;
-  lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
-  if (!filename.endsWith(QLatin1String(".wingpro"))) {
-    filename += ".wingpro";
-  }
-  if (saveAsWorkSpace(filename)) {
-    f.workspace = filename;
-    DMessageManager::instance()->sendMessage(this, ICONRES("workspacesaveas"),
-                                             tr("SaveSuccessfully"));
-  } else {
-    DMessageManager::instance()->sendMessage(this, ICONRES("workspacesaveas"),
-                                             tr("SaveUnSuccessfully"));
-  }
+  recentmanager->addRecentFile(filename);
 }

@@ -130,13 +130,12 @@ private:
   void newFile();
   ErrFile openDriver(QString driver);
   ErrFile closeFile(int index, bool force = false);
-  ErrFile saveFile(int index);
+  ErrFile save(int index);
   ErrFile exportFile(QString filename, int index);
-  ErrFile saveasFile(QString filename, int index);
+  ErrFile saveAs(QString filename, int index);
   ErrFile closeCurrentFile(bool force = false);
-  ErrFile saveCurrentFile();
+  ErrFile saveCurrent();
   bool isSavedFile(int index);
-  bool isSavedMeta(int index);
   void FindFileBytes(int index, QByteArray arr, QList<int> &indices);
   void FindAllBytes(QByteArray arr, QList<FindResult> &res);
   void gotoFileLine(int index, quint64 offset);
@@ -152,8 +151,6 @@ private:
   void cutCurrentBytes(quint64 pos, qint64 len, QByteArray &arr);
   void pasteFileBytes(int index, QByteArray arr, qint64 len = -1);
   void pasteCurrentBytes(quint64 pos, QByteArray arr, qint64 len = -1);
-  bool saveWorkSpace();
-  bool saveAsWorkSpace(QString filename);
 
 private:
   void setFilePage(int index);
@@ -176,8 +173,8 @@ private:
   void on_tabAddRequested();
   void on_tabMoved(int from, int to);
   void on_opendriver();
-  void on_savefile();
-  void on_saveasfile();
+  void on_save();
+  void on_saveas();
   void on_exit();
   void on_setting_general();
   void on_setting_plugin();
@@ -203,8 +200,6 @@ private:
   void on_loadplg();
   void on_encoding();
   void on_openworkspace();
-  void on_saveworkspace();
-  void on_saveasworkspace();
 
 private:
   QList<HexFile> hexfiles;

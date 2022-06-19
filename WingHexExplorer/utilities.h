@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #define ICONRES(name) QIcon(":/images/" name ".png")
+#define PROEXT ".wingpro"
 
 struct HexFile {
   QHexDocument *doc;
