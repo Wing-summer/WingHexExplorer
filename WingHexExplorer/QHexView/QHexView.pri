@@ -18,7 +18,12 @@ HEADERS += $$PWD/document/commands/hexcommand.h \
     $$PWD/document/commands/metaremovecommand.h \
     $$PWD/document/commands/metareplacecommand.h \
     $$PWD/document/commands/metaclearcommand.h \
-    $$PWD/document/commands/metaremoveposcommand.h
+    $$PWD/document/commands/metaremoveposcommand.h \
+    $$PWD/document/commands/bookmarkcommand.h \
+    $$PWD/document/commands/bookmarkaddcommand.h \
+    $$PWD/document/commands/bookmarkremovecommand.h \
+    $$PWD/document/commands/bookmarkreplacecommand.h \
+    $$PWD/document/commands/bookmarkclearcommand.h
 
 SOURCES += $$PWD/document/commands/hexcommand.cpp \
            $$PWD/document/commands/insertcommand.cpp \
@@ -38,6 +43,11 @@ SOURCES += $$PWD/document/commands/hexcommand.cpp \
     $$PWD/document/commands/metaremovecommand.cpp \
     $$PWD/document/commands/metareplacecommand.cpp \
     $$PWD/document/commands/metaclearcommand.cpp \
-    $$PWD/document/commands/metaremoveposcommand.cpp
+    $$PWD/document/commands/metaremoveposcommand.cpp \
+    $$PWD/document/commands/bookmarkcommand.cpp \
+    $$PWD/document/commands/bookmarkaddcommand.cpp \
+    $$PWD/document/commands/bookmarkremovecommand.cpp \
+    $$PWD/document/commands/bookmarkreplacecommand.cpp \
+    $$PWD/document/commands/bookmarkclearcommand.cpp
 
 INCLUDEPATH += $$PWD

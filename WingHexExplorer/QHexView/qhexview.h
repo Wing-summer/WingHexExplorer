@@ -59,6 +59,7 @@ signals:
   void documentSaved(bool saved);
   void documentLockedFile(bool locked);
   void documentKeepSize(bool keep);
+  void documentBookMarkChanged();
 
   /*=============================*/
 

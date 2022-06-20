@@ -1,5 +1,9 @@
 #include "qhexdocument.h"
 #include "buffer/qfilebuffer.h"
+#include "commands/bookmarkaddcommand.h"
+#include "commands/bookmarkclearcommand.h"
+#include "commands/bookmarkremovecommand.h"
+#include "commands/bookmarkreplacecommand.h"
 #include "commands/insertcommand.h"
 #include "commands/removecommand.h"
 #include "commands/replacecommand.h"
@@ -37,9 +41,49 @@ void QHexDocument::getBookMarks(QList<BookMarkStruct> &bookmarks) {
   bookmarks.append(this->bookmarks);
 }
 
-void QHexDocument::addBookMark(QString comment) {
-  BookMarkStruct b{m_cursor->position().offset(), comment};
-  bookmarks.append(b);
+void QHexDocument::AddBookMark(qint64 pos, QString comment) {
+  m_undostack.push(new BookMarkAddCommand(this, pos, comment));
+}
+
+void QHexDocument::ModBookMark(qint64 pos, QString comment) {
+  m_undostack.push(
+      new BookMarkReplaceCommand(this, pos, comment, bookMarkComment(pos)));
+}
+
+void QHexDocument::ClearBookMark() {
+  m_undostack.push(new BookMarkClearCommand(this, getAllBookMarks()));
+}
+
+bool QHexDocument::addBookMark(qint64 pos, QString comment) {
+  if (!existBookMark(pos)) {
+    BookMarkStruct b{pos, comment};
+    bookmarks.append(b);
+    emit bookMarkChanged();
+    return true;
+  }
+  return false;
+}
+
+QString QHexDocument::bookMarkComment(qint64 pos) {
+  if (pos > 0 && pos < m_buffer->length()) {
+    for (auto item : bookmarks) {
+      if (item.pos == pos) {
+        return item.comment;
+      }
+    }
+  }
+  return QString();
+}
+
+BookMarkStruct QHexDocument::bookMark(qint64 pos) {
+  if (pos > 0 && pos < m_buffer->length()) {
+    for (auto item : bookmarks) {
+      if (item.pos == pos) {
+        return item;
+      }
+    }
+  }
+  return BookMarkStruct{-1, ""};
 }
 
 BookMarkStruct QHexDocument::bookMark(int index) {
@@ -52,19 +96,68 @@ BookMarkStruct QHexDocument::bookMark(int index) {
   }
 }
 
-void QHexDocument::removeBookMark(int index) {
-  if (index >= 0 && index < bookmarks.count()) {
-    bookmarks.removeAt(index);
+void QHexDocument::RemoveBookMark(int index) {
+  auto b = bookmarks.at(index);
+  m_undostack.push(new BookMarkRemoveCommand(this, b.pos, b.comment));
+}
+
+void QHexDocument::removeBookMark(qint64 pos) {
+  if (pos >= 0 && pos < m_buffer->length()) {
+    int index = 0;
+    for (auto item : bookmarks) {
+      if (pos == item.pos) {
+        bookmarks.removeAt(index);
+        emit bookMarkChanged();
+        break;
+      }
+      index++;
+    }
   }
 }
 
-void QHexDocument::clearBookMark() { bookmarks.clear(); }
+void QHexDocument::removeBookMark(int index) {
+  if (index >= 0 && index < bookmarks.count()) {
+    bookmarks.removeAt(index);
+    emit bookMarkChanged();
+  }
+}
+
+bool QHexDocument::modBookMark(qint64 pos, QString comment) {
+  if (pos > 0 && pos < m_buffer->length()) {
+    for (auto &item : bookmarks) {
+      if (item.pos == pos) {
+        item.comment = comment;
+        emit bookMarkChanged();
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+void QHexDocument::clearBookMark() {
+  bookmarks.clear();
+  emit bookMarkChanged();
+}
 
 void QHexDocument::gotoBookMark(int index) {
   if (index >= 0 && index < bookmarks.count()) {
     auto bookmark = bookmarks.at(index);
     m_cursor->moveTo(qlonglong(bookmark.pos));
   }
+}
+
+bool QHexDocument::existBookMark(qint64 pos) {
+  for (auto item : bookmarks) {
+    if (item.pos == pos) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool QHexDocument::existBookMark() {
+  return existBookMark(m_cursor->position().offset());
 }
 
 bool QHexDocument::existBookMark(int &index) {
@@ -84,6 +177,7 @@ QList<BookMarkStruct> QHexDocument::getAllBookMarks() { return bookmarks; }
 
 void QHexDocument::applyBookMarks(QList<BookMarkStruct> books) {
   bookmarks.append(books);
+  emit bookMarkChanged();
 }
 
 void QHexDocument::FindAllBytes(qint64 begin, qint64 end, QByteArray b,

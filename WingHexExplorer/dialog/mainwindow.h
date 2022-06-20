@@ -200,6 +200,7 @@ private:
   void on_loadplg();
   void on_encoding();
   void on_openworkspace();
+  void on_bookmarkChanged();
 
 private:
   QList<HexFile> hexfiles;

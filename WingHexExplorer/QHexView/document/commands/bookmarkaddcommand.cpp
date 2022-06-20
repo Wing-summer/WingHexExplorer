@@ -1,0 +1,9 @@
+#include "bookmarkaddcommand.h"
+
+BookMarkAddCommand::BookMarkAddCommand(QHexDocument *doc, qint64 pos,
+                                       QString comment, QUndoCommand *parent)
+    : BookMarkCommand(doc, pos, comment, parent) {}
+
+void BookMarkAddCommand::redo() { m_doc->addBookMark(m_pos, m_comment); }
+
+void BookMarkAddCommand::undo() { m_doc->RemoveBookMark(m_pos); }

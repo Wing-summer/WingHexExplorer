@@ -38,8 +38,7 @@ ErrFile AppManager::openFile(QString file, bool readonly) {
 void AppManager::openFiles(QStringList files) {
   if (mWindow) {
     for (auto file : files) {
-      if (mWindow->openWorkSpace(file) != ErrFile::Success)
-        mWindow->openFile(file);
+      openFile(file);
     }
     //通过dbus接口从任务栏激活窗口
     if (!Q_LIKELY(Utilities::activeWindowFromDock(mWindow->winId()))) {

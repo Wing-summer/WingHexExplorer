@@ -48,15 +48,28 @@ public:
   bool isLocked();
   bool isSaved();
 
-  void addBookMark(QString comment);
+  //----------------------------------
+  void AddBookMark(qint64 pos, QString comment);
+  void RemoveBookMark(int index);
+  void ModBookMark(qint64 pos, QString comment);
+  void ClearBookMark();
+  //----------------------------------
+
+  bool addBookMark(qint64 pos, QString comment);
+  bool modBookMark(qint64 pos, QString comment);
   BookMarkStruct bookMark(int index);
+  BookMarkStruct bookMark(qint64 pos);
+  QString bookMarkComment(qint64 pos);
   QList<BookMarkStruct> getAllBookMarks();
   void applyBookMarks(QList<BookMarkStruct> books);
   void removeBookMark(int index);
+  void removeBookMark(qint64 pos);
   void clearBookMark();
   void getBookMarks(QList<BookMarkStruct> &bookmarks);
   void gotoBookMark(int index);
   bool existBookMark(int &index);
+  bool existBookMark();
+  bool existBookMark(qint64 pos);
 
   void FindAllBytes(qint64 begin, qint64 end, QByteArray b,
                     QList<quint64> &results, int maxCount = -1);
@@ -113,6 +126,7 @@ signals:
   /*================================*/
 
   void documentSaved(bool saved); // added by wingsummer
+  void bookMarkChanged();         // added by wingsummer
   void canUndoChanged(bool canUndo);
   void canRedoChanged(bool canRedo);
   void documentChanged();

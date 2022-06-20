@@ -7,8 +7,4 @@ MetaClearCommand::MetaClearCommand(QHexMetadata *hexmeta,
 
 void MetaClearCommand::redo() { m_hexmeta->clear(); }
 
-void MetaClearCommand::undo() {
-  for (auto item : m_metas)
-    m_hexmeta->metadata(item.begin, item.end, item.foreground, item.background,
-                        item.comment);
-}
+void MetaClearCommand::undo() { m_hexmeta->applyMetas(m_metas); }

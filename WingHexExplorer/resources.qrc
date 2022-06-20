@@ -69,6 +69,7 @@
         <file>images/mark.png</file>
         <file>images/wiki.png</file>
         <file>images/clearhis.png</file>
+        <file>images/pro.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

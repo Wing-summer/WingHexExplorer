@@ -483,7 +483,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
           &MainWindow::on_hexeditor_customContextMenuRequested);
   connect(hexeditor, &QHexView::documentSwitched, this,
           &MainWindow::on_documentSwitched);
-
+  connect(hexeditor, &QHexView::documentBookMarkChanged, this,
+          &MainWindow::on_bookmarkChanged);
   status = new DStatusBar(this);
   status->setEnabled(false);
   this->setStatusBar(status);
@@ -512,15 +513,18 @@ MainWindow::MainWindow(DMainWindow *parent) {
   iSetBaseAddr->setToolTip(tr("SetaddressBase"));
   connect(iSetBaseAddr, &DIconButton::clicked, [=] {
     DInputDialog d;
-    auto num = d.getText(this, tr("addressBase"), tr("inputAddressBase"));
-    bool b = false;
-    qulonglong qnum = num.toULongLong(&b, 0);
+    bool b;
+    auto num = d.getText(this, tr("addressBase"), tr("inputAddressBase"),
+                         QLineEdit::Normal, QString(), &b);
     if (b) {
-      hexeditor->setAddressBase(qnum);
-    } else {
-      if (num.length() > 0) {
-        auto d = DMessageManager::instance();
-        d->sendMessage(this, ICONRES("mAddr"), tr("ErrBaseAddress"));
+      qulonglong qnum = num.toULongLong(&b, 0);
+      if (b) {
+        hexeditor->setAddressBase(qnum);
+      } else {
+        if (num.length() > 0) {
+          auto d = DMessageManager::instance();
+          d->sendMessage(this, ICONRES("mAddr"), tr("ErrBaseAddress"));
+        }
       }
     }
   });
@@ -693,6 +697,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   bookmarks = new DListWidget(this);
   bookmarks->setFocusPolicy(Qt::StrongFocus);
   connect(bookmarks, &DListWidget::itemDoubleClicked, [=]() {
+    hexeditor->renderer()->enableCursor(true);
     hexeditor->document()->gotoBookMark(bookmarks->currentRow());
   });
   dw->setWidget(bookmarks);
@@ -1431,10 +1436,18 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
 
     hexfiles.push_back(hf);
 
-    QMimeDatabase db;
-    auto t = db.mimeTypeForFile(p->isWorkspace ? workspace : filename);
-    auto ico = t.iconName();
-    tabs->addTab(QIcon::fromTheme(ico, QIcon(ico)), info.fileName());
+    QIcon qicon;
+
+    if (p->isWorkspace) {
+      qicon = ICONRES("pro");
+    } else {
+      QMimeDatabase db;
+      auto t = db.mimeTypeForFile(filename);
+      auto ico = t.iconName();
+      qicon = QIcon::fromTheme(ico, QIcon(ico));
+    }
+
+    tabs->addTab(qicon, info.fileName());
     auto index = hexfiles.count() - 1;
     tabs->setCurrentIndex(index);
     tabs->setTabToolTip(index, filename);
@@ -2001,25 +2014,26 @@ void MainWindow::on_savesel() {
   }
 }
 
-void MainWindow::on_documentSwitched() {
-  iReadWrite->setPixmap(hexeditor->isReadOnly() ? infoReadonly : infoWriteable);
+void MainWindow::on_bookmarkChanged() {
+  auto doc = hexeditor->document();
   QList<BookMarkStruct> bookmaps;
   bookmarks->clear();
-  auto doc = hexeditor->document();
   doc->getBookMarks(bookmaps);
-
-  if (hexfiles.count()) {
-    iw->setPixmap(doc->isWorkspace ? infow : infouw);
-  } else {
-    iw->setPixmap(infouw);
-  }
-
   for (auto item : bookmaps) {
     QListWidgetItem *litem = new QListWidgetItem;
     litem->setIcon(ICONRES("bookmark"));
     litem->setText(item.comment);
     litem->setToolTip(QString(tr("Addr : 0x%1")).arg(item.pos, 0, 16));
     bookmarks->addItem(litem);
+  }
+}
+
+void MainWindow::on_documentSwitched() {
+  iReadWrite->setPixmap(hexeditor->isReadOnly() ? infoReadonly : infoWriteable);
+  if (hexfiles.count()) {
+    iw->setPixmap(hexeditor->document()->isWorkspace ? infow : infouw);
+  } else {
+    iw->setPixmap(infouw);
   }
 }
 
@@ -2042,6 +2056,9 @@ ErrFile MainWindow::save(int index) {
               hexeditor->document()->metadata()->getallMetas());
           if (!b)
             return ErrFile::WorkSpaceUnSaved;
+          f.doc->isWorkspace = true;
+          iw->setPixmap(infow);
+          tabs->setTabIcon(index, ICONRES("pro"));
         } else {
           auto b = WorkSpaceManager::saveWorkSpace(
               f.filename + PROEXT, f.filename,
@@ -2050,6 +2067,9 @@ ErrFile MainWindow::save(int index) {
           if (!b)
             return ErrFile::WorkSpaceUnSaved;
           hexfiles[index].workspace = f.filename + PROEXT;
+          f.doc->isWorkspace = true;
+          iw->setPixmap(infow);
+          tabs->setTabIcon(index, ICONRES("pro"));
         }
       }
       return ErrFile::Success;
@@ -2094,6 +2114,9 @@ ErrFile MainWindow::saveAs(QString filename, int index) {
         if (!b)
           return ErrFile::WorkSpaceUnSaved;
         hexfiles[index].workspace = filename + PROEXT;
+        f.doc->isWorkspace = true;
+        iw->setPixmap(infow);
+        tabs->setTabIcon(index, ICONRES("pro"));
       }
       return ErrFile::Success;
     }
@@ -2190,23 +2213,21 @@ void MainWindow::on_bookmark() {
   int index = -1;
   if (doc->existBookMark(index)) {
     auto b = doc->bookMark(index);
-    auto comment = DInputDialog::getText(
-        this, tr("BookMark"), tr("InputComment"), QLineEdit::Normal, b.comment);
-    if (!comment.isEmpty()) {
-      auto item = bookmarks->item(index);
-      item->setText(comment);
+    bool ok;
+    auto comment =
+        DInputDialog::getText(this, tr("BookMark"), tr("InputComment"),
+                              QLineEdit::Normal, b.comment, &ok);
+    if (ok) {
+      doc->ModBookMark(b.pos, comment);
     }
   } else {
+    bool ok;
     auto comment =
-        DInputDialog ::getText(this, tr("BookMark"), tr("InputComment"));
-    if (!comment.isEmpty()) {
-      hexeditor->document()->addBookMark(comment);
-      QListWidgetItem *item = new QListWidgetItem;
-      item->setIcon(ICONRES("bookmark"));
-      item->setText(comment);
-      item->setToolTip(QString(tr("Addr : 0x%1"))
-                           .arg(doc->cursor()->position().offset(), 0, 16));
-      bookmarks->addItem(item);
+        DInputDialog ::getText(this, tr("BookMark"), tr("InputComment"),
+                               QLineEdit::Normal, QString(), &ok);
+    if (ok) {
+      auto pos = qint64(hexeditor->currentOffset());
+      doc->AddBookMark(pos, comment);
     }
   }
 }
@@ -2216,17 +2237,13 @@ void MainWindow::on_bookmarkdel() {
   auto doc = hexeditor->document();
   int index = -1;
   if (doc->existBookMark(index)) {
-    doc->removeBookMark(index);
-    auto item = bookmarks->item(index);
-    bookmarks->removeItemWidget(item);
-    delete item; // make the removed item disapeared from the list widgets
+    doc->RemoveBookMark(index);
   }
 }
 
 void MainWindow::on_bookmarkcls() {
   CheckEnabled;
-  hexeditor->document()->clearBookMark();
-  bookmarks->clear();
+  hexeditor->document()->ClearBookMark();
 }
 
 void MainWindow::on_encoding() {
@@ -2290,9 +2307,10 @@ void MainWindow::on_restoreLayout() { m_settings->loadWindowState(this, true); }
 
 void MainWindow::on_fill() {
   CheckEnabled;
-  auto in = DInputDialog::getText(this, tr("Fill"), tr("PleaseInputFill"));
-  if (in.length() != 0) {
-    bool b = false;
+  bool b;
+  auto in = DInputDialog::getText(this, tr("Fill"), tr("PleaseInputFill"),
+                                  QLineEdit::Normal, QString(), &b);
+  if (b) {
     auto ch = char(in.toULongLong(&b, 0));
     if (b) {
       auto doc = hexeditor->document();
