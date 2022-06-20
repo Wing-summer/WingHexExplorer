@@ -195,6 +195,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 &emsp;&emsp;如果你还想到 Gitee 逛逛： https://gitee.com/wingsummer/wing-hex-explorer 。欢迎到我的新仓库来 star 或者反馈 Bug 以及贡献代码。
 
+## WIKI
+
+> Wiki 正在建设中，部分已经撰写完毕公开……
+
+&emsp;&emsp;如果想学习羽云十六进制编辑器的使用以及如何开发该软件的插件，请到该链接：https://code.gitlink.org.cn/wingsummer/WingHexExplorer/wiki/%E7%AE%80%E4%BB%8B ，同时也欢迎大家指出 Wiki 的错误以及贡献优质内容。
+
 ## 应用商店
 
 &emsp;&emsp;目前我已把安装包投递到星火商店，欢迎大家下载安装。
