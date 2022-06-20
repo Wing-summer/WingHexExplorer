@@ -2,6 +2,6 @@ Source code in this repository is variously licensed under the WingSummer OpenSo
 
 本仓库的源代码采用多协议的授权模式： “羽夏开源协议” 和 “羽夏商业协议”，它们分别在 OpenSource-LICENSE 和 Commerical-LICENSE 有详细的说明。
 
-When built, binary files are generated for the WingSummer OpenSource Lincense source code. Binaries located at my Gitee or Github repository and the spark store are released under the WingSummer OpenSource Lincense.
+When built, binary files are generated for the WingSummer OpenSource Lincense source code. Binaries located at my Gitee, Gitlink or Github repository and the spark store are released under the WingSummer OpenSource Lincense.
 
-当你编译代码时，二进制文件遵守 “羽夏开源协议”。在我的 Gitee 或 Github 和星火商店发布的二进制都遵守 “羽夏开源协议”。
+当你编译代码时，二进制文件遵守 “羽夏开源协议”。在我的 Gitee ，Gitlink 或 Github 和星火商店发布的二进制都遵守 “羽夏开源协议”。
