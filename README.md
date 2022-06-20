@@ -80,7 +80,7 @@
 
 1. 本人不考虑兼容 Windows 系统，虽然 QT 是跨平台的，但有些代码是依赖特定平台的，且十六进制编辑组件在 Windows 上会有一些已知问题，本人没有时间也没有义务来搞跨平台的东西。
 2. 本人不考虑多语言支持，主要是没时间和资金。由于本人是中国人，本人不考虑其他语言使用者。但如果使用其他语言，如果你有语言包，只需要简单的替换文件即可。
-3. 本人不考虑二进制安装包的分发，没时间和精力搞额外的东西。
+3. 本人不考虑除 deb 二进制安装包的分发，没时间和精力搞额外的东西。
 4. 本人不考虑其他插件的开发，如果插件有使用问题，请联系开发者（不排除我会开发一些插件，这样可以直接联系我）。
 5. 本人不考虑主题 UI 层面的问题，开发软件一切采用 DTK 原生样式，觉得丑找官方，或者自己写个样式编译加载。
 6. 图标在暗黑模式下可能会有点丑，不太明显，我美工不好，希望有同志能够提供一套图标（不要有版权纷争的图标），PR 给我进行审核采纳。但如果你没有，就不要给我提。
@@ -194,6 +194,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 &emsp;&emsp;如果想到 Gitea 看，请到： https://code.gitlink.org.cn/wingsummer/WingHexExplorer 。其实它就是 GitLink ，不过貌似 GitLink 显示仓库图片会有点 Bug ， **推荐到这里来！**
 
 &emsp;&emsp;如果你还想到 Gitee 逛逛： https://gitee.com/wingsummer/wing-hex-explorer 。欢迎到我的新仓库来 star 或者反馈 Bug 以及贡献代码。
+
+&emsp;&emsp;如果你还想到 Github 逛逛： https://github.com/Wing-summer/WingHexExplorer ，Github 仅作为备份使用，但考虑到国外的朋友，保留了 issue 、PR 功能，由于本人访问 Github 不太顺畅，所以照看的就相对比较少，敬请谅解。
+
+&emsp;&emsp;If you want to visit Github :  https://github.com/Wing-summer/WingHexExplorer .GitHub is only used for backup, but considering foreign friends, it retains the issue and PR. Forgiving me taking little care of Github repositories because of poor network access to it.
 
 ## WIKI
 
