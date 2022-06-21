@@ -60,7 +60,6 @@ public:
   virtual QString comment() = 0;
   virtual QList<QVariant> optionalInfos() = 0;
   virtual HookIndex getHookSubscribe() = 0;
-  IWingPlugin *self;
 
 signals:
   void host2MessagePipe(IWingPlugin *sender, WingPluginMessage type,

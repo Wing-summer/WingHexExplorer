@@ -743,8 +743,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   vlayout->insertWidget(1, gotobar);
   gotobar->setVisible(false);
   connect(gotobar, &GotoBar::jumpToLine, this, &MainWindow::on_gotobar);
-  connect(gotobar, &GotoBar::pressEsc, [=] { // ToDo
-  });
 
   // connect hexeditor status
   connect(hexeditor, &QHexView::canUndoChanged, [=](bool b) {
@@ -853,6 +851,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   if (enplugin) {
     logger->logMessage(INFOLOG(tr("PluginLoading")));
+    winmenu->addSeparator();
     // init plugin system
     plgsys = new PluginSystem(this);
     connect(plgsys, &PluginSystem::ConnectShadow, this,
@@ -892,12 +891,21 @@ void MainWindow::PluginMenuNeedAdd(QMenu *menu) {
   }
 }
 
-void MainWindow::PluginDockWidgetAdd(QDockWidget *dockw,
+void MainWindow::PluginDockWidgetAdd(QString dname, QDockWidget *dockw,
                                      Qt::DockWidgetArea align) {
   if (dockw != nullptr) {
     logger->logMessage(WARNLOG(tr("DockWidgetName :") + dockw->windowTitle()));
     dockw->setParent(this);
     addDockWidget(align, dockw);
+    auto t = dockw->windowTitle();
+    if (!t.trimmed().length())
+      t = dname;
+    auto a = new QAction(t, winmenu);
+    connect(a, &QAction::triggered, this, [dockw] {
+      dockw->show();
+      dockw->raise();
+    });
+    winmenu->addAction(a);
   }
 }
 

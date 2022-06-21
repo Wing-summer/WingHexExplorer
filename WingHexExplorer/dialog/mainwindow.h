@@ -218,7 +218,8 @@ private:
 
 private:
   void PluginMenuNeedAdd(QMenu *menu);
-  void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
+  void PluginDockWidgetAdd(QString dname, QDockWidget *dockw,
+                           Qt::DockWidgetArea align);
   void connectShadow(HexViewShadow *shadow);
   void connectShadowSlot(HexViewShadow *shadow);
   // shadow

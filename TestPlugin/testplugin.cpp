@@ -1,4 +1,5 @@
 #include "testplugin.h"
+#include <QLabel>
 #include <QMessageBox>
 #include <QStringList>
 
@@ -22,10 +23,19 @@ bool TestPlugin::init(QList<IWingPlugin *> loadedplugins) {
     QMessageBox::information(nullptr, "戳我", "经典：Hello World!");
   });
   testmenu->addAction(action);
+
+  dw = new QDockWidget;
+  auto l = new QLabel("Hello World!", dw);
+  dw->setWidget(l);
+  dw->setObjectName("testplg");
+
   return true;
 }
 
-void TestPlugin::unload() { testmenu->deleteLater(); }
+void TestPlugin::unload() {
+  testmenu->deleteLater();
+  dw->deleteLater();
+}
 
 QString TestPlugin::puid() { return PluginUtils::GetPUID(this); }
 
@@ -55,8 +65,6 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
     auto hvs = extractHexViewShadow(msg);
     if (hvs) {
       if (hvs->shadowControl(this)) {
-        QMessageBox::information(nullptr, "信息",
-                                 "获取组件控制权，下面开始表演！");
         hvs->newFile();
         hvs->switchDocument(0);
         auto str = QString("HelloWorld!").toUtf8();
@@ -69,10 +77,10 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
 
 QMenu *TestPlugin::registerMenu() { return testmenu; }
 
-QDockWidget *TestPlugin::registerDockWidget() { return nullptr; }
+QDockWidget *TestPlugin::registerDockWidget() { return dw; }
 
 Qt::DockWidgetArea TestPlugin::registerDockWidgetDockArea() {
-  return Qt::DockWidgetArea::NoDockWidgetArea;
+  return Qt::DockWidgetArea::LeftDockWidgetArea;
 }
 
 HookIndex TestPlugin::getHookSubscribe() { return HookIndex::None; }

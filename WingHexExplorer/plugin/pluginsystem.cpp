@@ -49,13 +49,19 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
       if (p->signature() != WINGSUMMER) {
         logger->logMessage(ERRLOG(tr("ErrLoadPluginSign")));
         loader.unload();
+        return;
+      }
+      if (!p->pluginName().trimmed().length()) {
+        logger->logMessage(ERRLOG(tr("ErrLoadPluginNoName")));
+        loader.unload();
+        return;
       }
       auto puid = PluginUtils::GetPUID(p);
       if (puid != p->puid()) {
         logger->logMessage(ERRLOG(tr("ErrLoadPluginPUID")));
         loader.unload();
+        return;
       }
-      p->self = p;
 
       emit p->plugin2MessagePipe(WingPluginMessage::PluginLoading, emptyparam);
 
@@ -71,7 +77,8 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
 
       auto dockw = p->registerDockWidget();
       if (dockw) {
-        emit this->PluginDockWidgetAdd(dockw, p->registerDockWidgetDockArea());
+        emit this->PluginDockWidgetAdd(p->pluginName(), dockw,
+                                       p->registerDockWidgetDockArea());
       }
 
       connect(p, &IWingPlugin::host2MessagePipe, this,

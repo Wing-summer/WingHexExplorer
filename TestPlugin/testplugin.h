@@ -35,6 +35,7 @@ public:
 
 private:
   QMenu *testmenu;
+  QDockWidget *dw;
 };
 
 #endif // GENERICPLUGIN_H

@@ -40,7 +40,8 @@ private slots:
 
 signals:
   void PluginMenuNeedAdd(QMenu *menu);
-  void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
+  void PluginDockWidgetAdd(QString dname, QDockWidget *dockw,
+                           Qt::DockWidgetArea align);
   void ConnectShadow(HexViewShadow *shadow);
   void ConnectShadowSlot(HexViewShadow *shadow);
   void DisConnectShadowSlot(HexViewShadow *shadow);
