@@ -16,25 +16,23 @@ bool TestPlugin::init(QList<IWingPlugin *> loadedplugins) {
     }
     QMessageBox::information(nullptr, "Test", ps);
   }
-  testmenu = new QMenu;
-  testmenu->setTitle("TestPlugin");
-  auto action = new QAction("ClickMe!", this);
-  connect(action, &QAction::triggered, [=] {
-    QMessageBox::information(nullptr, "戳我", "经典：Hello World!");
-  });
-  testmenu->addAction(action);
 
-  dw = new QDockWidget;
-  auto l = new QLabel("Hello World!", dw);
-  dw->setWidget(l);
-  dw->setObjectName("testplg");
+  PluginMenuInitBegin(testmenu, "TestPlugin") {
+    PluginMenuAddItemLamba(testmenu, "ClickMe!", [=] {
+      QMessageBox::information(nullptr, "戳我", "经典：Hello World!");
+    });
+  }
+  PluginMenuInitEnd();
+
+  PluginDockWidgetInit(dw, new QLabel("Hello World!", dw), "testplg",
+                       "testplg");
 
   return true;
 }
 
 void TestPlugin::unload() {
-  testmenu->deleteLater();
-  dw->deleteLater();
+  PluginWidgetFree(dw);
+  PluginWidgetFree(testmenu);
 }
 
 QString TestPlugin::puid() { return PluginUtils::GetPUID(this); }

@@ -532,6 +532,11 @@
         <translation>日志系统初始化完毕</translation>
     </message>
     <message>
+        <location filename="../dialog/mainwindow.cpp" line="899"/>
+        <source>ErrDockWidgetAddNoName</source>
+        <translation>停靠组件加载失败：非法名称！</translation>
+    </message>
+    <message>
         <location filename="../dialog/mainwindow.cpp" line="1737"/>
         <location filename="../dialog/mainwindow.cpp" line="1748"/>
         <source>CutToClipBoard</source>
@@ -624,27 +629,27 @@
         <translation>数值</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="795"/>
+        <location filename="../dialog/mainwindow.cpp" line="793"/>
         <source>SettingLoading</source>
         <translation>设置加载中……</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="855"/>
+        <location filename="../dialog/mainwindow.cpp" line="853"/>
         <source>PluginLoading</source>
         <translation>正在加载插件……</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="870"/>
+        <location filename="../dialog/mainwindow.cpp" line="868"/>
         <source>UnLoadPluginSetting</source>
         <translation>因在设置中禁用插件导致无法加载！</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="891"/>
+        <location filename="../dialog/mainwindow.cpp" line="889"/>
         <source>MenuName :</source>
         <translation>菜单名称：</translation>
     </message>
     <message>
-        <location filename="../dialog/mainwindow.cpp" line="899"/>
+        <location filename="../dialog/mainwindow.cpp" line="902"/>
         <source>DockWidgetName :</source>
         <translation>停靠组件名：</translation>
     </message>
@@ -802,7 +807,7 @@
 <context>
     <name>PluginSystem</name>
     <message>
-        <location filename="../plugin/pluginsystem.cpp" line="111"/>
+        <location filename="../plugin/pluginsystem.cpp" line="110"/>
         <source>FoundPluginCount</source>
         <translation>总计发现插件数目：</translation>
     </message>

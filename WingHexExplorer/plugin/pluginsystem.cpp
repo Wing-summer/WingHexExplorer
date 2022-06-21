@@ -77,8 +77,7 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
 
       auto dockw = p->registerDockWidget();
       if (dockw) {
-        emit this->PluginDockWidgetAdd(p->pluginName(), dockw,
-                                       p->registerDockWidgetDockArea());
+        emit this->PluginDockWidgetAdd(dockw, p->registerDockWidgetDockArea());
       }
 
       connect(p, &IWingPlugin::host2MessagePipe, this,

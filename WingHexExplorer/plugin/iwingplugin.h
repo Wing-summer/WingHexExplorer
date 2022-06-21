@@ -70,6 +70,40 @@ public slots:
 };
 
 #define WINGSUMMER "wingsummer"
+#define PluginDockWidgetInit(dw, widget, title, objname)                       \
+  dw = new QDockWidget;                                                        \
+  dw->setWidget(widget);                                                       \
+  dw->setWindowTitle(title);                                                   \
+  dw->setObjectName(objname);
+
+#define PluginWidgetFree(w) w->deleteLater();
+
+#define PluginMenuInitBegin(menu, title)                                       \
+  menu = new QMenu;                                                            \
+  menu->setTitle(title);                                                       \
+  QAction *a;
+
+#define PluginMenuAddItemAction(menu, title, slot)                             \
+  a = new QAction(title, this);                                                \
+  connect(a, &QAction::triggered, this, &slot);                                \
+  menu->addAction(a);
+
+#define PluginMenuAddItemLamba(menu, title, lamba)                             \
+  a = new QAction(title, this);                                                \
+  connect(a, &QAction::triggered, this, lamba);                                \
+  menu->addAction(a);
+
+#define PluginMenuAddItemIconAction(menu, title, icon, slot)                   \
+  a = new QAction(icon, title, this);                                          \
+  connect(a, &QAction::triggered, this, &slot);                                \
+  menu->addAction(a);
+
+#define PluginMenuAddItemIconLamba(menu, title, icon, lamba)                   \
+  a = new QAction(icon, title, this);                                          \
+  connect(a, &QAction::triggered, this, lamba);                                \
+  menu->addAction(a);
+
+#define PluginMenuInitEnd()
 
 class PluginUtils {
 public:

@@ -891,15 +891,17 @@ void MainWindow::PluginMenuNeedAdd(QMenu *menu) {
   }
 }
 
-void MainWindow::PluginDockWidgetAdd(QString dname, QDockWidget *dockw,
+void MainWindow::PluginDockWidgetAdd(QDockWidget *dockw,
                                      Qt::DockWidgetArea align) {
   if (dockw != nullptr) {
-    logger->logMessage(WARNLOG(tr("DockWidgetName :") + dockw->windowTitle()));
+    auto t = dockw->windowTitle();
+    if (!t.trimmed().length()) {
+      logger->logMessage(ERRLOG(tr("ErrDockWidgetAddNoName")));
+      return;
+    }
+    logger->logMessage(WARNLOG(tr("DockWidgetName :") + t));
     dockw->setParent(this);
     addDockWidget(align, dockw);
-    auto t = dockw->windowTitle();
-    if (!t.trimmed().length())
-      t = dname;
     auto a = new QAction(t, winmenu);
     connect(a, &QAction::triggered, this, [dockw] {
       dockw->show();
