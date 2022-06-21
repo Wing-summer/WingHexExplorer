@@ -55,12 +55,14 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
                                     QList<QVariant> msg) {
   Q_UNUSED(msg)
   if (type == WingPluginMessage::PluginLoaded) {
-    if (shadowControl(this)) {
-      newFile();
-      switchDocument(0);
+    if (requestControl(this)) {
+      controller.newFile();
+      controller.switchDocument(0);
       auto str = QString("HelloWorld!").toUtf8();
-      insert(0, str);
-      shadowRelease(this);
+      controller.insert(0, str);
+      controller.metadata(0, 2, Qt::red, Qt::transparent, QString());
+      requestRelease(this);
+      controller.newFile();
     }
   }
 }

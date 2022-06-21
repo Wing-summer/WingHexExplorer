@@ -222,10 +222,8 @@ QHexDocument::QHexDocument(QHexBuffer *buffer, bool readonly, QObject *parent)
   m_metadata = new QHexMetadata(&m_undostack, this);
   m_metadata->setLineWidth(m_hexlinewidth);
 
-  connect(m_metadata, &QHexMetadata::metadataChanged, this, [=](quint64 line) {
-    pluginMetaSaved = false;
-    emit QHexDocument::lineChanged(line);
-  });
+  connect(m_metadata, &QHexMetadata::metadataChanged, this,
+          [=](quint64 line) { emit QHexDocument::metaLineChanged(line); });
   connect(m_metadata, &QHexMetadata::metadataCleared, this,
           &QHexDocument::documentChanged);
 

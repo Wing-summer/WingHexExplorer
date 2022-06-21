@@ -141,12 +141,15 @@ void QHexView::establishSignal(QHexDocument *doc) {
   connect(doc, &QHexDocument::documentSaved, this, &QHexView::documentSaved);
   connect(doc, &QHexDocument::bookMarkChanged, this,
           &QHexView::documentBookMarkChanged);
+  connect(doc, &QHexDocument::metaLineChanged, this,
+          &QHexView::documentmetaDataChanged);
 
   emit canUndoChanged(doc->canUndo());
   emit canRedoChanged(doc->canRedo());
   emit cursorLocationChanged();
   emit documentSwitched();
   emit documentBookMarkChanged();
+  emit documentmetaDataChanged();
   emit documentSaved(doc->isSaved());
   emit documentKeepSize(doc->isKeepSize());
   emit documentLockedFile(doc->isLocked());

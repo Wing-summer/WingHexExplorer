@@ -133,38 +133,11 @@ Q_DECLARE_METATYPE(WingPluginMessage)
 Q_DECLARE_METATYPE(ResponseMsg)
 Q_DECLARE_METATYPE(HookIndex)
 
-class IWingPlugin : public QObject {
+namespace WingPlugin {
+class Reader : public QObject {
   Q_OBJECT
-public:
-  virtual bool init(QList<IWingPlugin *> loadedplugins) = 0;
-  virtual ~IWingPlugin() {}
-  virtual void unload() = 0;
-  virtual QMenu *registerMenu() = 0;
-  virtual QDockWidget *registerDockWidget() = 0;
-  virtual Qt::DockWidgetArea registerDockWidgetDockArea() = 0;
-  virtual QString pluginName() = 0;
-  virtual QString pluginAuthor() = 0;
-  virtual uint pluginVersion() = 0;
-  virtual QString puid() = 0;
-  virtual QString signature() = 0;
-  virtual QString pluginComment() = 0;
-  virtual QList<QVariant> optionalInfos() = 0;
-  virtual HookIndex getHookSubscribe() = 0;
-
-public slots:
-  virtual void plugin2MessagePipe(WingPluginMessage type,
-                                  QList<QVariant> msg) = 0;
-
 signals:
   // document
-  void switchDocument(int index, bool gui = false);
-  bool setLockedFile(bool b);
-  bool setKeepSize(bool b);
-  void setAsciiVisible(bool b);
-  void setAddressVisible(bool b);
-  void setHeaderVisible(bool b);
-  void setAddressBase(quint64 base);
-
   bool isReadOnly();
   bool isKeepSize();
   bool isLocked();
@@ -192,16 +165,7 @@ signals:
   int hexLineWidth();
   void setHexLineWidth(quint8 value);
 
-  void undo();
-  void redo();
-  void cut(bool hex = false);
   void copy(bool hex = false);
-  void paste(bool hex = false);
-  void insert(qint64 offset, uchar b);
-  void replace(qint64 offset, uchar b);
-  void insert(qint64 offset, const QByteArray &data);
-  void replace(qint64 offset, const QByteArray &data);
-  void remove(qint64 offset, int len);
   QByteArray read(qint64 offset, int len);
   qint64 searchForward(const QByteArray &ba);
   qint64 searchBackward(const QByteArray &ba);
@@ -217,6 +181,41 @@ signals:
   QRect getLineRect(quint64 line, quint64 firstline);
   int headerLineCount();
   int borderSize();
+
+  // metadata
+  bool lineHasMetadata(quint64 line) const;
+  QList<HexMetadataAbsoluteItem> getMetadatas(qint64 offset);
+  HexLineMetadata getMetaLine(quint64 line) const;
+
+  // extension
+  QList<QString> getOpenFiles();
+  QStringList getSupportedEncodings();
+  QString currentEncoding();
+};
+
+class Controller : public QObject {
+  Q_OBJECT
+signals:
+  // document
+  void switchDocument(int index, bool gui = false);
+  bool setLockedFile(bool b);
+  bool setKeepSize(bool b);
+  void setAsciiVisible(bool b);
+  void setAddressVisible(bool b);
+  void setHeaderVisible(bool b);
+  void setAddressBase(quint64 base);
+  void setAreaIndent(quint8 value);
+  void setHexLineWidth(quint8 value);
+
+  void undo();
+  void redo();
+  void cut(bool hex = false);
+  void paste(bool hex = false);
+  void insert(qint64 offset, uchar b);
+  void replace(qint64 offset, uchar b);
+  void insert(qint64 offset, const QByteArray &data);
+  void replace(qint64 offset, const QByteArray &data);
+  void remove(qint64 offset, int len);
 
   // cursor
   void moveTo(const HexPosition &pos);
@@ -234,20 +233,13 @@ signals:
                 const QColor &bgcolor, const QString &comment);
   void metadata(quint64 line, int start, int length, const QColor &fgcolor,
                 const QColor &bgcolor, const QString &comment);
-  bool lineHasMetadata(quint64 line) const;
   bool removeMetadata(qint64 offset);
-  QList<HexMetadataAbsoluteItem> getMetadatas(qint64 offset);
-  void clear();
-  HexLineMetadata getMetaLine(quint64 line) const;
+  void clearMeta();
   void color(quint64 line, int start, int length, const QColor &fgcolor,
              const QColor &bgcolor);
   void foreground(quint64 line, int start, int length, const QColor &fgcolor);
   void background(quint64 line, int start, int length, const QColor &bgcolor);
   void comment(quint64 line, int start, int length, const QString &comment);
-
-  // shadow
-  bool shadowControl(IWingPlugin *plugin);
-  bool shadowRelease(IWingPlugin *plugin);
 
   // mainwindow
   void newFile();
@@ -270,13 +262,42 @@ signals:
   void fillnopGUI();
 
   // extension
-  QList<QString> getOpenFiles();
-  QStringList getSupportedEncodings();
-  QString currentEncoding();
   void setCurrentEncoding(QString encoding);
 
   // workspace
   bool openWorkSpace(QString filename, bool readonly = false);
+};
+} // namespace WingPlugin
+
+class IWingPlugin : public QObject {
+  Q_OBJECT
+public:
+  virtual bool init(QList<IWingPlugin *> loadedplugins) = 0;
+  virtual ~IWingPlugin() {}
+  virtual void unload() = 0;
+  virtual QMenu *registerMenu() = 0;
+  virtual QDockWidget *registerDockWidget() = 0;
+  virtual Qt::DockWidgetArea registerDockWidgetDockArea() = 0;
+  virtual QString pluginName() = 0;
+  virtual QString pluginAuthor() = 0;
+  virtual uint pluginVersion() = 0;
+  virtual QString puid() = 0;
+  virtual QString signature() = 0;
+  virtual QString pluginComment() = 0;
+  virtual QList<QVariant> optionalInfos() = 0;
+  virtual HookIndex getHookSubscribe() = 0;
+
+public slots:
+  virtual void plugin2MessagePipe(WingPluginMessage type,
+                                  QList<QVariant> msg) = 0;
+
+signals:
+  bool requestControl(IWingPlugin *plugin);
+  bool requestRelease(IWingPlugin *plugin);
+
+public:
+  WingPlugin::Reader reader;
+  WingPlugin::Controller controller;
 };
 
 #define WINGSUMMER "wingsummer"

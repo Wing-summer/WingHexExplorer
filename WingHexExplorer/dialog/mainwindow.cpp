@@ -754,8 +754,13 @@ MainWindow::MainWindow(DMainWindow *parent) {
     toolbartools[ToolBoxIndex::Redo]->setEnabled(b);
     toolmenutools[ToolBoxIndex::Redo]->setEnabled(b);
   });
-  connect(hexeditor, &QHexView::documentSaved,
-          [=](bool b) { iSaved->setPixmap(b ? infoSaved : infoUnsaved); });
+  connect(hexeditor, &QHexView::documentSaved, [=](bool b) {
+    iSaved->setPixmap(b && plgChangeSaved ? infoSaved : infoUnsaved);
+  });
+  connect(hexeditor, &QHexView::documentBookMarkChanged,
+          [=] { plgChangeSaved = false; });
+  connect(hexeditor, &QHexView::documentmetaDataChanged,
+          [=] { plgChangeSaved = false; });
   connect(hexeditor, &QHexView::documentKeepSize, this,
           [=](bool b) { iOver->setIcon(b ? infoCannotOver : infoCanOver); });
   connect(hexeditor, &QHexView::documentLockedFile, this,
@@ -855,10 +860,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
     winmenu->addSeparator();
     // init plugin system
     plgsys = new PluginSystem(this);
-    connect(plgsys, &PluginSystem::ConnectShadow, this,
-            &MainWindow::connectShadow);
-    connect(plgsys, &PluginSystem::ConnectShadowSlot, this,
-            &MainWindow::connectShadowSlot);
+    connect(plgsys, &PluginSystem::ConnectBase, this, &MainWindow::connectBase);
+    connect(plgsys, &PluginSystem::ConnectControl, this,
+            &MainWindow::connectControl);
     connect(plgsys, &PluginSystem::PluginMenuNeedAdd, this,
             &MainWindow::PluginMenuNeedAdd);
     connect(plgsys, &PluginSystem::PluginDockWidgetAdd, this,
@@ -912,16 +916,20 @@ void MainWindow::PluginDockWidgetAdd(QDockWidget *dockw,
   }
 }
 
-void MainWindow::connectShadow(IWingPlugin *plugin) {
+void MainWindow::connectBase(IWingPlugin *plugin) {
   if (plugin == nullptr)
     return;
 
-#define ConnectShadows(Signal, Slot) connect(plugin, &Signal, this, &Slot)
-#define ConnectShadowLamba(Signal, Function) connect(plugin, &Signal, Function)
+#define ConnectBase(Signal, Slot) connect(plugin, &Signal, this, &Slot)
+#define ConnectBaseLamba(Signal, Function) connect(plugin, &Signal, Function)
+#define ConnectBase2(Signal, Slot)                                             \
+  connect(&plugin->reader, &Signal, this, &Slot)
+#define ConnectBaseLamba2(Signal, Function)                                    \
+  connect(&plugin->reader, &Signal, Function)
 
   // connect neccessary signal-slot
-  ConnectShadows(IWingPlugin::shadowControl, MainWindow::shadowControl);
-  ConnectShadows(IWingPlugin::shadowRelease, MainWindow::shadowRelease);
+  ConnectBase(IWingPlugin::requestControl, MainWindow::requestControl);
+  ConnectBase(IWingPlugin::requestRelease, MainWindow::requestRelease);
 
 #define PCHECK(T, F)                                                           \
   if (hexfiles.count() > 0 && _pcurfile >= 0)                                  \
@@ -933,29 +941,32 @@ void MainWindow::connectShadow(IWingPlugin *plugin) {
     return T;                                                                  \
   return F;
 
-  // connect property-get signal-slot
-  ConnectShadowLamba(IWingPlugin::isLocked, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::isLocked, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->isLocked(), true);
   });
-  ConnectShadowLamba(IWingPlugin::isEmpty, [=] {
+
+  ConnectBaseLamba2(WingPlugin::Reader::isLocked, [=] {
+    PCHECKRETURN(hexfiles[_pcurfile].doc->isLocked(), true);
+  });
+  ConnectBaseLamba2(WingPlugin::Reader::isEmpty, [=] {
     PCHECKRETURN(hexeditor->document()->isEmpty(), true);
   });
-  ConnectShadowLamba(IWingPlugin::isKeepSize, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::isKeepSize, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->isKeepSize(), true);
   });
-  ConnectShadowLamba(IWingPlugin::isModified, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::isModified, [=] {
     PCHECKRETURN(!hexfiles[_pcurfile].doc->isSaved(), false);
   });
-  ConnectShadowLamba(IWingPlugin::isReadOnly, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::isReadOnly, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->isReadOnly(), true);
   });
-  ConnectShadowLamba(IWingPlugin::documentLines, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::documentLines, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->documentLines(), quint64(0));
   });
-  ConnectShadowLamba(IWingPlugin::documentBytes, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::documentBytes, [=] {
     PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->length()), quint64(0));
   });
-  ConnectShadowLamba(IWingPlugin::currentPos, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::currentPos, [=] {
     HexPosition pos;
     PCHECK(
         {
@@ -967,7 +978,7 @@ void MainWindow::connectShadow(IWingPlugin *plugin) {
         },
         return pos);
   });
-  ConnectShadowLamba(IWingPlugin::selectionPos, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::selectionPos, [=] {
     HexPosition pos;
     PCHECK(
         {
@@ -979,94 +990,97 @@ void MainWindow::connectShadow(IWingPlugin *plugin) {
         },
         return pos);
   });
-  ConnectShadowLamba(IWingPlugin::currentRow, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::currentRow, [=] {
     PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->cursor()->currentLine()),
                  quint64(0));
   });
-  ConnectShadowLamba(IWingPlugin::currentColumn, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::currentColumn, [=] {
     PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->cursor()->currentColumn()),
                  quint64(0));
   });
-  ConnectShadowLamba(IWingPlugin::currentOffset, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::currentOffset, [=] {
     PCHECKRETURN(
         quint64(hexfiles[_pcurfile].doc->cursor()->position().offset()),
         quint64(0));
   });
-  ConnectShadowLamba(IWingPlugin::selectlength, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::selectlength, [=] {
     PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->cursor()->selectionLength()),
                  quint64(0));
   });
-  ConnectShadowLamba(IWingPlugin::asciiVisible, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::asciiVisible, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->asciiVisible(), true);
   });
-  ConnectShadowLamba(IWingPlugin::headerVisible, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::headerVisible, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->headerVisible(), true);
   });
-  ConnectShadowLamba(IWingPlugin::addressVisible, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::addressVisible, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->addressVisible(), true);
   });
-  ConnectShadowLamba(IWingPlugin::addressBase, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::addressBase, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->baseAddress(), quint64(0));
   });
-  ConnectShadowLamba(IWingPlugin::atEnd, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::atEnd, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->atEnd(), false);
   });
-  ConnectShadowLamba(IWingPlugin::canUndo, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::canUndo, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->canUndo(), false);
   });
-  ConnectShadowLamba(IWingPlugin::canRedo, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::canRedo, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->canRedo(), false);
   });
-  ConnectShadowLamba(IWingPlugin::areaIndent, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::areaIndent, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->areaIndent(), 0);
   });
-  ConnectShadowLamba(IWingPlugin::hexLineWidth, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::hexLineWidth, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->hexLineWidth(), 0);
   });
-  ConnectShadowLamba(IWingPlugin::editableArea, [=](int area) {
+  ConnectBaseLamba2(WingPlugin::Reader::editableArea, [=](int area) {
     PCHECKRETURN(hexfiles[_pcurfile].render->editableArea(area), false);
   });
-  ConnectShadowLamba(IWingPlugin::documentLastLine, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::documentLastLine, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->documentLastLine(), quint64(0));
   });
-  ConnectShadowLamba(IWingPlugin::documentLastColumn, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::documentLastColumn, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->documentLastColumn(), 0);
   });
-  ConnectShadowLamba(IWingPlugin::documentWidth, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::documentWidth, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->documentWidth(), 0);
   });
-  ConnectShadowLamba(IWingPlugin::lineHeight, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::lineHeight, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->lineHeight(), 0);
   });
-  ConnectShadowLamba(
-      IWingPlugin::getLineRect, [=](quint64 line, quint64 firstline) {
+  ConnectBaseLamba2(
+      WingPlugin::Reader::getLineRect, [=](quint64 line, quint64 firstline) {
         PCHECKRETURN(hexfiles[_pcurfile].render->getLineRect(line, firstline),
                      QRect());
       });
-  ConnectShadowLamba(IWingPlugin::headerLineCount, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::headerLineCount, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->headerLineCount(), 0);
   });
-  ConnectShadowLamba(IWingPlugin::borderSize, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::borderSize, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->borderSize(), 0);
   });
-  ConnectShadowLamba(IWingPlugin::copy, [=](bool hex) {
+  ConnectBaseLamba2(WingPlugin::Reader::copy, [=](bool hex) {
     PCHECK(hexfiles[_pcurfile].doc->copy(hex), );
   });
-  ConnectShadowLamba(IWingPlugin::read, [=](qint64 offset, int len) {
+  ConnectBaseLamba2(WingPlugin::Reader::read, [=](qint64 offset, int len) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->read(offset, len), QByteArray());
   });
-  ConnectShadowLamba(IWingPlugin::FindAllBytes, [=](qlonglong begin,
-                                                    qlonglong end, QByteArray b,
-                                                    QList<quint64> &results) {
-    PCHECK(hexfiles[_pcurfile].doc->FindAllBytes(begin, end, b, results), );
-  });
-  ConnectShadowLamba(IWingPlugin::searchForward, [=](const QByteArray &ba) {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->searchForward(ba), qint64(-1));
-  });
-  ConnectShadowLamba(IWingPlugin::searchBackward, [=](const QByteArray &ba) {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->searchBackward(ba), qint64(-1));
-  });
-  ConnectShadowLamba(IWingPlugin::getMetaLine, [=](quint64 line) {
+  ConnectBaseLamba2(
+      WingPlugin::Reader::FindAllBytes,
+      [=](qlonglong begin, qlonglong end, QByteArray b,
+          QList<quint64> &results) {
+        PCHECK(hexfiles[_pcurfile].doc->FindAllBytes(begin, end, b, results), );
+      });
+  ConnectBaseLamba2(
+      WingPlugin::Reader::searchForward, [=](const QByteArray &ba) {
+        PCHECKRETURN(hexfiles[_pcurfile].doc->searchForward(ba), qint64(-1));
+      });
+  ConnectBaseLamba2(
+      WingPlugin::Reader::searchBackward, [=](const QByteArray &ba) {
+        PCHECKRETURN(hexfiles[_pcurfile].doc->searchBackward(ba), qint64(-1));
+      });
+  ConnectBaseLamba2(WingPlugin::Reader::getMetaLine, [=](quint64 line) {
     auto ometas = hexfiles[_pcurfile].doc->metadata()->get(line);
     HexLineMetadata metas;
     for (auto item : ometas) {
@@ -1076,7 +1090,7 @@ void MainWindow::connectShadow(IWingPlugin *plugin) {
     }
     return metas;
   });
-  ConnectShadowLamba(IWingPlugin::getMetadatas, [=](qint64 offset) {
+  ConnectBaseLamba2(WingPlugin::Reader::getMetadatas, [=](qint64 offset) {
     auto ometaline = hexfiles[_pcurfile].doc->metadata()->gets(offset);
     QList<HexMetadataAbsoluteItem> metaline;
     for (auto item : ometaline) {
@@ -1086,94 +1100,113 @@ void MainWindow::connectShadow(IWingPlugin *plugin) {
     }
     return metaline;
   });
-  ConnectShadowLamba(IWingPlugin::lineHasMetadata, [=](quint64 line) {
+  ConnectBaseLamba2(WingPlugin::Reader::lineHasMetadata, [=](quint64 line) {
     return hexfiles[_pcurfile].doc->metadata()->lineHasMetadata(line);
   });
-  ConnectShadowLamba(IWingPlugin::getOpenFiles, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::getOpenFiles, [=] {
     QList<QString> files;
     for (auto item : hexfiles) {
       files.push_back(item.filename);
     }
     return files;
   });
-  ConnectShadows(IWingPlugin::getSupportedEncodings, Utilities::GetEncodings);
-  ConnectShadowLamba(IWingPlugin::currentEncoding,
-                     [=] { return hexfiles[_pcurfile].render->encoding(); });
+  ConnectBase2(WingPlugin::Reader::getSupportedEncodings,
+               Utilities::GetEncodings);
+  ConnectBaseLamba2(WingPlugin::Reader::currentEncoding,
+                    [=] { return hexfiles[_pcurfile].render->encoding(); });
 }
 
-void MainWindow::connectShadowSlot(IWingPlugin *plugin) {
-  ConnectShadowLamba(IWingPlugin::switchDocument, [=](int index, bool gui) {
-    if (gui) {
-      setFilePage(index);
-      _pcurfile = _currentfile;
-    } else {
-      if (index >= 0 && index < hexfiles.count())
-        _pcurfile = index;
-    }
-  });
-  ConnectShadowLamba(IWingPlugin::setLockedFile, [=](bool b) {
+void MainWindow::connectControl(IWingPlugin *plugin) {
+
+#define ConnectControl(Signal, Slot) connect(plugin, &Signal, this, &Slot)
+#define ConnectControlLamba(Signal, Function) connect(plugin, &Signal, Function)
+#define ConnectControl2(Signal, Slot)                                          \
+  connect(&plugin->controller, &Signal, this, &Slot)
+#define ConnectControlLamba2(Signal, Function)                                 \
+  connect(&plugin->controller, &Signal, Function)
+
+  ConnectControlLamba2(WingPlugin::Controller::switchDocument,
+                       [=](int index, bool gui) {
+                         if (gui) {
+                           setFilePage(index);
+                           _pcurfile = _currentfile;
+                         } else {
+                           if (index >= 0 && index < hexfiles.count())
+                             _pcurfile = index;
+                         }
+                       });
+
+  ConnectControlLamba2(WingPlugin::Controller::setLockedFile, [=](bool b) {
     hexfiles[_pcurfile].doc->setLockedFile(b);
   });
-  ConnectShadowLamba(IWingPlugin::setKeepSize,
-                     [=](bool b) { hexfiles[_pcurfile].doc->setKeepSize(b); });
-  ConnectShadowLamba(IWingPlugin::setAsciiVisible, [=](bool b) {
+  ConnectControlLamba2(WingPlugin::Controller::setKeepSize, [=](bool b) {
+    hexfiles[_pcurfile].doc->setKeepSize(b);
+  });
+  ConnectControlLamba2(WingPlugin::Controller::setAsciiVisible, [=](bool b) {
     hexfiles[_pcurfile].render->setAsciiVisible(b);
   });
-  ConnectShadowLamba(IWingPlugin::setHeaderVisible, [=](bool b) {
+  ConnectControlLamba2(WingPlugin::Controller::setHeaderVisible, [=](bool b) {
     hexfiles[_pcurfile].render->setHeaderVisible(b);
   });
-  ConnectShadowLamba(IWingPlugin::setAddressVisible, [=](bool b) {
+  ConnectControlLamba2(WingPlugin::Controller::setAddressVisible, [=](bool b) {
     hexfiles[_pcurfile].render->setAddressVisible(b);
   });
-  ConnectShadowLamba(IWingPlugin::setAddressBase, [=](quint64 base) {
-    hexfiles[_pcurfile].doc->setBaseAddress(base);
-  });
-  ConnectShadowLamba(IWingPlugin::setAreaIndent, [=](quint8 value) {
-    hexfiles[_pcurfile].doc->setAreaIndent(value);
-  });
-  ConnectShadowLamba(IWingPlugin::setHexLineWidth, [=](quint8 value) {
-    hexfiles[_pcurfile].doc->setHexLineWidth(value);
-  });
-  ConnectShadowLamba(IWingPlugin::undo,
-                     [=] { hexfiles[_pcurfile].doc->undo(); });
-  ConnectShadowLamba(IWingPlugin::redo,
-                     [=] { hexfiles[_pcurfile].doc->redo(); });
-  ConnectShadowLamba(IWingPlugin::cut,
-                     [=](bool hex) { hexfiles[_pcurfile].doc->cut(hex); });
-  ConnectShadowLamba(IWingPlugin::paste,
-                     [=](bool hex) { hexfiles[_pcurfile].doc->paste(hex); });
+  ConnectControlLamba2(
+      WingPlugin::Controller::setAddressBase,
+      [=](quint64 base) { hexfiles[_pcurfile].doc->setBaseAddress(base); });
+  ConnectControlLamba2(
+      WingPlugin::Controller::setAreaIndent,
+      [=](quint8 value) { hexfiles[_pcurfile].doc->setAreaIndent(value); });
+  ConnectControlLamba2(
+      WingPlugin::Controller::setHexLineWidth,
+      [=](quint8 value) { hexfiles[_pcurfile].doc->setHexLineWidth(value); });
+  ConnectControlLamba2(WingPlugin::Controller::undo,
+                       [=] { hexfiles[_pcurfile].doc->undo(); });
+  ConnectControlLamba2(WingPlugin::Controller::redo,
+                       [=] { hexfiles[_pcurfile].doc->redo(); });
+  ConnectControlLamba2(WingPlugin::Controller::cut,
+                       [=](bool hex) { hexfiles[_pcurfile].doc->cut(hex); });
+  ConnectControlLamba2(WingPlugin::Controller::paste,
+                       [=](bool hex) { hexfiles[_pcurfile].doc->paste(hex); });
 
-#define ConnectShadowLamba2(Signal, Function) connect(plugin, Signal, Function)
+#define ConnectControlLamba3(Signal, Function)                                 \
+  connect(&plugin->controller, Signal, Function)
 
-  void (IWingPlugin::*insertchar)(qint64 offset, uchar b) =
-      &IWingPlugin::insert;
-  void (IWingPlugin::*insertarr)(qint64 offset, const QByteArray &data) =
-      &IWingPlugin::insert;
-  ConnectShadowLamba2(insertchar, [=](qint64 offset, uchar b) {
+  void (WingPlugin::Controller::*insertchar)(qint64 offset, uchar b) =
+      &WingPlugin::Controller::insert;
+  void (WingPlugin::Controller::*insertarr)(
+      qint64 offset, const QByteArray &data) = &WingPlugin::Controller::insert;
+
+  ConnectControlLamba3(insertchar, [=](qint64 offset, uchar b) {
     hexfiles[_pcurfile].doc->insert(offset, b);
   });
-  ConnectShadowLamba2(insertarr, [=](qint64 offset, const QByteArray &data) {
+  ConnectControlLamba3(insertarr, [=](qint64 offset, const QByteArray &data) {
     hexfiles[_pcurfile].doc->insert(offset, data);
   });
 
-  void (IWingPlugin::*replacechar)(qint64 offset, uchar b) =
-      &IWingPlugin::replace;
-  void (IWingPlugin::*replacearr)(qint64 offset, const QByteArray &data) =
-      &IWingPlugin::replace;
-  ConnectShadowLamba2(replacechar, [=](qint64 offset, uchar b) {
+  void (WingPlugin::Controller::*replacechar)(qint64 offset, uchar b) =
+      &WingPlugin::Controller::replace;
+  void (WingPlugin::Controller::*replacearr)(
+      qint64 offset, const QByteArray &data) = &WingPlugin::Controller::replace;
+  ConnectControlLamba3(replacechar, [=](qint64 offset, uchar b) {
     hexfiles[_pcurfile].doc->insert(offset, b);
   });
-  ConnectShadowLamba2(replacearr, [=](qint64 offset, const QByteArray &data) {
+  ConnectControlLamba3(replacearr, [=](qint64 offset, const QByteArray &data) {
     hexfiles[_pcurfile].doc->insert(offset, data);
   });
-  ConnectShadowLamba(IWingPlugin::remove, [=](qint64 offset, int len) {
-    hexfiles[_pcurfile].doc->remove(offset, len);
-  });
+  ConnectControlLamba2(WingPlugin::Controller::remove,
+                       [=](qint64 offset, int len) {
+                         hexfiles[_pcurfile].doc->remove(offset, len);
+                       });
 
-  void (IWingPlugin::*moveToHP)(const HexPosition &pos);
-  void (IWingPlugin::*moveTo)(quint64 line, int column, int nibbleindex);
-  void (IWingPlugin::*moveToOff)(qint64 offset);
-  ConnectShadowLamba2(moveToHP, [=](const HexPosition &pos) {
+  void (WingPlugin::Controller::*moveToHP)(const HexPosition &pos) =
+      &WingPlugin::Controller::moveTo;
+  void (WingPlugin::Controller::*moveTo)(quint64 line, int column,
+                                         int nibbleindex) =
+      &WingPlugin::Controller::moveTo;
+
+  void (WingPlugin::Controller::*moveToOff)(qint64 offset);
+  ConnectControlLamba3(moveToHP, [=](const HexPosition &pos) {
     QHexPosition p;
     p.line = pos.line;
     p.column = pos.column;
@@ -1181,17 +1214,21 @@ void MainWindow::connectShadowSlot(IWingPlugin *plugin) {
     p.nibbleindex = pos.nibbleindex;
     hexfiles[_pcurfile].doc->cursor()->moveTo(p);
   });
-  ConnectShadowLamba2(moveTo, [=](quint64 line, int column, int nibbleindex) {
+  ConnectControlLamba3(moveTo, [=](quint64 line, int column, int nibbleindex) {
     hexfiles[_pcurfile].doc->cursor()->moveTo(line, column, nibbleindex);
   });
-  ConnectShadowLamba2(moveToOff, [=](qint64 offset) {
+  ConnectControlLamba3(moveToOff, [=](qint64 offset) {
     hexfiles[_pcurfile].doc->cursor()->moveTo(offset);
   });
 
-  void (IWingPlugin::*selectHP)(const HexPosition &pos);
-  void (IWingPlugin::*select)(quint64 line, int column, int nibbleindex);
-  void (IWingPlugin::*selectL)(int length);
-  ConnectShadowLamba2(selectHP, [=](const HexPosition &pos) {
+  void (WingPlugin::Controller::*selectHP)(const HexPosition &pos) =
+      &WingPlugin::Controller::select;
+  void (WingPlugin::Controller::*select)(quint64 line, int column,
+                                         int nibbleindex) =
+      &WingPlugin::Controller::select;
+
+  void (WingPlugin::Controller::*selectL)(int length);
+  ConnectControlLamba3(selectHP, [=](const HexPosition &pos) {
     QHexPosition p;
     p.line = pos.line;
     p.column = pos.column;
@@ -1199,117 +1236,128 @@ void MainWindow::connectShadowSlot(IWingPlugin *plugin) {
     p.nibbleindex = pos.nibbleindex;
     hexfiles[_pcurfile].doc->cursor()->select(p);
   });
-  ConnectShadowLamba2(select, [=](quint64 line, int column, int nibbleindex) {
+  ConnectControlLamba3(select, [=](quint64 line, int column, int nibbleindex) {
     hexfiles[_pcurfile].doc->cursor()->select(line, column, nibbleindex);
   });
-  ConnectShadowLamba2(selectL, [=](int length) {
+  ConnectControlLamba3(selectL, [=](int length) {
     hexfiles[_pcurfile].doc->cursor()->select(length);
   });
 
-  ConnectShadowLamba(IWingPlugin::selectOffset, [=](qint64 offset, int length) {
-    hexfiles[_pcurfile].doc->cursor()->selectOffset(offset, length);
-  });
-  ConnectShadowLamba(IWingPlugin::setInsertionMode, [=](bool isinsert) {
-    hexfiles[_pcurfile].doc->cursor()->setInsertionMode(
-        isinsert ? QHexCursor::InsertMode : QHexCursor::OverwriteMode);
-  });
-  ConnectShadowLamba(IWingPlugin::setLineWidth, [=](quint8 width) {
+  ConnectControlLamba2(
+      WingPlugin::Controller::selectOffset, [=](qint64 offset, int length) {
+        hexfiles[_pcurfile].doc->cursor()->selectOffset(offset, length);
+      });
+  ConnectControlLamba2(
+      WingPlugin::Controller::setInsertionMode, [=](bool isinsert) {
+        hexfiles[_pcurfile].doc->cursor()->setInsertionMode(
+            isinsert ? QHexCursor::InsertMode : QHexCursor::OverwriteMode);
+      });
+  ConnectControlLamba2(WingPlugin::Controller::setLineWidth, [=](quint8 width) {
     hexfiles[_pcurfile].doc->cursor()->setLineWidth(width);
   });
 
-  void (IWingPlugin::*metadata)(qint64 begin, qint64 end, const QColor &fgcolor,
-                                const QColor &bgcolor, const QString &comment);
+  void (WingPlugin::Controller::*metadata)(
+      qint64 begin, qint64 end, const QColor &fgcolor, const QColor &bgcolor,
+      const QString &comment) = &WingPlugin::Controller::metadata;
 
-  void (IWingPlugin::*metadataL)(quint64 line, int start, int length,
-                                 const QColor &fgcolor, const QColor &bgcolor,
-                                 const QString &comment);
-  ConnectShadowLamba2(metadata,
-                      [=](qint64 begin, qint64 end, const QColor &fgcolor,
-                          const QColor &bgcolor, const QString &comment) {
-                        hexfiles[_pcurfile].doc->metadata()->metadata(
-                            begin, end, fgcolor, bgcolor, comment);
-                      });
-  ConnectShadowLamba2(
+  void (WingPlugin::Controller::*metadataL)(
+      quint64 line, int start, int length, const QColor &fgcolor,
+      const QColor &bgcolor, const QString &comment) =
+      &WingPlugin::Controller::metadata;
+
+  ConnectControlLamba3(metadata,
+                       [=](qint64 begin, qint64 end, const QColor &fgcolor,
+                           const QColor &bgcolor, const QString &comment) {
+                         hexfiles[_pcurfile].doc->metadata()->metadata(
+                             begin, end, fgcolor, bgcolor, comment);
+                       });
+  ConnectControlLamba3(
       metadataL, [=](quint64 line, int start, int length, const QColor &fgcolor,
                      const QColor &bgcolor, const QString &comment) {
         hexfiles[_pcurfile].doc->metadata()->metadata(
             line, start, length, fgcolor, bgcolor, comment);
       });
 
-  ConnectShadowLamba(IWingPlugin::removeMetadata, [=](qint64 offset) {
-    hexfiles[_pcurfile].doc->metadata()->removeMetadata(offset);
-  });
+  ConnectControlLamba2(
+      WingPlugin::Controller::removeMetadata, [=](qint64 offset) {
+        hexfiles[_pcurfile].doc->metadata()->removeMetadata(offset);
+      });
 
-  void (IWingPlugin::*clear)() = &IWingPlugin::clear;
-  ConnectShadowLamba2(clear,
-                      [=]() { hexfiles[_pcurfile].doc->metadata()->clear(); });
+  void (WingPlugin::Controller::*clear)() = &WingPlugin::Controller::clearMeta;
+  ConnectControlLamba3(clear,
+                       [=]() { hexfiles[_pcurfile].doc->metadata()->clear(); });
 
-  ConnectShadowLamba(IWingPlugin::color, [=](quint64 line, int start,
-                                             int length, const QColor &fgcolor,
-                                             const QColor &bgcolor) {
-    hexfiles[_pcurfile].doc->metadata()->color(line, start, length, fgcolor,
-                                               bgcolor);
-  });
+  ConnectControlLamba2(WingPlugin::Controller::color,
+                       [=](quint64 line, int start, int length,
+                           const QColor &fgcolor, const QColor &bgcolor) {
+                         hexfiles[_pcurfile].doc->metadata()->color(
+                             line, start, length, fgcolor, bgcolor);
+                       });
 
-  ConnectShadowLamba(IWingPlugin::comment, [=](quint64 line, int start,
-                                               int length,
-                                               const QString &comment) {
-    hexfiles[_pcurfile].doc->metadata()->comment(line, start, length, comment);
-  });
+  ConnectControlLamba2(
+      WingPlugin::Controller::comment,
+      [=](quint64 line, int start, int length, const QString &comment) {
+        hexfiles[_pcurfile].doc->metadata()->comment(line, start, length,
+                                                     comment);
+      });
 
-  ConnectShadowLamba(
-      IWingPlugin::foreground,
+  ConnectControlLamba2(
+      WingPlugin::Controller::foreground,
       [=](quint64 line, int start, int length, const QColor &fgcolor) {
         hexfiles[_pcurfile].doc->metadata()->foreground(line, start, length,
                                                         fgcolor);
       });
-  ConnectShadowLamba(
-      IWingPlugin::background,
+  ConnectControlLamba2(
+      WingPlugin::Controller::background,
       [=](quint64 line, int start, int length, const QColor &bgcolor) {
         hexfiles[_pcurfile].doc->metadata()->background(line, start, length,
                                                         bgcolor);
       });
 
-  ConnectShadowLamba(IWingPlugin::setCurrentEncoding, [=](QString encoding) {
-    hexfiles[_pcurfile].render->setEncoding(encoding);
-  });
+  ConnectControlLamba2(WingPlugin::Controller::setCurrentEncoding,
+                       [=](QString encoding) {
+                         hexfiles[_pcurfile].render->setEncoding(encoding);
+                       });
 
-  ConnectShadowLamba(IWingPlugin::openWorkSpace,
-                     [=](QString filename, bool readonly) {
-                       openWorkSpace(filename, readonly);
-                     });
-  ConnectShadows(IWingPlugin::newFile, MainWindow::newFile);
-  ConnectShadowLamba(
-      IWingPlugin::openFile,
+  ConnectControlLamba2(WingPlugin::Controller::openWorkSpace,
+                       [=](QString filename, bool readonly) {
+                         openWorkSpace(filename, readonly);
+                       });
+  ConnectControl2(WingPlugin::Controller::newFile, MainWindow::newFile);
+  ConnectControlLamba2(
+      WingPlugin::Controller::openFile,
       [=](QString filename, bool readonly) { openFile(filename, readonly); });
-  ConnectShadows(IWingPlugin::openDriver, MainWindow::openDriver);
-  ConnectShadows(IWingPlugin::closeFile, MainWindow::closeFile);
-  ConnectShadows(IWingPlugin::saveFile, MainWindow::save);
-  ConnectShadows(IWingPlugin::exportFile, MainWindow::exportFile);
-  ConnectShadows(IWingPlugin::exportFileGUI, MainWindow::on_exportfile);
-  ConnectShadows(IWingPlugin::saveasFile, MainWindow::saveAs);
-  ConnectShadows(IWingPlugin::saveasFileGUI, MainWindow::on_saveas);
-  ConnectShadows(IWingPlugin::closeCurrentFile, MainWindow::closeCurrentFile);
-  ConnectShadows(IWingPlugin::saveCurrentFile, MainWindow::saveCurrent);
-  ConnectShadows(IWingPlugin::openFileGUI, MainWindow::on_openfile);
-  ConnectShadows(IWingPlugin::openDriverGUI, MainWindow::on_opendriver);
-  ConnectShadows(IWingPlugin::gotoGUI, MainWindow::on_gotoline);
-  ConnectShadows(IWingPlugin::findGUI, MainWindow::on_findfile);
-  ConnectShadows(IWingPlugin::fillGUI, MainWindow::on_fill);
-  ConnectShadows(IWingPlugin::fillzeroGUI, MainWindow::on_fillzero);
-  ConnectShadows(IWingPlugin::fillnopGUI, MainWindow::on_fillnop);
+  ConnectControl2(WingPlugin::Controller::openDriver, MainWindow::openDriver);
+  ConnectControl2(WingPlugin::Controller::closeFile, MainWindow::closeFile);
+  ConnectControl2(WingPlugin::Controller::saveFile, MainWindow::save);
+  ConnectControl2(WingPlugin::Controller::exportFile, MainWindow::exportFile);
+  ConnectControl2(WingPlugin::Controller::exportFileGUI,
+                  MainWindow::on_exportfile);
+  ConnectControl2(WingPlugin::Controller::saveasFile, MainWindow::saveAs);
+  ConnectControl2(WingPlugin::Controller::saveasFileGUI, MainWindow::on_saveas);
+  ConnectControl2(WingPlugin::Controller::closeCurrentFile,
+                  MainWindow::closeCurrentFile);
+  ConnectControl2(WingPlugin::Controller::saveCurrentFile,
+                  MainWindow::saveCurrent);
+  ConnectControl2(WingPlugin::Controller::openFileGUI, MainWindow::on_openfile);
+  ConnectControl2(WingPlugin::Controller::openDriverGUI,
+                  MainWindow::on_opendriver);
+  ConnectControl2(WingPlugin::Controller::gotoGUI, MainWindow::on_gotoline);
+  ConnectControl2(WingPlugin::Controller::findGUI, MainWindow::on_findfile);
+  ConnectControl2(WingPlugin::Controller::fillGUI, MainWindow::on_fill);
+  ConnectControl2(WingPlugin::Controller::fillzeroGUI, MainWindow::on_fillzero);
+  ConnectControl2(WingPlugin::Controller::fillnopGUI, MainWindow::on_fillnop);
 }
 
-bool MainWindow::shadowControl(IWingPlugin *plugin) {
-  return plgsys->shadowControl(plugin);
+bool MainWindow::requestControl(IWingPlugin *plugin) {
+  return plgsys->requestControl(plugin);
 }
-bool MainWindow::shadowRelease(IWingPlugin *plugin) {
-  return plgsys->shadowRelease(plugin);
+bool MainWindow::requestRelease(IWingPlugin *plugin) {
+  return plgsys->requestRelease(plugin);
 }
 
 void MainWindow::setTheme(DGuiApplicationHelper::ColorType theme) {
   auto p = palette();
-
   if (theme == DGuiApplicationHelper::LightType) {
   } else {
   }
@@ -1607,7 +1655,7 @@ bool MainWindow::isSavedFile(int index) {
   if (index < 0 || index >= hexfiles.count())
     return false;
   auto p = hexfiles.at(index);
-  return p.doc->isSaved() && p.doc->pluginMetaSaved;
+  return p.doc->isSaved() && plgChangeSaved;
 }
 
 ErrFile MainWindow::closeCurrentFile(bool force) {
@@ -2089,6 +2137,7 @@ ErrFile MainWindow::save(int index) {
           f.doc->isWorkspace = true;
           iw->setPixmap(infow);
           tabs->setTabIcon(index, ICONRES("pro"));
+          plgChangeSaved = true;
         } else {
           auto b = WorkSpaceManager::saveWorkSpace(
               f.filename + PROEXT, f.filename,
@@ -2100,6 +2149,7 @@ ErrFile MainWindow::save(int index) {
           f.doc->isWorkspace = true;
           iw->setPixmap(infow);
           tabs->setTabIcon(index, ICONRES("pro"));
+          plgChangeSaved = true;
         }
       }
       return ErrFile::Success;
@@ -2147,6 +2197,7 @@ ErrFile MainWindow::saveAs(QString filename, int index) {
         f.doc->isWorkspace = true;
         iw->setPixmap(infow);
         tabs->setTabIcon(index, ICONRES("pro"));
+        plgChangeSaved = true;
       }
       return ErrFile::Success;
     }

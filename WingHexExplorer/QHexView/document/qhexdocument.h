@@ -73,9 +73,10 @@ public:
 
   void FindAllBytes(qint64 begin, qint64 end, QByteArray b,
                     QList<quint64> &results, int maxCount = -1);
+  void setPluginSaved();
 
   bool isWorkspace = false;
-  bool pluginMetaSaved = true;
+
   /*======================*/
 
 public:
@@ -131,7 +132,7 @@ signals:
   void canUndoChanged(bool canUndo);
   void canRedoChanged(bool canRedo);
   void documentChanged();
-  void lineChanged(quint64 line);
+  void metaLineChanged(quint64 line);
 
 private:
   QHexBuffer *m_buffer;

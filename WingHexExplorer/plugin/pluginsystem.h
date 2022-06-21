@@ -23,10 +23,10 @@ public:
   QList<IWingPlugin *> plugins();
   void raiseDispatch(HookIndex hookindex, QList<QVariant> params);
 
-  bool shadowControl(IWingPlugin *plugin);
-  bool shadowRelease(IWingPlugin *plugin);
+  bool requestControl(IWingPlugin *plugin);
+  bool requestRelease(IWingPlugin *plugin);
 
-  void initShadowControl(IWingPlugin *plugin);
+  void initControl(IWingPlugin *plugin);
   void loadPlugin(QFileInfo filename);
 
 private:
@@ -35,9 +35,9 @@ private:
 signals:
   void PluginMenuNeedAdd(QMenu *menu);
   void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
-  void ConnectShadow(IWingPlugin *plugin);
-  void ConnectShadowSlot(IWingPlugin *plugin);
-  void DisConnectShadowSlot(IWingPlugin *plugin);
+  void ConnectBase(IWingPlugin *plugin);
+  void ConnectControl(IWingPlugin *plugin);
+  void DisconnectControl(IWingPlugin *plugin);
 
 private:
   QList<IWingPlugin *> loadedplgs;

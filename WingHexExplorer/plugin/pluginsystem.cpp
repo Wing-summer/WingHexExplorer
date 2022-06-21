@@ -80,7 +80,7 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         emit this->PluginDockWidgetAdd(dockw, p->registerDockWidgetDockArea());
       }
 
-      emit ConnectShadow(p);
+      emit ConnectBase(p);
       emit p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
 
     } else {
@@ -109,7 +109,7 @@ bool PluginSystem::LoadPlugin() {
   return true;
 }
 
-bool PluginSystem::shadowControl(IWingPlugin *plugin) {
+bool PluginSystem::requestControl(IWingPlugin *plugin) {
   if (plugin == nullptr)
     return false;
   auto res = mutex.tryLock(1500);
@@ -123,16 +123,16 @@ bool PluginSystem::shadowControl(IWingPlugin *plugin) {
           QList<QVariant>({plugin->pluginName(), plugin->puid()}));
     }
   }
-  initShadowControl(plugin);
+  initControl(plugin);
   mutex.unlock();
   return true;
 }
 
-bool PluginSystem::shadowRelease(IWingPlugin *plugin) {
+bool PluginSystem::requestRelease(IWingPlugin *plugin) {
   if (plugin == nullptr)
     return false;
 
-  plugin->disconnect();
+  plugin->controller.disconnect();
   plugintimer[plugin]->stop();
   plugintimeout[plugin] = false;
   curpluginctl = nullptr;
@@ -140,7 +140,7 @@ bool PluginSystem::shadowRelease(IWingPlugin *plugin) {
   return true;
 }
 
-void PluginSystem::initShadowControl(IWingPlugin *plugin) {
+void PluginSystem::initControl(IWingPlugin *plugin) {
   if (!plugintimer.contains(plugin)) {
     auto timer = new QTimer(this);
     plugintimer.insert(plugin, timer);
@@ -155,8 +155,8 @@ void PluginSystem::initShadowControl(IWingPlugin *plugin) {
     plugintimeout.insert(plugin, false);
   }
   if (curpluginctl)
-    shadowRelease(plugin);
-  emit ConnectShadowSlot(plugin);
+    requestRelease(plugin);
+  emit ConnectControl(plugin);
   curpluginctl = plugin;
   plugintimer[plugin]->start(5000);
 }

@@ -219,11 +219,11 @@ private:
 private:
   void PluginMenuNeedAdd(QMenu *menu);
   void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
-  void connectShadow(IWingPlugin *plugin);
-  void connectShadowSlot(IWingPlugin *plugin);
+  void connectBase(IWingPlugin *plugin);
+  void connectControl(IWingPlugin *plugin);
   // shadow
-  bool shadowControl(IWingPlugin *plugin);
-  bool shadowRelease(IWingPlugin *plugin);
+  bool requestControl(IWingPlugin *plugin);
+  bool requestRelease(IWingPlugin *plugin);
 
   void enableDirverLimit(bool b);
 
@@ -286,6 +286,7 @@ private:
 
   int _findmax = 100;
   int findres = 0;
+  bool plgChangeSaved = true; //由于插件编辑的不会存于撤销列表中，所以得有个标记
 
   QString lastusedpath;
 };
