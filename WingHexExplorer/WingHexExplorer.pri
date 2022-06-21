@@ -15,7 +15,6 @@ SOURCES += \
     $$PWD/class/logger.cpp \
     $$PWD/winghexapplication.cpp \
     $$PWD/settingdialog.cpp \
-    $$PWD/plugin/hexviewshadow.cpp \
     $$PWD/dialog/encodingdialog.cpp \
     $$PWD/class/workspacemanager.cpp \
     $$PWD/class/recentfilemanager.cpp
@@ -43,7 +42,6 @@ HEADERS += \
     $$PWD/dialog/sponsordialog.h \
     $$PWD/class/logger.h \
     $$PWD/winghexapplication.h \
-    $$PWD/plugin/hexviewshadow.h \
     $$PWD/dialog/encodingdialog.h \
     $$PWD/class/workspacemanager.h \
     $$PWD/class/recentfilemanager.h

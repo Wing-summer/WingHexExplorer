@@ -6,7 +6,7 @@
 #include <QtCore>
 
 PluginSystem::PluginSystem(QObject *parent)
-    : QObject(parent), curhexshadow(nullptr) {
+    : QObject(parent), curpluginctl(nullptr) {
   logger = Logger::getInstance();
 
   // init plugin dispathcer
@@ -80,12 +80,7 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         emit this->PluginDockWidgetAdd(dockw, p->registerDockWidgetDockArea());
       }
 
-      connect(p, &IWingPlugin::host2MessagePipe, this,
-              &PluginSystem::messagePipe);
-
-      auto hvs = new HexViewShadow(this);
-      hexshadows.insert(p, hvs);
-      emit ConnectShadow(hvs);
+      emit ConnectShadow(p);
       emit p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
 
     } else {
@@ -114,98 +109,54 @@ bool PluginSystem::LoadPlugin() {
   return true;
 }
 
-void PluginSystem::messagePipe(IWingPlugin *sender, WingPluginMessage type,
-                               QList<QVariant> msg) {
-  Q_UNUSED(msg)
-
-  if (sender == nullptr)
-    return;
-
-  if (type == WingPluginMessage::GetHexViewShadow) {
-    HexViewShadow *hvs;
-    if (hexshadows.contains(sender)) {
-      hvs = hexshadows[sender];
-    } else {
-      hvs = new HexViewShadow(this);
-      hexshadows.insert(sender, hvs);
-      emit this->ConnectShadow(hvs);
-    }
-    sender->plugin2MessagePipe(WingPluginMessage::GetHexViewShadow,
-                               QList<QVariant>({QVariant::fromValue(hvs)}));
-  }
-}
-
-void PluginSystem::shadowDestory(IWingPlugin *plugin) {
-  if (shadowRelease(plugin)) {
-    auto shv = hexshadows[plugin];
-    hexshadowtimeout.remove(shv);
-    hexshadowtimer.remove(shv);
-    shv->deleteLater();
-  }
-}
 bool PluginSystem::shadowControl(IWingPlugin *plugin) {
   if (plugin == nullptr)
     return false;
   auto res = mutex.tryLock(1500);
   if (!res)
     return false;
-  if (hexshadows.contains(plugin)) {
-    if (curhexshadow) {
-      if (hexshadowtimeout[curhexshadow]) {
-        plugin->plugin2MessagePipe(
-            WingPluginMessage::HexViewShadowTimeout,
-            QList<QVariant>({plugin->pluginName(), plugin->puid()}));
-      }
+
+  if (curpluginctl) {
+    if (plugintimeout[curpluginctl]) {
+      plugin->plugin2MessagePipe(
+          WingPluginMessage::ConnectTimeout,
+          QList<QVariant>({plugin->pluginName(), plugin->puid()}));
     }
-    initShadowControl(plugin);
-    return true;
-  } else {
-    return false;
   }
+  initShadowControl(plugin);
   mutex.unlock();
+  return true;
 }
 
-bool PluginSystem::shadowIsValid(IWingPlugin *plugin) {
-  if (plugin == nullptr)
-    return false;
-  if (hexshadows.contains(plugin)) {
-    return curhexshadow == hexshadows[plugin];
-  }
-  return false;
-}
 bool PluginSystem::shadowRelease(IWingPlugin *plugin) {
   if (plugin == nullptr)
     return false;
-  if (hexshadows.contains(plugin)) {
-    auto shadow = hexshadows[plugin];
-    shadow->disconnect();
-    hexshadowtimer[shadow]->stop();
-    hexshadowtimeout[shadow] = false;
-    curhexshadow = nullptr;
-  }
+
+  plugin->disconnect();
+  plugintimer[plugin]->stop();
+  plugintimeout[plugin] = false;
+  curpluginctl = nullptr;
+
   return true;
 }
 
 void PluginSystem::initShadowControl(IWingPlugin *plugin) {
-  if (!hexshadows.contains(plugin))
-    return;
-  auto shadow = hexshadows[plugin];
-  if (!hexshadowtimer.contains(shadow)) {
+  if (!plugintimer.contains(plugin)) {
     auto timer = new QTimer(this);
-    hexshadowtimer.insert(shadow, timer);
+    plugintimer.insert(plugin, timer);
     connect(timer, &QTimer::timeout, [=] {
-      hexshadowtimeout[shadow] = true;
+      plugintimeout[plugin] = true;
       timer->stop();
     });
   }
-  if (hexshadowtimeout.contains(shadow)) {
-    hexshadowtimeout[shadow] = false;
+  if (plugintimeout.contains(plugin)) {
+    plugintimeout[plugin] = false;
   } else {
-    hexshadowtimeout.insert(shadow, false);
+    plugintimeout.insert(plugin, false);
   }
-  if (curhexshadow)
+  if (curpluginctl)
     shadowRelease(plugin);
-  emit ConnectShadowSlot(shadow);
-  curhexshadow = shadow;
-  hexshadowtimer[shadow]->start(5000);
+  emit ConnectShadowSlot(plugin);
+  curpluginctl = plugin;
+  plugintimer[plugin]->start(5000);
 }

@@ -10,7 +10,6 @@ class TestPlugin : public IWingPlugin {
   Q_OBJECT
 #if QT_VERSION >= 0x050000
   Q_PLUGIN_METADATA(IID IWINGPLUGIN_INTERFACE_IID FILE "TestPlugin.json")
-  // Q_PLUGIN_METADATA(IID IWINGPLUGIN_SHADOWINTERFACE_IID)
 #endif // QT_VERSION >= 0x050000
 
   Q_INTERFACES(IWingPlugin)
@@ -27,7 +26,7 @@ public:
   uint pluginVersion() override;
   QString puid() override;
   QString signature() override;
-  QString comment() override;
+  QString pluginComment() override;
   QList<QVariant> optionalInfos() override;
   void plugin2MessagePipe(WingPluginMessage type, QList<QVariant> msg) override;
   Qt::DockWidgetArea registerDockWidgetDockArea() override;

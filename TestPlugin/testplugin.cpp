@@ -41,7 +41,7 @@ QString TestPlugin::pluginName() { return "TestPlugin"; }
 
 QString TestPlugin::pluginAuthor() { return "Wingsummer"; }
 
-QString TestPlugin::comment() {
+QString TestPlugin::pluginComment() {
   return "A Sample Plugin for WingHex Explorer by Wingsummer!";
 }
 
@@ -55,20 +55,12 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
                                     QList<QVariant> msg) {
   Q_UNUSED(msg)
   if (type == WingPluginMessage::PluginLoaded) {
-    emit host2MessagePipe(this, WingPluginMessage::GetHexViewShadow,
-                          QList<QVariant>());
-    return;
-  }
-  if (type == WingPluginMessage::GetHexViewShadow) {
-    auto hvs = extractHexViewShadow(msg);
-    if (hvs) {
-      if (hvs->shadowControl(this)) {
-        hvs->newFile();
-        hvs->switchDocument(0);
-        auto str = QString("HelloWorld!").toUtf8();
-        hvs->insert(0, str);
-        hvs->shadowRelease(this);
-      }
+    if (shadowControl(this)) {
+      newFile();
+      switchDocument(0);
+      auto str = QString("HelloWorld!").toUtf8();
+      insert(0, str);
+      shadowRelease(this);
     }
   }
 }

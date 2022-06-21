@@ -23,8 +23,6 @@ public:
   QList<IWingPlugin *> plugins();
   void raiseDispatch(HookIndex hookindex, QList<QVariant> params);
 
-  void shadowDestory(IWingPlugin *plugin);
-  bool shadowIsValid(IWingPlugin *plugin);
   bool shadowControl(IWingPlugin *plugin);
   bool shadowRelease(IWingPlugin *plugin);
 
@@ -34,23 +32,18 @@ public:
 private:
   const QList<QVariant> emptyparam;
 
-private slots:
-  void messagePipe(IWingPlugin *sender, WingPluginMessage type,
-                   QList<QVariant> msg);
-
 signals:
   void PluginMenuNeedAdd(QMenu *menu);
   void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
-  void ConnectShadow(HexViewShadow *shadow);
-  void ConnectShadowSlot(HexViewShadow *shadow);
-  void DisConnectShadowSlot(HexViewShadow *shadow);
+  void ConnectShadow(IWingPlugin *plugin);
+  void ConnectShadowSlot(IWingPlugin *plugin);
+  void DisConnectShadowSlot(IWingPlugin *plugin);
 
 private:
   QList<IWingPlugin *> loadedplgs;
-  QMap<IWingPlugin *, HexViewShadow *> hexshadows;
-  QMap<HexViewShadow *, bool> hexshadowtimeout;
-  QMap<HexViewShadow *, QTimer *> hexshadowtimer;
-  HexViewShadow *curhexshadow;
+  QMap<IWingPlugin *, bool> plugintimeout;
+  QMap<IWingPlugin *, QTimer *> plugintimer;
+  IWingPlugin *curpluginctl;
   QMap<HookIndex, QList<IWingPlugin *>> dispatcher;
   Logger *logger;
   QMutex mutex;

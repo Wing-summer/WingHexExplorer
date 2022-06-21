@@ -75,6 +75,7 @@ public:
                     QList<quint64> &results, int maxCount = -1);
 
   bool isWorkspace = false;
+  bool pluginMetaSaved = true;
   /*======================*/
 
 public:
