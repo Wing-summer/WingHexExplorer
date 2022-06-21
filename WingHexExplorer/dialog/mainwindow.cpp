@@ -312,6 +312,12 @@ MainWindow::MainWindow(DMainWindow *parent) {
   menu->addMenu(tm);
 
   tm = new DMenu(this);
+  winmenu = tm;
+  tm->setTitle(tr("Window"));
+  tm->setIcon(ICONRES("win"));
+  menu->addMenu(tm);
+
+  tm = new DMenu(this);
   tm->setTitle(tr("Author"));
   tm->setIcon(ICONRES("author"));
   AddToolSubMenuAction("soft", tr("About"), MainWindow::on_about);
@@ -620,6 +626,24 @@ MainWindow::MainWindow(DMainWindow *parent) {
                 findresultMenu);
 
   // dockwidgets init
+#define AddDockWin(title)                                                      \
+  a = new QAction(this);                                                       \
+  a->setText(title);                                                           \
+  connect(a, &QAction::triggered, this, [dw] {                                 \
+    dw->show();                                                                \
+    dw->raise();                                                               \
+  });                                                                          \
+  winmenu->addAction(a);
+
+#define AddDockWin2(title)                                                     \
+  a = new QAction(this);                                                       \
+  a->setText(title);                                                           \
+  connect(a, &QAction::triggered, this, [dw2] {                                \
+    dw2->show();                                                               \
+    dw2->raise();                                                              \
+  });                                                                          \
+  winmenu->addAction(a);
+
   auto dw = new DDockWidget(this);
   findresult = new DTableWidget(0, 3, this);
   findresult->setEditTriggers(DTableWidget::EditTrigger::NoEditTriggers);
@@ -652,9 +676,11 @@ MainWindow::MainWindow(DMainWindow *parent) {
   dw->setWindowTitle(tr("FindResult"));
   dw->setObjectName("FindResult");
   dw->setWidget(findresult);
+  AddDockWin(tr("FindResult"));
   this->addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, dw);
 
   dw = new DDockWidget(this);
+  AddDockWin(tr("Log"));
   pluginInfo = new QTextBrowser(this);
   dw->setWindowTitle(tr("Log"));
   dw->setObjectName("Log");
@@ -669,6 +695,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   logger->logMessage(INFOLOG(tr("LoggerInitFinish")));
 
   auto dw2 = new DDockWidget(this);
+  AddDockWin2(tr("Number"));
   numshowtable = new DTableWidget(8, 1, this);
   numshowtable->setEditTriggers(DTableWidget::EditTrigger::NoEditTriggers);
   numshowtable->setSelectionBehavior(
@@ -694,6 +721,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   this->tabifyDockWidget(dw, dw2);
 
   dw = new DDockWidget(this);
+  AddDockWin(tr("BookMark"));
   bookmarks = new DListWidget(this);
   bookmarks->setFocusPolicy(Qt::StrongFocus);
   connect(bookmarks, &DListWidget::itemDoubleClicked, [=]() {

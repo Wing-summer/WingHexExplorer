@@ -213,7 +213,10 @@ void Settings::saveWindowState(DMainWindow *wnd, bool isorign) {
     QSettings settings(QApplication::organizationName(),
                        QApplication::applicationName());
     settings.setValue("geometry", wnd->saveGeometry());
-    settings.setValue("windowState", wnd->saveState(isorign ? 0 : 1));
+    if (isorign)
+      settings.setValue("windowState", wnd->saveState());
+    else
+      settings.setValue("orignwindowState", wnd->saveState());
   }
 }
 
@@ -222,8 +225,10 @@ void Settings::loadWindowState(DMainWindow *wnd, bool isorign) {
     QSettings settings(QApplication::organizationName(),
                        QApplication::applicationName());
     wnd->restoreGeometry(settings.value("geometry").toByteArray());
-    wnd->restoreState(settings.value("windowState").toByteArray(),
-                      isorign ? 0 : 1);
+    if (isorign)
+      wnd->restoreState(settings.value("windowState").toByteArray());
+    else
+      wnd->restoreState(settings.value("orignwindowState").toByteArray());
   }
 }
 

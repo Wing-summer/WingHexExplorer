@@ -105,7 +105,7 @@ private:
   DStatusBar *status;
   DLabel *lblloc;
   DLabel *lblsellen;
-  // DDockWidget *dw;
+
   DMenu *hexeditorMenu;
   DMenu *findresultMenu;
 
@@ -232,6 +232,7 @@ private:
 private:
   DMenu *plgmenu;
   DMenu *toolmenu;
+  DMenu *winmenu;
   QMutex mutex;
 
   DIconButton *iSetBaseAddr;
