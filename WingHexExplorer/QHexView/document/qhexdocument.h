@@ -46,7 +46,6 @@ public:
   bool isReadOnly();
   bool isKeepSize();
   bool isLocked();
-  bool isSaved();
 
   //----------------------------------
   void AddBookMark(qint64 pos, QString comment);
@@ -71,16 +70,16 @@ public:
   bool existBookMark();
   bool existBookMark(qint64 pos);
 
-  void FindAllBytes(qint64 begin, qint64 end, QByteArray b,
+  void findAllBytes(qint64 begin, qint64 end, QByteArray b,
                     QList<quint64> &results, int maxCount = -1);
-  void setPluginSaved();
+  bool isDocSaved();
+  void setDocSaved(bool b = true);
 
   bool isWorkspace = false;
-
   /*======================*/
 
 public:
-  bool removeSelection();
+  bool RemoveSelection();
   QByteArray read(qint64 offset, int len = 0);
   QByteArray selectedBytes() const;
   char at(int offset) const;
@@ -90,19 +89,33 @@ public:
 public slots:
   void undo();
   void redo();
-  bool cut(bool hex = false);
+  bool Cut(bool hex = false);
   void copy(bool hex = false);
-  void paste(bool hex = false);
-  void insert(qint64 offset, uchar b);
-  void replace(qint64 offset, uchar b);
-  void insert(qint64 offset, const QByteArray &data);
-  void replace(qint64 offset, const QByteArray &data);
-  bool remove(qint64 offset, int len);
+  void Paste(bool hex = false);
+  void Insert(qint64 offset, uchar b);
+  void Insert(qint64 offset, const QByteArray &data);
+  void Replace(qint64 offset, uchar b);
+  void Replace(qint64 offset, const QByteArray &data);
+  bool Remove(qint64 offset, int len);
   QByteArray read(qint64 offset, int len) const;
   bool saveTo(QIODevice *device, bool cleanUndo);
 
   qint64 searchForward(const QByteArray &ba);
   qint64 searchBackward(const QByteArray &ba);
+
+  /*================================*/
+  // added by wingsummer
+
+  bool cut(bool hex = false);
+  void paste(bool hex = false);
+  void insert(qint64 offset, uchar b);
+  void insert(qint64 offset, const QByteArray &data);
+  void replace(qint64 offset, uchar b);
+  void replace(qint64 offset, const QByteArray &data);
+  bool remove(qint64 offset, int len);
+  bool removeSelection();
+
+  /*================================*/
 
   /*================================*/
   // modified by wingsummer
@@ -150,6 +163,7 @@ private:
   bool m_keepsize;
   bool m_islocked;
   QList<BookMarkStruct> bookmarks;
+  bool m_pluginModed = false;
 
   /*======================*/
 };

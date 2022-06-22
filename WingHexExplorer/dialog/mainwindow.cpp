@@ -754,13 +754,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
     toolbartools[ToolBoxIndex::Redo]->setEnabled(b);
     toolmenutools[ToolBoxIndex::Redo]->setEnabled(b);
   });
-  connect(hexeditor, &QHexView::documentSaved, [=](bool b) {
-    iSaved->setPixmap(b && plgChangeSaved ? infoSaved : infoUnsaved);
-  });
-  connect(hexeditor, &QHexView::documentBookMarkChanged,
-          [=] { plgChangeSaved = false; });
-  connect(hexeditor, &QHexView::documentmetaDataChanged,
-          [=] { plgChangeSaved = false; });
+  connect(hexeditor, &QHexView::documentSaved,
+          [=](bool b) { iSaved->setPixmap(b ? infoSaved : infoUnsaved); });
   connect(hexeditor, &QHexView::documentKeepSize, this,
           [=](bool b) { iOver->setIcon(b ? infoCannotOver : infoCanOver); });
   connect(hexeditor, &QHexView::documentLockedFile, this,
@@ -955,7 +950,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->isKeepSize(), true);
   });
   ConnectBaseLamba2(WingPlugin::Reader::isModified, [=] {
-    PCHECKRETURN(!hexfiles[_pcurfile].doc->isSaved(), false);
+    PCHECKRETURN(!hexfiles[_pcurfile].doc->isDocSaved(), false);
   });
   ConnectBaseLamba2(WingPlugin::Reader::isReadOnly, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->isReadOnly(), true);
@@ -1067,10 +1062,10 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->read(offset, len), QByteArray());
   });
   ConnectBaseLamba2(
-      WingPlugin::Reader::FindAllBytes,
+      WingPlugin::Reader::findAllBytes,
       [=](qlonglong begin, qlonglong end, QByteArray b,
           QList<quint64> &results) {
-        PCHECK(hexfiles[_pcurfile].doc->FindAllBytes(begin, end, b, results), );
+        PCHECK(hexfiles[_pcurfile].doc->findAllBytes(begin, end, b, results), );
       });
   ConnectBaseLamba2(
       WingPlugin::Reader::searchForward, [=](const QByteArray &ba) {
@@ -1189,10 +1184,10 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   void (WingPlugin::Controller::*replacearr)(
       qint64 offset, const QByteArray &data) = &WingPlugin::Controller::replace;
   ConnectControlLamba3(replacechar, [=](qint64 offset, uchar b) {
-    hexfiles[_pcurfile].doc->insert(offset, b);
+    hexfiles[_pcurfile].doc->replace(offset, b);
   });
   ConnectControlLamba3(replacearr, [=](qint64 offset, const QByteArray &data) {
-    hexfiles[_pcurfile].doc->insert(offset, data);
+    hexfiles[_pcurfile].doc->replace(offset, data);
   });
   ConnectControlLamba2(WingPlugin::Controller::remove,
                        [=](qint64 offset, int len) {
@@ -1655,7 +1650,7 @@ bool MainWindow::isSavedFile(int index) {
   if (index < 0 || index >= hexfiles.count())
     return false;
   auto p = hexfiles.at(index);
-  return p.doc->isSaved() && plgChangeSaved;
+  return p.doc->isDocSaved();
 }
 
 ErrFile MainWindow::closeCurrentFile(bool force) {
@@ -1772,7 +1767,7 @@ void MainWindow::on_redofile() {
 
 void MainWindow::on_cutfile() {
   CheckEnabled;
-  if (hexeditor->document()->cut()) {
+  if (hexeditor->document()->Cut()) {
     DMessageManager::instance()->sendMessage(this, ICONRES("cut"),
                                              tr("CutToClipBoard"));
   } else {
@@ -1783,7 +1778,7 @@ void MainWindow::on_cutfile() {
 
 void MainWindow::on_cuthex() {
   CheckEnabled;
-  if (hexeditor->document()->cut(true)) {
+  if (hexeditor->document()->Cut(true)) {
     DMessageManager::instance()->sendMessage(this, ICONRES("cut"),
                                              tr("CutToClipBoard"));
   } else {
@@ -1808,12 +1803,12 @@ void MainWindow::on_copyhex() {
 
 void MainWindow::on_pastefile() {
   CheckEnabled;
-  hexeditor->document()->paste();
+  hexeditor->document()->Paste();
 }
 
 void MainWindow::on_pastehex() {
   CheckEnabled;
-  hexeditor->document()->paste(true);
+  hexeditor->document()->Paste(true);
 }
 
 void MainWindow::on_opendriver() {
@@ -1881,7 +1876,7 @@ void MainWindow::on_save() {
 
 void MainWindow::on_delete() {
   CheckEnabled;
-  hexeditor->document()->removeSelection();
+  hexeditor->document()->RemoveSelection();
 }
 
 void MainWindow::on_saveas() {
@@ -1937,7 +1932,7 @@ void MainWindow::on_findfile() {
           end = -1;
         } break;
         }
-        d->FindAllBytes(begin, end, res, results, _findmax);
+        d->findAllBytes(begin, end, res, results, _findmax);
         if (findresitem) {
           delete[] findresitem;
           findresult->setRowCount(0);
@@ -2137,7 +2132,7 @@ ErrFile MainWindow::save(int index) {
           f.doc->isWorkspace = true;
           iw->setPixmap(infow);
           tabs->setTabIcon(index, ICONRES("pro"));
-          plgChangeSaved = true;
+          f.doc->setDocSaved();
         } else {
           auto b = WorkSpaceManager::saveWorkSpace(
               f.filename + PROEXT, f.filename,
@@ -2149,7 +2144,7 @@ ErrFile MainWindow::save(int index) {
           f.doc->isWorkspace = true;
           iw->setPixmap(infow);
           tabs->setTabIcon(index, ICONRES("pro"));
-          plgChangeSaved = true;
+          f.doc->setDocSaved();
         }
       }
       return ErrFile::Success;
@@ -2197,7 +2192,7 @@ ErrFile MainWindow::saveAs(QString filename, int index) {
         f.doc->isWorkspace = true;
         iw->setPixmap(infow);
         tabs->setTabIcon(index, ICONRES("pro"));
-        plgChangeSaved = true;
+        f.doc->setDocSaved();
       }
       return ErrFile::Success;
     }
@@ -2398,7 +2393,7 @@ void MainWindow::on_fill() {
       if (doc->isEmpty() || hexeditor->selectlength() == 0)
         return;
       auto pos = doc->cursor()->selectionStart().offset();
-      doc->replace(pos, QByteArray(int(hexeditor->selectlength()), char(ch)));
+      doc->Replace(pos, QByteArray(int(hexeditor->selectlength()), char(ch)));
     } else {
       DMessageManager::instance()->sendMessage(this, ICONRES("fill"),
                                                tr("FillInputError"));
@@ -2412,7 +2407,7 @@ void MainWindow::on_fillnop() {
   if (doc->isEmpty() || hexeditor->selectlength() == 0)
     return;
   auto pos = doc->cursor()->selectionStart().offset();
-  doc->replace(pos, QByteArray(int(hexeditor->selectlength()), char(0x90)));
+  doc->Replace(pos, QByteArray(int(hexeditor->selectlength()), char(0x90)));
 }
 
 void MainWindow::on_fillzero() {
@@ -2421,7 +2416,7 @@ void MainWindow::on_fillzero() {
   if (doc->isEmpty() || hexeditor->selectlength() == 0)
     return;
   auto pos = doc->cursor()->selectionStart().offset();
-  doc->replace(pos, QByteArray(int(hexeditor->selectlength()), char(0)));
+  doc->Replace(pos, QByteArray(int(hexeditor->selectlength()), char(0)));
 }
 
 void MainWindow::on_loadplg() {

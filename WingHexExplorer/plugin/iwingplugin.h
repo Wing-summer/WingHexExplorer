@@ -161,15 +161,13 @@ signals:
   bool canUndo();
   bool canRedo();
   int areaIndent();
-  void setAreaIndent(quint8 value);
   int hexLineWidth();
-  void setHexLineWidth(quint8 value);
 
   void copy(bool hex = false);
   QByteArray read(qint64 offset, int len);
   qint64 searchForward(const QByteArray &ba);
   qint64 searchBackward(const QByteArray &ba);
-  void FindAllBytes(qlonglong begin, qlonglong end, QByteArray b,
+  void findAllBytes(qlonglong begin, qlonglong end, QByteArray b,
                     QList<quint64> &results);
 
   // render

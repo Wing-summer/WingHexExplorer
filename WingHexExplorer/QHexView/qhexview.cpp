@@ -115,7 +115,7 @@ void QHexView::setAddressBase(quint64 base) {
   m_document->setBaseAddress(base);
 }
 
-bool QHexView::isSaved() { return m_document->isSaved(); }
+bool QHexView::isSaved() { return m_document->isDocSaved(); }
 
 QFont QHexView::getHexeditorFont() {
   QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -150,7 +150,7 @@ void QHexView::establishSignal(QHexDocument *doc) {
   emit documentSwitched();
   emit documentBookMarkChanged();
   emit documentmetaDataChanged();
-  emit documentSaved(doc->isSaved());
+  emit documentSaved(doc->isDocSaved());
   emit documentKeepSize(doc->isKeepSize());
   emit documentLockedFile(doc->isLocked());
 }
@@ -515,11 +515,11 @@ bool QHexView::processAction(QHexCursor *cur, QKeyEvent *e) {
     else if (e->matches(QKeySequence::Redo))
       m_document->redo();
     else if (e->matches(QKeySequence::Cut))
-      m_document->cut((m_renderer->selectedArea() == QHexRenderer::HexArea));
+      m_document->Cut((m_renderer->selectedArea() == QHexRenderer::HexArea));
     else if (e->matches(QKeySequence::Copy))
       m_document->copy((m_renderer->selectedArea() == QHexRenderer::HexArea));
     else if (e->matches(QKeySequence::Paste))
-      m_document->paste((m_renderer->selectedArea() == QHexRenderer::HexArea));
+      m_document->Paste((m_renderer->selectedArea() == QHexRenderer::HexArea));
     else
       return false;
 
@@ -536,19 +536,19 @@ bool QHexView::processAction(QHexCursor *cur, QKeyEvent *e) {
       // modified by wingsummer
       if (isKeepSize()) {
         if (e->key() == Qt::Key_Backspace)
-          m_document->replace(cur->position().offset() - 1, uchar(0));
+          m_document->Replace(cur->position().offset() - 1, uchar(0));
         else
-          m_document->replace(cur->position().offset(), uchar(0));
+          m_document->Replace(cur->position().offset(), uchar(0));
       } else {
         if (e->key() == Qt::Key_Backspace)
-          m_document->remove(cur->position().offset() - 1, 1);
+          m_document->Remove(cur->position().offset() - 1, 1);
         else
-          m_document->remove(cur->position().offset(), 1);
+          m_document->Remove(cur->position().offset(), 1);
       }
 
     } else {
       QHexPosition oldpos = cur->selectionStart();
-      m_document->removeSelection();
+      m_document->RemoveSelection();
       cur->moveTo(oldpos.line, oldpos.column + 1);
     }
 
@@ -676,12 +676,12 @@ bool QHexView::processTextInput(QHexCursor *cur, QKeyEvent *e) {
       return false;
 
     uchar val = uchar(QString(static_cast<char>(key)).toUInt(nullptr, 16));
-    m_document->removeSelection();
+    m_document->RemoveSelection();
 
     if (m_document->atEnd() ||
         (cur->currentNibble() && !isKeepSize() &&
          cur->insertionMode() == QHexCursor::InsertMode)) {
-      m_document->insert(cur->position().offset(), uchar(val << 4)); // X0 byte
+      m_document->Insert(cur->position().offset(), uchar(val << 4)); // X0 byte
       this->moveNext();
       return true;
     }
@@ -693,7 +693,7 @@ bool QHexView::processTextInput(QHexCursor *cur, QKeyEvent *e) {
     else // 0X
       val = (ch & 0xF0) | val;
 
-    m_document->replace(cur->position().offset(), val);
+    m_document->Replace(cur->position().offset(), val);
     this->moveNext();
     return true;
   }
@@ -702,13 +702,13 @@ bool QHexView::processTextInput(QHexCursor *cur, QKeyEvent *e) {
     if (!(key >= 0x20 && key <= 0x7E)) // Check if is a Printable Char
       return false;
 
-    m_document->removeSelection();
+    m_document->RemoveSelection();
 
     if (!m_document->atEnd() &&
         (cur->insertionMode() == QHexCursor::OverwriteMode))
-      m_document->replace(cur->position().offset(), key);
+      m_document->Replace(cur->position().offset(), key);
     else
-      m_document->insert(cur->position().offset(), key);
+      m_document->Insert(cur->position().offset(), key);
 
     QKeyEvent keyevent(QEvent::KeyPress, Qt::Key_Right, Qt::NoModifier);
     qApp->sendEvent(this, &keyevent);

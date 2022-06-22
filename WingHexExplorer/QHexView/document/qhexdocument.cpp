@@ -15,6 +15,16 @@
 /*======================*/
 // added by wingsummer
 
+bool QHexDocument::isDocSaved() {
+  return m_undostack.isClean() && !m_pluginModed;
+}
+void QHexDocument::setDocSaved(bool b) {
+  if (b) {
+    m_undostack.setClean();
+  }
+  m_pluginModed = !b;
+  emit documentSaved(b);
+}
 bool QHexDocument::isReadOnly() { return m_readonly; }
 bool QHexDocument::isKeepSize() { return m_keepsize; }
 bool QHexDocument::isLocked() { return m_islocked; }
@@ -33,8 +43,6 @@ bool QHexDocument::setKeepSize(bool b) {
     m_cursor->setInsertionMode(QHexCursor::OverwriteMode);
   return true;
 }
-
-bool QHexDocument::isSaved() { return m_undostack.isClean(); }
 
 void QHexDocument::getBookMarks(QList<BookMarkStruct> &bookmarks) {
   bookmarks.clear();
@@ -58,6 +66,7 @@ bool QHexDocument::addBookMark(qint64 pos, QString comment) {
   if (!existBookMark(pos)) {
     BookMarkStruct b{pos, comment};
     bookmarks.append(b);
+    setDocSaved(false);
     emit bookMarkChanged();
     return true;
   }
@@ -107,6 +116,7 @@ void QHexDocument::removeBookMark(qint64 pos) {
     for (auto item : bookmarks) {
       if (pos == item.pos) {
         bookmarks.removeAt(index);
+        setDocSaved(false);
         emit bookMarkChanged();
         break;
       }
@@ -118,6 +128,7 @@ void QHexDocument::removeBookMark(qint64 pos) {
 void QHexDocument::removeBookMark(int index) {
   if (index >= 0 && index < bookmarks.count()) {
     bookmarks.removeAt(index);
+    setDocSaved(false);
     emit bookMarkChanged();
   }
 }
@@ -127,6 +138,7 @@ bool QHexDocument::modBookMark(qint64 pos, QString comment) {
     for (auto &item : bookmarks) {
       if (item.pos == pos) {
         item.comment = comment;
+        setDocSaved(false);
         emit bookMarkChanged();
         return true;
       }
@@ -137,6 +149,7 @@ bool QHexDocument::modBookMark(qint64 pos, QString comment) {
 
 void QHexDocument::clearBookMark() {
   bookmarks.clear();
+  setDocSaved(false);
   emit bookMarkChanged();
 }
 
@@ -177,10 +190,11 @@ QList<BookMarkStruct> QHexDocument::getAllBookMarks() { return bookmarks; }
 
 void QHexDocument::applyBookMarks(QList<BookMarkStruct> books) {
   bookmarks.append(books);
+  setDocSaved(false);
   emit bookMarkChanged();
 }
 
-void QHexDocument::FindAllBytes(qint64 begin, qint64 end, QByteArray b,
+void QHexDocument::findAllBytes(qint64 begin, qint64 end, QByteArray b,
                                 QList<quint64> &results, int maxCount) {
   results.clear();
   qlonglong p = begin > 0 ? begin : 0;
@@ -195,6 +209,77 @@ void QHexDocument::FindAllBytes(qint64 begin, qint64 end, QByteArray b,
     results.append(quint64(p));
     p += offset + 1;
   }
+}
+
+bool QHexDocument::removeSelection() {
+  if (!m_cursor->hasSelection())
+    return false;
+
+  auto res = this->remove(m_cursor->selectionStart().offset(),
+                          m_cursor->selectionLength());
+  if (res)
+    m_cursor->clearSelection();
+  return res;
+}
+
+bool QHexDocument::cut(bool hex) {
+  if (!m_cursor->hasSelection() || m_keepsize)
+    return false;
+
+  this->copy(hex);
+  return this->removeSelection();
+}
+
+void QHexDocument::paste(bool hex) {
+  QClipboard *c = qApp->clipboard();
+  QByteArray data = c->text().toUtf8();
+
+  if (data.isEmpty())
+    return;
+
+  this->removeSelection();
+
+  if (hex)
+    data = QByteArray::fromHex(data);
+
+  auto pos = m_cursor->position().offset();
+  if (!m_keepsize) {
+    this->insert(pos, data);
+    m_cursor->moveTo(pos + data.length()); // added by wingsummer
+  } else
+    this->replace(pos, data);
+}
+
+void QHexDocument::insert(qint64 offset, uchar b) {
+  if (m_keepsize || m_readonly || m_islocked)
+    return;
+  this->insert(offset, QByteArray(1, char(b)));
+}
+
+void QHexDocument::insert(qint64 offset, const QByteArray &data) {
+  if (m_keepsize || m_readonly || m_islocked)
+    return;
+  m_buffer->insert(offset, data);
+  emit documentChanged();
+}
+
+void QHexDocument::replace(qint64 offset, uchar b) {
+  if (m_readonly || m_islocked)
+    return;
+  this->replace(offset, QByteArray(1, char(b)));
+}
+
+void QHexDocument::replace(qint64 offset, const QByteArray &data) {
+  m_buffer->replace(offset, data);
+  emit documentChanged();
+}
+
+bool QHexDocument::remove(qint64 offset, int len) {
+  if (m_keepsize || m_readonly || m_islocked)
+    return false;
+  m_buffer->remove(offset, len);
+  emit documentChanged();
+  return true;
 }
 
 /*======================*/
@@ -222,10 +307,14 @@ QHexDocument::QHexDocument(QHexBuffer *buffer, bool readonly, QObject *parent)
   m_metadata = new QHexMetadata(&m_undostack, this);
   m_metadata->setLineWidth(m_hexlinewidth);
 
-  connect(m_metadata, &QHexMetadata::metadataChanged, this,
-          [=](quint64 line) { emit QHexDocument::metaLineChanged(line); });
-  connect(m_metadata, &QHexMetadata::metadataCleared, this,
-          &QHexDocument::documentChanged);
+  connect(m_metadata, &QHexMetadata::metadataChanged, this, [=](quint64 line) {
+    setDocSaved(false);
+    emit QHexDocument::metaLineChanged(line);
+  });
+  connect(m_metadata, &QHexMetadata::metadataCleared, this, [=] {
+    setDocSaved(false);
+    emit QHexDocument::documentChanged();
+  });
 
   /*=======================*/
   // added by wingsummer
@@ -262,11 +351,11 @@ QByteArray QHexDocument::read(qint64 offset, int len) {
   return m_buffer->read(offset, len);
 }
 
-bool QHexDocument::removeSelection() {
+bool QHexDocument::RemoveSelection() {
   if (!m_cursor->hasSelection())
     return false;
 
-  auto res = this->remove(m_cursor->selectionStart().offset(),
+  auto res = this->Remove(m_cursor->selectionStart().offset(),
                           m_cursor->selectionLength());
   if (res)
     m_cursor->clearSelection();
@@ -303,12 +392,12 @@ void QHexDocument::redo() {
   emit documentChanged();
 }
 
-bool QHexDocument::cut(bool hex) {
+bool QHexDocument::Cut(bool hex) {
   if (!m_cursor->hasSelection() || m_keepsize)
     return false;
 
   this->copy(hex);
-  return this->removeSelection();
+  return this->RemoveSelection();
 }
 
 void QHexDocument::copy(bool hex) {
@@ -325,51 +414,51 @@ void QHexDocument::copy(bool hex) {
 }
 
 // modified by wingsummer
-void QHexDocument::paste(bool hex) {
+void QHexDocument::Paste(bool hex) {
   QClipboard *c = qApp->clipboard();
   QByteArray data = c->text().toUtf8();
 
   if (data.isEmpty())
     return;
 
-  this->removeSelection();
+  this->RemoveSelection();
 
   if (hex)
     data = QByteArray::fromHex(data);
 
   auto pos = m_cursor->position().offset();
   if (!m_keepsize) {
-    this->insert(pos, data);
+    this->Insert(pos, data);
     m_cursor->moveTo(pos + data.length()); // added by wingsummer
   } else
-    this->replace(pos, data);
+    this->Replace(pos, data);
 }
 
-void QHexDocument::insert(qint64 offset, uchar b) {
+void QHexDocument::Insert(qint64 offset, uchar b) {
   if (m_keepsize || m_readonly || m_islocked)
     return;
-  this->insert(offset, QByteArray(1, char(b)));
+  this->Insert(offset, QByteArray(1, char(b)));
 }
 
-void QHexDocument::replace(qint64 offset, uchar b) {
+void QHexDocument::Replace(qint64 offset, uchar b) {
   if (m_readonly || m_islocked)
     return;
-  this->replace(offset, QByteArray(1, char(b)));
+  this->Replace(offset, QByteArray(1, char(b)));
 }
 
-void QHexDocument::insert(qint64 offset, const QByteArray &data) {
+void QHexDocument::Insert(qint64 offset, const QByteArray &data) {
   if (m_keepsize || m_readonly || m_islocked)
     return;
   m_undostack.push(new InsertCommand(m_buffer, offset, data));
   emit documentChanged();
 }
 
-void QHexDocument::replace(qint64 offset, const QByteArray &data) {
+void QHexDocument::Replace(qint64 offset, const QByteArray &data) {
   m_undostack.push(new ReplaceCommand(m_buffer, offset, data));
   emit documentChanged();
 }
 
-bool QHexDocument::remove(qint64 offset, int len) {
+bool QHexDocument::Remove(qint64 offset, int len) {
   if (m_keepsize || m_readonly || m_islocked)
     return false;
   m_undostack.push(new RemoveCommand(m_buffer, offset, len));

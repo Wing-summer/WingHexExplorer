@@ -286,8 +286,6 @@ private:
 
   int _findmax = 100;
   int findres = 0;
-  bool plgChangeSaved = true; //由于插件编辑的不会存于撤销列表中，所以得有个标记
-
   QString lastusedpath;
 };
 
