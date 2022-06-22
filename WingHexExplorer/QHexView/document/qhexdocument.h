@@ -16,6 +16,8 @@ struct BookMarkStruct {
   QString comment;
 };
 
+enum class BookMarkModEnum { Insert, Modify, Remove, Apply, Clear };
+
 /*=========================*/
 
 class QHexDocument : public QObject {
@@ -141,7 +143,8 @@ signals:
   /*================================*/
 
   void documentSaved(bool saved); // added by wingsummer
-  void bookMarkChanged();         // added by wingsummer
+  void bookMarkChanged(BookMarkModEnum flag, int index, qint64 pos,
+                       QString comment); // added by wingsummer
   void canUndoChanged(bool canUndo);
   void canRedoChanged(bool canRedo);
   void documentChanged();

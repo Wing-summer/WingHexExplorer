@@ -62,12 +62,18 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         loader.unload();
         return;
       }
+      if (loadedpuid.contains(puid)) {
+        logger->logMessage(ERRLOG(tr("ErrLoadLoadedPlugin")));
+        loader.unload();
+        return;
+      }
 
       emit p->plugin2MessagePipe(WingPluginMessage::PluginLoading, emptyparam);
 
       p->init(loadedplgs);
 
       loadedplgs.push_back(p);
+      loadedpuid << puid;
 
       logger->logMessage(WARNLOG(tr("PluginWidgetRegister")));
       auto menu = p->registerMenu();

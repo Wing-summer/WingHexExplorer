@@ -200,7 +200,8 @@ private:
   void on_loadplg();
   void on_encoding();
   void on_openworkspace();
-  void on_bookmarkChanged();
+  void on_bookmarkChanged(BookMarkModEnum flag, int index, qint64 pos,
+                          QString comment);
 
 private:
   QList<HexFile> hexfiles;

@@ -790,6 +790,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keycuthex, MainWindow::on_cuthex);
   ConnectShortCut(keycopyhex, MainWindow::on_copyhex);
   ConnectShortCut(keypastehex, MainWindow::on_pastehex);
+  ConnectShortCut(keybookmark, MainWindow::on_bookmark);
+  ConnectShortCut(keybookmarkcls, MainWindow::on_bookmarkcls);
+  ConnectShortCut(keybookmarkdel, MainWindow::on_bookmarkdel);
 
   logger->logMessage(INFOLOG(tr("SettingLoading")));
 
@@ -2087,17 +2090,40 @@ void MainWindow::on_savesel() {
   }
 }
 
-void MainWindow::on_bookmarkChanged() {
+void MainWindow::on_bookmarkChanged(BookMarkModEnum flag, int index, qint64 pos,
+                                    QString comment) {
   auto doc = hexeditor->document();
-  QList<BookMarkStruct> bookmaps;
-  bookmarks->clear();
-  doc->getBookMarks(bookmaps);
-  for (auto item : bookmaps) {
+  switch (flag) {
+  case BookMarkModEnum::Insert: {
     QListWidgetItem *litem = new QListWidgetItem;
     litem->setIcon(ICONRES("bookmark"));
-    litem->setText(item.comment);
-    litem->setToolTip(QString(tr("Addr : 0x%1")).arg(item.pos, 0, 16));
+    litem->setText(comment);
+    litem->setToolTip(QString(tr("Addr : 0x%1")).arg(pos, 0, 16));
     bookmarks->addItem(litem);
+  } break;
+  case BookMarkModEnum::Modify: {
+    bookmarks->item(index)->setText(comment);
+  } break;
+  case BookMarkModEnum::Remove: {
+    auto item = bookmarks->item(index);
+    bookmarks->removeItemWidget(item);
+    delete item; // let item disappear
+  } break;
+  case BookMarkModEnum::Apply: {
+    QList<BookMarkStruct> bookmaps;
+    bookmarks->clear();
+    doc->getBookMarks(bookmaps);
+    for (auto item : bookmaps) {
+      QListWidgetItem *litem = new QListWidgetItem;
+      litem->setIcon(ICONRES("bookmark"));
+      litem->setText(item.comment);
+      litem->setToolTip(QString(tr("Addr : 0x%1")).arg(item.pos, 0, 16));
+      bookmarks->addItem(litem);
+    }
+  } break;
+  case BookMarkModEnum::Clear: {
+    bookmarks->clear();
+  } break;
   }
 }
 

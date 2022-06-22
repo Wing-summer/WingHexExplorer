@@ -148,7 +148,7 @@ void QHexView::establishSignal(QHexDocument *doc) {
   emit canRedoChanged(doc->canRedo());
   emit cursorLocationChanged();
   emit documentSwitched();
-  emit documentBookMarkChanged();
+  emit documentBookMarkChanged(BookMarkModEnum::Apply, -1, -1, QString());
   emit documentmetaDataChanged();
   emit documentSaved(doc->isDocSaved());
   emit documentKeepSize(doc->isKeepSize());

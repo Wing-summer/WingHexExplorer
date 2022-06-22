@@ -6,4 +6,4 @@ BookMarkAddCommand::BookMarkAddCommand(QHexDocument *doc, qint64 pos,
 
 void BookMarkAddCommand::redo() { m_doc->addBookMark(m_pos, m_comment); }
 
-void BookMarkAddCommand::undo() { m_doc->RemoveBookMark(m_pos); }
+void BookMarkAddCommand::undo() { m_doc->removeBookMark(m_pos); }

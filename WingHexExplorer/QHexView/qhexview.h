@@ -59,7 +59,8 @@ signals:
   void documentSaved(bool saved);
   void documentLockedFile(bool locked);
   void documentKeepSize(bool keep);
-  void documentBookMarkChanged();
+  void documentBookMarkChanged(BookMarkModEnum flag, int index, qint64 pos,
+                               QString comment);
   void documentmetaDataChanged();
 
   /*=============================*/

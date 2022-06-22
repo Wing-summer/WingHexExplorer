@@ -40,6 +40,7 @@ signals:
   void DisconnectControl(IWingPlugin *plugin);
 
 private:
+  QStringList loadedpuid;
   QList<IWingPlugin *> loadedplgs;
   QMap<IWingPlugin *, bool> plugintimeout;
   QMap<IWingPlugin *, QTimer *> plugintimer;
