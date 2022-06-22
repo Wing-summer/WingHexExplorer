@@ -78,6 +78,7 @@ public:
   void setDocSaved(bool b = true);
 
   bool isWorkspace = false;
+
   /*======================*/
 
 public:

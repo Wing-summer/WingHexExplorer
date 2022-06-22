@@ -518,7 +518,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   AddFunctionIconButton(iSetBaseAddr, "mAddr");
   iSetBaseAddr->setToolTip(tr("SetaddressBase"));
-  connect(iSetBaseAddr, &DIconButton::clicked, [=] {
+  connect(iSetBaseAddr, &DIconButton::clicked, this, [=] {
     DInputDialog d;
     bool b;
     auto num = d.getText(this, tr("addressBase"), tr("inputAddressBase"),
@@ -526,12 +526,15 @@ MainWindow::MainWindow(DMainWindow *parent) {
     if (b) {
       qulonglong qnum = num.toULongLong(&b, 0);
       if (b) {
+        auto r = qnum + hexeditor->documentBytes();
+        if (qnum > r || hexeditor->documentBytes() > r) {
+          DMessageManager::instance()->sendMessage(this, ICONRES("mAddr"),
+                                                   tr("WarnBigBaseAddress"));
+        }
         hexeditor->setAddressBase(qnum);
       } else {
-        if (num.length() > 0) {
-          auto d = DMessageManager::instance();
-          d->sendMessage(this, ICONRES("mAddr"), tr("ErrBaseAddress"));
-        }
+        DMessageManager::instance()->sendMessage(this, ICONRES("mAddr"),
+                                                 tr("ErrBaseAddress"));
       }
     }
   });
@@ -1006,7 +1009,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
                  quint64(0));
   });
   ConnectBaseLamba2(WingPlugin::Reader::asciiVisible, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->asciiVisible(), true);
+    PCHECKRETURN(hexfiles[_pcurfile].render->stringVisible(), true);
   });
   ConnectBaseLamba2(WingPlugin::Reader::headerVisible, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->headerVisible(), true);
@@ -2150,9 +2153,21 @@ ErrFile MainWindow::save(int index) {
       if (f.doc->metadata()->hasMetadata()) {
         auto w = f.workspace;
         if (QFile::exists(w)) {
+          auto doc = hexeditor->document();
+          auto render = hexeditor->renderer();
+
+          WorkSpaceInfo infos;
+          infos.base = doc->baseAddress();
+          infos.locked = doc->isLocked();
+          infos.keepsize = doc->isKeepSize();
+          infos.showstr = render->stringVisible();
+          infos.showaddr = render->addressVisible();
+          infos.showheader = render->headerVisible();
+          infos.encoding = render->encoding();
+
           auto b = WorkSpaceManager::saveWorkSpace(
-              w, f.filename, hexeditor->document()->getAllBookMarks(),
-              hexeditor->document()->metadata()->getallMetas());
+              w, f.filename, doc->getAllBookMarks(),
+              doc->metadata()->getallMetas(), infos);
           if (!b)
             return ErrFile::WorkSpaceUnSaved;
           f.doc->isWorkspace = true;
@@ -2160,10 +2175,21 @@ ErrFile MainWindow::save(int index) {
           tabs->setTabIcon(index, ICONRES("pro"));
           f.doc->setDocSaved();
         } else {
+          auto doc = hexeditor->document();
+          auto render = hexeditor->renderer();
+
+          WorkSpaceInfo infos;
+          infos.base = doc->baseAddress();
+          infos.locked = doc->isLocked();
+          infos.keepsize = doc->isKeepSize();
+          infos.showstr = render->stringVisible();
+          infos.showaddr = render->addressVisible();
+          infos.showheader = render->headerVisible();
+          infos.encoding = render->encoding();
+
           auto b = WorkSpaceManager::saveWorkSpace(
-              f.filename + PROEXT, f.filename,
-              hexeditor->document()->getAllBookMarks(),
-              hexeditor->document()->metadata()->getallMetas());
+              f.filename + PROEXT, f.filename, doc->getAllBookMarks(),
+              doc->metadata()->getallMetas(), infos);
           if (!b)
             return ErrFile::WorkSpaceUnSaved;
           hexfiles[index].workspace = f.filename + PROEXT;
@@ -2206,12 +2232,25 @@ ErrFile MainWindow::saveAs(QString filename, int index) {
     file.open(QFile::WriteOnly);
     if (f.doc->saveTo(&file, true)) {
       hexfiles[index].filename = filename;
+      tabs->setTabText(index, QFileInfo(file).fileName());
+      tabs->setTabToolTip(index, filename);
       file.close();
       if (f.doc->metadata()->hasMetadata()) {
+        auto doc = hexeditor->document();
+        auto render = hexeditor->renderer();
+
+        WorkSpaceInfo infos;
+        infos.base = doc->baseAddress();
+        infos.locked = doc->isLocked();
+        infos.keepsize = doc->isKeepSize();
+        infos.showstr = render->stringVisible();
+        infos.showaddr = render->addressVisible();
+        infos.showheader = render->headerVisible();
+        infos.encoding = render->encoding();
+
         auto b = WorkSpaceManager::saveWorkSpace(
-            filename + PROEXT, filename,
-            hexeditor->document()->getAllBookMarks(),
-            hexeditor->document()->metadata()->getallMetas());
+            filename + PROEXT, filename, doc->getAllBookMarks(),
+            doc->metadata()->getallMetas(), infos);
         if (!b)
           return ErrFile::WorkSpaceUnSaved;
         hexfiles[index].workspace = filename + PROEXT;
@@ -2518,7 +2557,10 @@ ErrFile MainWindow::openWorkSpace(QString filename, bool readonly,
   QList<BookMarkStruct> bookmarks;
   QList<QHexMetadataAbsoluteItem> metas;
   auto res = ErrFile::Error;
-  if (WorkSpaceManager::loadWorkSpace(filename, file, bookmarks, metas)) {
+  WorkSpaceInfo infos;
+
+  if (WorkSpaceManager::loadWorkSpace(filename, file, bookmarks, metas,
+                                      infos)) {
     bool b;
     int index;
     res = openFile(file, readonly, &index, filename, &b);
@@ -2532,9 +2574,18 @@ ErrFile MainWindow::openWorkSpace(QString filename, bool readonly,
     }
 
     auto doc = hexeditor->document();
+    auto render = hexeditor->renderer();
     doc->applyBookMarks(bookmarks);
-    on_documentSwitched();
+    doc->setBaseAddress(infos.base);
+    doc->setLockedFile(infos.locked);
+    doc->setKeepSize(infos.keepsize);
+    render->setAsciiVisible(infos.showstr);
+    render->setHeaderVisible(infos.showheader);
+    render->setAddressVisible(infos.showaddr);
+    render->setEncoding(infos.encoding);
     doc->metadata()->applyMetas(metas);
+    doc->setDocSaved();
+    on_documentSwitched();
   }
   return res;
 }

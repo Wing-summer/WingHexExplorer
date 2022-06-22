@@ -12,16 +12,28 @@
 #include <QObject>
 #include <QStringList>
 
+struct WorkSpaceInfo {
+  bool showaddr;
+  bool showheader;
+  bool showstr;
+  bool locked;
+  bool keepsize;
+  QString encoding;
+  qulonglong base;
+};
+
 class WorkSpaceManager : public QObject {
   Q_OBJECT
 public:
   explicit WorkSpaceManager(QObject *parent = nullptr);
   bool static saveWorkSpace(QString filename, QString file,
                             QList<BookMarkStruct> bookmarks,
-                            QList<QHexMetadataAbsoluteItem> metas);
+                            QList<QHexMetadataAbsoluteItem> metas,
+                            WorkSpaceInfo infos);
   bool static loadWorkSpace(QString filename, QString &file,
                             QList<BookMarkStruct> &bookmarks,
-                            QList<QHexMetadataAbsoluteItem> &metas);
+                            QList<QHexMetadataAbsoluteItem> &metas,
+                            WorkSpaceInfo &infos);
 
 signals:
 

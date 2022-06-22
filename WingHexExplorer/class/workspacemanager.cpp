@@ -8,7 +8,9 @@ WorkSpaceManager::WorkSpaceManager(QObject *parent) : QObject(parent) {}
 
 bool WorkSpaceManager::loadWorkSpace(QString filename, QString &file,
                                      QList<BookMarkStruct> &bookmarks,
-                                     QList<QHexMetadataAbsoluteItem> &metas) {
+                                     QList<QHexMetadataAbsoluteItem> &metas,
+                                     WorkSpaceInfo &infos) {
+  bool b = false;
   QFile f(filename);
   if (f.exists()) {
     QJsonParseError err;
@@ -27,11 +29,42 @@ bool WorkSpaceManager::loadWorkSpace(QString filename, QString &file,
             auto fi = ff.toString();
             QFileInfo finfo(f);
             file = fi[0] != '/' ? finfo.absoluteDir().path() + "/" + fi : fi;
-            auto values = jobj.value("metas");
+            auto values = jobj.value("showaddr");
+            if (!values.isUndefined() && values.isBool()) {
+              infos.showaddr = values.toBool();
+            }
+            values = jobj.value("showheader");
+            if (!values.isUndefined() && values.isBool()) {
+              infos.showheader = values.toBool();
+            }
+            values = jobj.value("showstr");
+            if (!values.isUndefined() && values.isBool()) {
+              infos.showstr = values.toBool();
+            }
+            values = jobj.value("encoding");
+            if (!values.isUndefined() && values.isString()) {
+              infos.encoding = values.toString();
+            }
+            values = jobj.value("base");
+            if (!values.isUndefined() && values.isString()) {
+              auto ba = values.toString();
+              auto nbase = ba.toULongLong(&b);
+              if (b)
+                infos.base = nbase;
+            }
+            values = jobj.value("locked");
+            if (!values.isUndefined() && values.isBool()) {
+              infos.locked = values.toBool();
+            }
+            values = jobj.value("keepsize");
+            if (!values.isUndefined() && values.isBool()) {
+              infos.keepsize = values.toBool();
+            }
+
+            values = jobj.value("metas");
             if (!values.isUndefined() && values.isArray()) {
               auto metaitems = values.toArray();
               for (auto item : metaitems) {
-                bool b = false;
                 auto linem = item.toObject();
                 auto begin = linem.value("begin");
                 auto end = linem.value("end");
@@ -100,7 +133,8 @@ bool WorkSpaceManager::loadWorkSpace(QString filename, QString &file,
 
 bool WorkSpaceManager::saveWorkSpace(QString filename, QString file,
                                      QList<BookMarkStruct> bookmarklist,
-                                     QList<QHexMetadataAbsoluteItem> metalist) {
+                                     QList<QHexMetadataAbsoluteItem> metalist,
+                                     WorkSpaceInfo infos) {
   QFile f(filename);
   if (f.open(QFile::WriteOnly)) {
     QJsonObject jobj;
@@ -113,6 +147,13 @@ bool WorkSpaceManager::saveWorkSpace(QString filename, QString file,
     }
 
     jobj.insert("file", file);
+    jobj.insert("showaddr", infos.showaddr);
+    jobj.insert("showheader", infos.showheader);
+    jobj.insert("showstr", infos.showstr);
+    jobj.insert("encoding", infos.encoding);
+    jobj.insert("base", QString::number(infos.base));
+    jobj.insert("locked", infos.locked);
+    jobj.insert("keepsize", infos.keepsize);
 
     QJsonArray metas;
     for (auto meta : metalist) {

@@ -33,6 +33,7 @@ bool QHexDocument::setLockedFile(bool b) {
     return false;
   m_islocked = b;
   m_cursor->setInsertionMode(QHexCursor::OverwriteMode);
+  setDocSaved(false);
   return true;
 }
 bool QHexDocument::setKeepSize(bool b) {
@@ -41,6 +42,7 @@ bool QHexDocument::setKeepSize(bool b) {
   m_keepsize = b;
   if (b)
     m_cursor->setInsertionMode(QHexCursor::OverwriteMode);
+  setDocSaved(false);
   return true;
 }
 
@@ -380,6 +382,7 @@ void QHexDocument::setBaseAddress(quint64 baseaddress) {
     return;
 
   m_baseaddress = baseaddress;
+  setDocSaved(false);
   emit documentChanged();
 }
 
@@ -457,6 +460,8 @@ void QHexDocument::Insert(qint64 offset, const QByteArray &data) {
 }
 
 void QHexDocument::Replace(qint64 offset, const QByteArray &data) {
+  if (m_readonly || m_islocked)
+    return;
   m_undostack.push(new ReplaceCommand(m_buffer, offset, data));
   emit documentChanged();
 }

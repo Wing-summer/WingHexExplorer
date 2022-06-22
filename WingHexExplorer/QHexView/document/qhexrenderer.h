@@ -32,7 +32,7 @@ public:
   // added by wingsummer
 
   void setAsciiVisible(bool b);
-  bool asciiVisible();
+  bool stringVisible();
   void setAddressVisible(bool b);
   bool addressVisible();
   void setHeaderVisible(bool b);
@@ -119,6 +119,8 @@ private:
   bool m_headerVisible;
   QString m_encoding;
 
+signals:
+  void renderStatusChanged();
   /*==============================*/
 };
 

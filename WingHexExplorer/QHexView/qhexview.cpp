@@ -85,7 +85,7 @@ quint64 QHexView::selectlength() {
   return quint64(m_document->cursor()->selectionLength());
 }
 
-bool QHexView::asciiVisible() { return m_renderer->asciiVisible(); }
+bool QHexView::asciiVisible() { return m_renderer->stringVisible(); }
 
 bool QHexView::headerVisible() { return m_renderer->headerVisible(); }
 

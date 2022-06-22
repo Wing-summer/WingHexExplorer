@@ -11,7 +11,7 @@
 /*===================================*/
 // added by wingsummer
 
-bool QHexRenderer::asciiVisible() { return m_asciiVisible; }
+bool QHexRenderer::stringVisible() { return m_asciiVisible; }
 
 void QHexRenderer::setAsciiVisible(bool b) { m_asciiVisible = b; }
 
@@ -241,8 +241,9 @@ qint64 QHexRenderer::rendererLength() const { return m_document->length() + 1; }
 
 // modified by wingsummer
 int QHexRenderer::getAddressWidth() const {
-  quint64 maxAddr = m_document->baseAddress() + quint64(this->rendererLength());
-  if (maxAddr <= 0xFFFFFFFF)
+  auto base = m_document->baseAddress();
+  quint64 maxAddr = base + quint64(this->rendererLength());
+  if (base <= 0xFFFFFFFF && maxAddr <= 0xFFFFFFFF)
     return 8;
   else
     return 16;
