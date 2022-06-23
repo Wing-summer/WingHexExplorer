@@ -1,7 +1,6 @@
 SOURCES += \
         $$PWD/main.cpp \
     $$PWD/dialog/mainwindow.cpp \
-    $$PWD/QHexEdit2/chunks.cpp \
     $$PWD/class/appmanager.cpp \
     $$PWD/control/gotobar.cpp \
     $$PWD/settings.cpp \
@@ -28,7 +27,6 @@ DISTFILES += \
 HEADERS += \
     $$PWD/dialog/mainwindow.h \
     $$PWD/utilities.h \
-    $$PWD/QHexEdit2/chunks.h \
     $$PWD/class/appmanager.h \
     $$PWD/control/gotobar.h \
     $$PWD/settings.h \

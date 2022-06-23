@@ -71,6 +71,7 @@
         <file>images/clearhis.png</file>
         <file>images/pro.png</file>
         <file>images/win.png</file>
+        <file>images/newb.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

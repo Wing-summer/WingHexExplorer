@@ -240,7 +240,7 @@ signals:
   void comment(quint64 line, int start, int length, const QString &comment);
 
   // mainwindow
-  void newFile();
+  void newFile(bool bigfile = false);
   ErrFile openFile(QString filename, bool readonly = false);
   ErrFile openDriver(QString driver);
   ErrFile closeFile(int index, bool force = false);

@@ -675,7 +675,7 @@ bool QHexView::processTextInput(QHexCursor *cur, QKeyEvent *e) {
           (key >= 'a' && key <= 'f'))) // Check if is a Hex Char
       return false;
 
-    uchar val = uchar(QString(static_cast<char>(key)).toUInt(nullptr, 16));
+    uchar val = uchar(QString(char(key)).toUInt(nullptr, 16));
     m_document->RemoveSelection();
 
     if (m_document->atEnd() ||

@@ -112,6 +112,11 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolSubMenuShortcutAction("new", tr("New"), MainWindow::on_newfile,
                                QKeySequence::New);
 
+  auto keynewb = QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                              Qt::KeyboardModifier::ShiftModifier | Qt::Key_N);
+
+  AddToolSubMenuShortcutAction("newb", tr("NewBigFile"),
+                               MainWindow::on_newbigfile, keynewb);
   AddToolSubMenuShortcutAction("open", tr("OpenF"), MainWindow::on_openfile,
                                QKeySequence::Open);
 
@@ -380,7 +385,42 @@ MainWindow::MainWindow(DMainWindow *parent) {
   a->setEnabled(false);                                                        \
   toolbartools.insert(index, a);
 
-  AddToolBarTool("new", MainWindow::on_newfile, tr("New"));
+  DToolButton *tbtn;
+  DMenu *tmenu;
+
+#define AddToolBtnBegin(DIcon)                                                 \
+  tbtn = new DToolButton(this);                                                \
+  tbtn->setEnabled(false);                                                     \
+  tbtn->setIcon(ICONRES(DIcon));                                               \
+  tmenu = new DMenu(this);
+
+#define AddToolBtnBegin2(DIcon)                                                \
+  tbtn = new DToolButton(this);                                                \
+  tbtn->setIcon(ICONRES(DIcon));                                               \
+  tmenu = new DMenu(this);
+
+#define AddToolBtnBtn(Icon, Title, Slot)                                       \
+  a = new QAction(ICONRES(Icon), Title, this);                                 \
+  connect(a, &QAction::triggered, this, &Slot);                                \
+  tmenu->addAction(a);
+
+#define AddToolBtnEnd2()                                                       \
+  tbtn->setMenu(tmenu);                                                        \
+  tbtn->setPopupMode(DToolButton::ToolButtonPopupMode::InstantPopup);          \
+  toolbar->addWidget(tbtn);
+
+#define AddToolBtnEnd(Index)                                                   \
+  tbtn->setMenu(tmenu);                                                        \
+  tbtn->setPopupMode(DToolButton::ToolButtonPopupMode::InstantPopup);          \
+  toolbar->addWidget(tbtn);                                                    \
+  toolbtnstools.insert(Index, tbtn);
+
+  AddToolBtnBegin2("new") {
+    AddToolBtnBtn("new", tr("New"), MainWindow::on_newfile);
+    AddToolBtnBtn("newb", tr("NewBigFile"), MainWindow::on_newbigfile);
+  }
+  AddToolBtnEnd2();
+
   AddToolBarTool("open", MainWindow::on_openfile, tr("OpenF"));
   AddToolBarTool("workspace", MainWindow::on_openworkspace,
                  tr("OpenWorkSpace"));
@@ -397,26 +437,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolsDB(ToolBoxIndex::Undo);
   AddToolBarTool("redo", MainWindow::on_redofile, tr("Redo"));
   AddToolsDB(ToolBoxIndex::Redo);
-
-  DToolButton *tbtn;
-  DMenu *tmenu;
-
-#define AddToolBtnBegin(DIcon)                                                 \
-  tbtn = new DToolButton(this);                                                \
-  tbtn->setEnabled(false);                                                     \
-  tbtn->setIcon(ICONRES(DIcon));                                               \
-  tmenu = new DMenu(this);
-
-#define AddToolBtnBtn(Icon, Title, Slot)                                       \
-  a = new QAction(ICONRES(Icon), Title, this);                                 \
-  connect(a, &QAction::triggered, this, &Slot);                                \
-  tmenu->addAction(a);
-
-#define AddToolBtnEnd(Index)                                                   \
-  tbtn->setMenu(tmenu);                                                        \
-  tbtn->setPopupMode(DToolButton::ToolButtonPopupMode::InstantPopup);          \
-  toolbar->addWidget(tbtn);                                                    \
-  toolbtnstools.insert(Index, tbtn);
 
   AddToolBtnBegin("cut") {
     AddToolBtnBtn("cut", tr("Cut"), MainWindow::on_cutfile);
@@ -769,6 +789,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   connect(s, &QShortcut::activated, this, &Slot);
   QShortcut *s;
   ConnectShortCut(QKeySequence::New, MainWindow::on_newfile);
+  ConnectShortCut(keynewb, MainWindow::on_newbigfile);
   ConnectShortCut(QKeySequence::Open, MainWindow::on_openfile);
   ConnectShortCut(QKeySequence::Save, MainWindow::on_save);
   ConnectShortCut(keysaveas, MainWindow::on_saveas);
@@ -1400,8 +1421,9 @@ void MainWindow::setFilePage(int index) {
 }
 
 void MainWindow::on_newfile() { newFile(); }
+void MainWindow::on_newbigfile() { newFile(true); }
 
-void MainWindow::newFile() {
+void MainWindow::newFile(bool bigfile) {
   QList<QVariant> params;
   QString title = tr("Untitled") + QString("-%1").arg(defaultindex);
   if (_enableplugin) {
@@ -1410,7 +1432,9 @@ void MainWindow::newFile() {
   }
 
   hexeditor->setVisible(true);
-  auto p = QHexDocument::fromFile<QMemoryBuffer>(nullptr);
+
+  auto p = bigfile ? QHexDocument::fromLargeFile(nullptr)
+                   : QHexDocument::fromFile<QMemoryBuffer>(nullptr);
   HexFile hf;
   hf.doc = p;
   hexeditor->setDocument(p);

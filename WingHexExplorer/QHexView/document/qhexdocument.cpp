@@ -515,6 +515,7 @@ qint64 QHexDocument::searchBackward(const QByteArray &ba) {
 
 QHexDocument *QHexDocument::fromLargeFile(QString filename, bool readonly,
                                           QObject *parent) {
+
   QFile *f = new QFile(filename);
 
   QHexBuffer *hexbuffer = new QFileBuffer();

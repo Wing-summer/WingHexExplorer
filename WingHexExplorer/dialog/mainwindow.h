@@ -128,7 +128,7 @@ public:
   void setFilePage(int index);
 
 private:
-  void newFile();
+  void newFile(bool bigfile = false);
   ErrFile openDriver(QString driver);
   ErrFile closeFile(int index, bool force = false);
   ErrFile save(int index);
@@ -155,6 +155,7 @@ private:
 
 private:
   void on_newfile();
+  void on_newbigfile();
   void on_openfile();
   void on_redofile();
   void on_undofile();

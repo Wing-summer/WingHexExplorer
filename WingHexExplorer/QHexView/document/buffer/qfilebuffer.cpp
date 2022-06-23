@@ -13,26 +13,24 @@ QFileBuffer::QFileBuffer(QObject *parent) : QHexBuffer(parent) {
 
 QFileBuffer::~QFileBuffer() {}
 
-uchar QFileBuffer::at(qint64 idx) {
-  return uchar(_chunks->data(quint64(idx), 1)[0]);
-}
+uchar QFileBuffer::at(qint64 idx) { return uchar(_chunks->data(idx, 1)[0]); }
 
-qint64 QFileBuffer::length() const { return qint64(_chunks->size()); }
+qint64 QFileBuffer::length() const { return _chunks->size(); }
 
 void QFileBuffer::insert(qint64 offset, const QByteArray &data) {
   for (int i = 0; i < data.length(); i++) {
-    _chunks->insert(quint64(offset + i), data.at(i));
+    _chunks->insert(offset + i, data.at(i));
   }
 }
 
 void QFileBuffer::remove(qint64 offset, int length) {
   for (uint i = 0; i < uint(length); i++) {
-    _chunks->removeAt(quint64(offset) + i);
+    _chunks->removeAt(offset + i);
   }
 }
 
 QByteArray QFileBuffer::read(qint64 offset, int length) {
-  return _chunks->data(quint64(offset), length);
+  return _chunks->data(offset, length);
 }
 
 bool QFileBuffer::read(QIODevice *device) {

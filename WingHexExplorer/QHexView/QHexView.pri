@@ -23,7 +23,8 @@ HEADERS += $$PWD/document/commands/hexcommand.h \
     $$PWD/document/commands/bookmarkaddcommand.h \
     $$PWD/document/commands/bookmarkremovecommand.h \
     $$PWD/document/commands/bookmarkreplacecommand.h \
-    $$PWD/document/commands/bookmarkclearcommand.h
+    $$PWD/document/commands/bookmarkclearcommand.h \
+    $$PWD/QHexEdit2/chunks.h
 
 SOURCES += $$PWD/document/commands/hexcommand.cpp \
            $$PWD/document/commands/insertcommand.cpp \
@@ -48,6 +49,7 @@ SOURCES += $$PWD/document/commands/hexcommand.cpp \
     $$PWD/document/commands/bookmarkaddcommand.cpp \
     $$PWD/document/commands/bookmarkremovecommand.cpp \
     $$PWD/document/commands/bookmarkreplacecommand.cpp \
-    $$PWD/document/commands/bookmarkclearcommand.cpp
+    $$PWD/document/commands/bookmarkclearcommand.cpp \
+    $$PWD/QHexEdit2/chunks.cpp
 
 INCLUDEPATH += $$PWD
