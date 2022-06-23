@@ -23,7 +23,7 @@ public:
   QList<IWingPlugin *> plugins();
   void raiseDispatch(HookIndex hookindex, QList<QVariant> params);
 
-  bool requestControl(IWingPlugin *plugin);
+  bool requestControl(IWingPlugin *plugin, int timeout = 1500);
   bool requestRelease(IWingPlugin *plugin);
 
   void initControl(IWingPlugin *plugin);

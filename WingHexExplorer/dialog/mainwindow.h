@@ -224,8 +224,8 @@ private:
   void connectBase(IWingPlugin *plugin);
   void connectControl(IWingPlugin *plugin);
   // shadow
-  bool requestControl(IWingPlugin *plugin);
-  bool requestRelease(IWingPlugin *plugin);
+  bool requestControl(int timeout);
+  bool requestRelease();
 
   void enableDirverLimit(bool b);
 

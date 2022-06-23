@@ -55,7 +55,7 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
                                     QList<QVariant> msg) {
   Q_UNUSED(msg)
   if (type == WingPluginMessage::PluginLoaded) {
-    if (requestControl(this)) {
+    if (requestControl()) {
       controller.newFile();
       controller.switchDocument(0);
       auto str = QString("HelloWorld!").toUtf8();

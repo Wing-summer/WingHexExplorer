@@ -1371,11 +1371,14 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   ConnectControl2(WingPlugin::Controller::fillnopGUI, MainWindow::on_fillnop);
 }
 
-bool MainWindow::requestControl(IWingPlugin *plugin) {
-  return plgsys->requestControl(plugin);
+bool MainWindow::requestControl(int timeout) {
+  auto s = qobject_cast<IWingPlugin *>(sender());
+  return plgsys->requestControl(s, timeout);
 }
-bool MainWindow::requestRelease(IWingPlugin *plugin) {
-  return plgsys->requestRelease(plugin);
+
+bool MainWindow::requestRelease() {
+  auto s = qobject_cast<IWingPlugin *>(sender());
+  return plgsys->requestRelease(s);
 }
 
 void MainWindow::setTheme(DGuiApplicationHelper::ColorType theme) {
@@ -2239,6 +2242,25 @@ ErrFile MainWindow::exportFile(QString filename, int index) {
     file.open(QFile::WriteOnly);
     if (f.doc->saveTo(&file, false)) {
       file.close();
+      if (f.doc->metadata()->hasMetadata()) {
+        auto doc = hexeditor->document();
+        auto render = hexeditor->renderer();
+
+        WorkSpaceInfo infos;
+        infos.base = doc->baseAddress();
+        infos.locked = doc->isLocked();
+        infos.keepsize = doc->isKeepSize();
+        infos.showstr = render->stringVisible();
+        infos.showaddr = render->addressVisible();
+        infos.showheader = render->headerVisible();
+        infos.encoding = render->encoding();
+
+        auto b = WorkSpaceManager::saveWorkSpace(
+            filename + PROEXT, filename, doc->getAllBookMarks(),
+            doc->metadata()->getallMetas(), infos);
+        if (!b)
+          return ErrFile::WorkSpaceUnSaved;
+      }
       return ErrFile::Success;
     }
     file.close();

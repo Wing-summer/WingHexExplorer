@@ -115,10 +115,10 @@ bool PluginSystem::LoadPlugin() {
   return true;
 }
 
-bool PluginSystem::requestControl(IWingPlugin *plugin) {
+bool PluginSystem::requestControl(IWingPlugin *plugin, int timeout) {
   if (plugin == nullptr)
     return false;
-  auto res = mutex.tryLock(1500);
+  auto res = mutex.tryLock(timeout);
   if (!res)
     return false;
 

@@ -290,8 +290,8 @@ public slots:
                                   QList<QVariant> msg) = 0;
 
 signals:
-  bool requestControl(IWingPlugin *plugin);
-  bool requestRelease(IWingPlugin *plugin);
+  bool requestControl(int timeout = 1500);
+  bool requestRelease();
 
 public:
   WingPlugin::Reader reader;
