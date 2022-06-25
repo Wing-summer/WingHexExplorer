@@ -73,6 +73,8 @@ bool WorkSpaceManager::loadWorkSpace(QString filename, QString &file,
               infos.showmetacomment = values.toBool();
             }
 
+            auto maxbytes = QFileInfo(file).size(); //简单排除非法标记
+
             values = jobj.value("metas");
             if (!values.isUndefined() && values.isArray()) {
               auto metaitems = values.toArray();
@@ -88,11 +90,11 @@ bool WorkSpaceManager::loadWorkSpace(QString filename, QString &file,
                     !comment.isUndefined() && comment.isString() &&
                     !fgcolor.isUndefined() && fgcolor.isString() &&
                     !bgcolor.isUndefined() && bgcolor.isString()) {
-                  auto nbegin = begin.toString().toUInt(&b);
-                  if (!b)
+                  auto nbegin = begin.toString().toLongLong(&b);
+                  if (!b || nbegin >= maxbytes || nbegin < 0)
                     continue;
-                  auto nend = end.toString().toInt(&b);
-                  if (!b)
+                  auto nend = end.toString().toLongLong(&b);
+                  if (!b || nend >= maxbytes || nend < 0)
                     continue;
                   auto nf = fgcolor.toString().toUInt(&b, 16);
                   if (!b)
@@ -124,7 +126,7 @@ bool WorkSpaceManager::loadWorkSpace(QString filename, QString &file,
                       !comment.isUndefined() && comment.isString()) {
                     auto b = false;
                     auto ipos = pos.toString().toLongLong(&b);
-                    if (!b)
+                    if (!b || ipos < 0 || ipos >= maxbytes)
                       continue;
                     BookMarkStruct book;
                     book.pos = ipos;

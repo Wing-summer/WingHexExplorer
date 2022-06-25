@@ -84,7 +84,6 @@ private slots:
   void renderCurrentLine();
   void moveToSelection();
   void blinkCursor();
-  void refresh(); // added by wingsummer
 
 private:
   void moveNext(bool select = false);

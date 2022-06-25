@@ -100,6 +100,7 @@ public:
   QByteArray read(qint64 offset, int len = 0);
   QByteArray selectedBytes() const;
   char at(int offset) const;
+  void SetBaseAddress(quint64 baseaddress);
   void setBaseAddress(quint64 baseaddress);
   void sync();
 
@@ -166,7 +167,6 @@ signals:
   void metafgVisibleChanged(bool b);
   void metabgVisibleChanged(bool b);
   void metaCommentVisibleChanged(bool b);
-  void viewSettingChanged();
 
   /*================================*/
 

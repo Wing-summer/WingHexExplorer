@@ -16,8 +16,6 @@
 /*======================*/
 // added by wingsummer
 
-void QHexView::refresh() { this->viewport()->update(); }
-
 QHexRenderer *QHexView::renderer() { return m_renderer; }
 
 int QHexView::getWorkSpaceState(QHexDocument *doc, bool b) {
@@ -114,7 +112,7 @@ void QHexView::setHeaderVisible(bool b) {
 quint64 QHexView::addressBase() { return m_document->baseAddress(); }
 
 void QHexView::setAddressBase(quint64 base) {
-  m_document->setBaseAddress(base);
+  m_document->SetBaseAddress(base);
 }
 
 bool QHexView::isSaved() { return m_document->isDocSaved(); }
@@ -143,7 +141,6 @@ void QHexView::establishSignal(QHexDocument *doc) {
   connect(doc, &QHexDocument::documentSaved, this, &QHexView::documentSaved);
   connect(doc, &QHexDocument::bookMarkChanged, this,
           &QHexView::documentBookMarkChanged);
-  connect(doc, &QHexDocument::viewSettingChanged, this, &QHexView::refresh);
   connect(doc, &QHexDocument::metabgVisibleChanged, this, [=](bool b) {
     QHexView::metabgVisibleChanged(b);
     emit this->metaStatusChanged();

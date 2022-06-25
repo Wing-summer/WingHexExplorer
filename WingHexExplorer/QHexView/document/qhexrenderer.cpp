@@ -13,21 +13,31 @@
 
 bool QHexRenderer::stringVisible() { return m_asciiVisible; }
 
-void QHexRenderer::setAsciiVisible(bool b) { m_asciiVisible = b; }
+void QHexRenderer::setAsciiVisible(bool b) {
+  m_asciiVisible = b;
+  m_document->setDocSaved(false);
+}
 
 bool QHexRenderer::headerVisible() { return m_headerVisible; }
 
-void QHexRenderer::setHeaderVisible(bool b) { m_headerVisible = b; }
+void QHexRenderer::setHeaderVisible(bool b) {
+  m_headerVisible = b;
+  m_document->setDocSaved(false);
+}
 
 bool QHexRenderer::addressVisible() { return m_addressVisible; }
 
-void QHexRenderer::setAddressVisible(bool b) { m_addressVisible = b; }
+void QHexRenderer::setAddressVisible(bool b) {
+  m_addressVisible = b;
+  m_document->setDocSaved(false);
+}
 
 QString QHexRenderer::encoding() { return m_encoding; }
 
 bool QHexRenderer::setEncoding(QString encoding) {
   if (QTextCodec::codecForName(encoding.toUtf8())) {
     m_encoding = encoding;
+    m_document->setDocSaved(false);
     return true;
   }
   return false;

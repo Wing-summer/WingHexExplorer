@@ -2716,8 +2716,8 @@ ErrFile MainWindow::openWorkSpace(QString filename, bool readonly,
     auto render = hexeditor->renderer();
     doc->applyBookMarks(bookmarks);
     doc->setBaseAddress(infos.base);
-    doc->setLockedFile(infos.locked);
-    doc->setKeepSize(infos.keepsize);
+    hexeditor->setLockedFile(infos.locked);
+    hexeditor->setKeepSize(infos.keepsize);
     doc->setMetabgVisible(infos.showmetabg);
     doc->setMetafgVisible(infos.showmetafg);
     doc->setMetaCommentVisible(infos.showmetacomment);

@@ -1,5 +1,6 @@
 #include "qhexdocument.h"
 #include "buffer/qfilebuffer.h"
+#include "commands/baseaddrcommand.h"
 #include "commands/bookmark/bookmarkaddcommand.h"
 #include "commands/bookmark/bookmarkclearcommand.h"
 #include "commands/bookmark/bookmarkremovecommand.h"
@@ -34,19 +35,19 @@ void QHexDocument::SetMetaCommentVisible(bool b) {
 
 void QHexDocument::setMetabgVisible(bool b) {
   m_metabg = b;
-  emit viewSettingChanged();
+  emit documentChanged();
   emit metabgVisibleChanged(b);
 }
 
 void QHexDocument::setMetafgVisible(bool b) {
   m_metafg = b;
-  emit viewSettingChanged();
+  emit documentChanged();
   emit metafgVisibleChanged(b);
 }
 
 void QHexDocument::setMetaCommentVisible(bool b) {
   m_metacomment = b;
-  emit viewSettingChanged();
+  emit documentChanged();
   emit metaCommentVisibleChanged(b);
 }
 
@@ -418,12 +419,15 @@ QByteArray QHexDocument::selectedBytes() const {
 
 char QHexDocument::at(int offset) const { return char(m_buffer->at(offset)); }
 
+void QHexDocument::SetBaseAddress(quint64 baseaddress) {
+  m_undostack.push(new BaseAddrCommand(this, m_baseaddress, baseaddress));
+}
+
 void QHexDocument::setBaseAddress(quint64 baseaddress) {
   if (m_baseaddress == baseaddress)
     return;
 
   m_baseaddress = baseaddress;
-  setDocSaved(false);
   emit documentChanged();
 }
 
@@ -529,6 +533,8 @@ bool QHexDocument::saveTo(QIODevice *device, bool cleanUndo) {
   m_buffer->write(device);
   if (cleanUndo)
     m_undostack.setClean(); // added by wingsummer
+
+  m_pluginModed = false;
   return true;
 }
 
