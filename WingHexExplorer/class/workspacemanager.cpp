@@ -60,6 +60,18 @@ bool WorkSpaceManager::loadWorkSpace(QString filename, QString &file,
             if (!values.isUndefined() && values.isBool()) {
               infos.keepsize = values.toBool();
             }
+            values = jobj.value("showmetafg");
+            if (!values.isUndefined() && values.isBool()) {
+              infos.showmetafg = values.toBool();
+            }
+            values = jobj.value("showmetabg");
+            if (!values.isUndefined() && values.isBool()) {
+              infos.showmetabg = values.toBool();
+            }
+            values = jobj.value("showmetacomment");
+            if (!values.isUndefined() && values.isBool()) {
+              infos.showmetacomment = values.toBool();
+            }
 
             values = jobj.value("metas");
             if (!values.isUndefined() && values.isArray()) {
@@ -154,6 +166,9 @@ bool WorkSpaceManager::saveWorkSpace(QString filename, QString file,
     jobj.insert("base", QString::number(infos.base));
     jobj.insert("locked", infos.locked);
     jobj.insert("keepsize", infos.keepsize);
+    jobj.insert("showmetafg", infos.showmetafg);
+    jobj.insert("showmetabg", infos.showmetabg);
+    jobj.insert("showmetacomment", infos.showmetacomment);
 
     QJsonArray metas;
     for (auto meta : metalist) {

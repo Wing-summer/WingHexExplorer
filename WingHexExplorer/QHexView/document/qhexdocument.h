@@ -79,6 +79,14 @@ public:
 
   bool isWorkspace = false;
 
+  void setMetafgVisible(bool b);
+  void setMetabgVisible(bool b);
+  void setMetaCommentVisible(bool b);
+
+  bool metafgVisible();
+  bool metabgVisible();
+  bool metaCommentVisible();
+
   /*======================*/
 
 public:
@@ -143,9 +151,19 @@ signals:
 
   /*================================*/
 
-  void documentSaved(bool saved); // added by wingsummer
+  /*================================*/
+  // added by wingsummer
+
+  void documentSaved(bool saved);
   void bookMarkChanged(BookMarkModEnum flag, int index, qint64 pos,
-                       QString comment); // added by wingsummer
+                       QString comment);
+  void metafgVisibleChanged(bool b);
+  void metabgVisibleChanged(bool b);
+  void metaCommentVisibleChanged(bool b);
+  void viewSettingChanged();
+
+  /*================================*/
+
   void canUndoChanged(bool canUndo);
   void canRedoChanged(bool canRedo);
   void documentChanged();
@@ -168,6 +186,10 @@ private:
   bool m_islocked;
   QList<BookMarkStruct> bookmarks;
   bool m_pluginModed = false;
+
+  bool m_metafg = true;
+  bool m_metabg = true;
+  bool m_metacomment = true;
 
   /*======================*/
 };

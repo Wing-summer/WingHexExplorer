@@ -137,13 +137,14 @@ bool PluginSystem::requestControl(IWingPlugin *plugin, int timeout) {
 bool PluginSystem::requestRelease(IWingPlugin *plugin) {
   if (plugin == nullptr)
     return false;
-
-  plugin->controller.disconnect();
-  plugintimer[plugin]->stop();
-  plugintimeout[plugin] = false;
-  curpluginctl = nullptr;
-
-  return true;
+  if (mutex.tryLock(1500)) {
+    plugin->controller.disconnect();
+    plugintimer[plugin]->stop();
+    plugintimeout[plugin] = false;
+    curpluginctl = nullptr;
+    return true;
+  }
+  return false;
 }
 
 void PluginSystem::initControl(IWingPlugin *plugin) {

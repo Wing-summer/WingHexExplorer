@@ -61,7 +61,10 @@ signals:
   void documentKeepSize(bool keep);
   void documentBookMarkChanged(BookMarkModEnum flag, int index, qint64 pos,
                                QString comment);
-  void documentmetaDataChanged();
+  void metafgVisibleChanged(bool b);
+  void metabgVisibleChanged(bool b);
+  void metaCommentVisibleChanged(bool b);
+  void metaStatusChanged();
 
   /*=============================*/
 
@@ -81,6 +84,7 @@ private slots:
   void renderCurrentLine();
   void moveToSelection();
   void blinkCursor();
+  void refresh(); // added by wingsummer
 
 private:
   void moveNext(bool select = false);

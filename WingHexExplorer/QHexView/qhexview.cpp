@@ -16,6 +16,8 @@
 /*======================*/
 // added by wingsummer
 
+void QHexView::refresh() { this->viewport()->update(); }
+
 QHexRenderer *QHexView::renderer() { return m_renderer; }
 
 int QHexView::getWorkSpaceState(QHexDocument *doc, bool b) {
@@ -141,18 +143,31 @@ void QHexView::establishSignal(QHexDocument *doc) {
   connect(doc, &QHexDocument::documentSaved, this, &QHexView::documentSaved);
   connect(doc, &QHexDocument::bookMarkChanged, this,
           &QHexView::documentBookMarkChanged);
-  connect(doc, &QHexDocument::metaLineChanged, this,
-          &QHexView::documentmetaDataChanged);
+  connect(doc, &QHexDocument::viewSettingChanged, this, &QHexView::refresh);
+  connect(doc, &QHexDocument::metabgVisibleChanged, this, [=](bool b) {
+    QHexView::metabgVisibleChanged(b);
+    emit this->metaStatusChanged();
+  });
+  connect(doc, &QHexDocument::metafgVisibleChanged, this, [=](bool b) {
+    QHexView::metafgVisibleChanged(b);
+    emit this->metaStatusChanged();
+  });
+  connect(doc, &QHexDocument::metaCommentVisibleChanged, this, [=](bool b) {
+    QHexView::metaCommentVisibleChanged(b);
+    emit this->metaStatusChanged();
+  });
 
   emit canUndoChanged(doc->canUndo());
   emit canRedoChanged(doc->canRedo());
   emit cursorLocationChanged();
   emit documentSwitched();
   emit documentBookMarkChanged(BookMarkModEnum::Apply, -1, -1, QString());
-  emit documentmetaDataChanged();
   emit documentSaved(doc->isDocSaved());
   emit documentKeepSize(doc->isKeepSize());
   emit documentLockedFile(doc->isLocked());
+  emit metafgVisibleChanged(doc->metafgVisible());
+  emit metabgVisibleChanged(doc->metabgVisible());
+  emit metaCommentVisibleChanged(doc->metaCommentVisible());
 }
 
 /*======================*/

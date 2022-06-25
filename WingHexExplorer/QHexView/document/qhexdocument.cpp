@@ -15,6 +15,33 @@
 /*======================*/
 // added by wingsummer
 
+void QHexDocument::setMetabgVisible(bool b) {
+  m_metabg = b;
+  setDocSaved(false);
+  emit viewSettingChanged();
+  emit metabgVisibleChanged(b);
+}
+
+void QHexDocument::setMetafgVisible(bool b) {
+  m_metafg = b;
+  setDocSaved(false);
+  emit viewSettingChanged();
+  emit metafgVisibleChanged(b);
+}
+
+void QHexDocument::setMetaCommentVisible(bool b) {
+  m_metacomment = b;
+  setDocSaved(false);
+  emit viewSettingChanged();
+  emit metaCommentVisibleChanged(b);
+}
+
+bool QHexDocument::metabgVisible() { return m_metabg; }
+
+bool QHexDocument::metafgVisible() { return m_metafg; }
+
+bool QHexDocument::metaCommentVisible() { return m_metacomment; }
+
 bool QHexDocument::isDocSaved() {
   return m_undostack.isClean() && !m_pluginModed;
 }
@@ -399,7 +426,10 @@ void QHexDocument::redo() {
 }
 
 bool QHexDocument::Cut(bool hex) {
-  if (!m_cursor->hasSelection() || m_keepsize)
+  if (!m_cursor->hasSelection())
+    return true;
+
+  if (m_keepsize)
     return false;
 
   this->copy(hex);

@@ -345,11 +345,13 @@ void QHexRenderer::applyMetadata(QTextCursor &textcursor, quint64 line,
   const QHexLineMetadata &linemetadata = metadata->get(line);
   for (const QHexMetadataItem &mi : linemetadata) {
     QTextCharFormat charformat;
-    if (mi.background.isValid() && mi.background.rgba())
+    if (m_document->metabgVisible() && mi.background.isValid() &&
+        mi.background.rgba())
       charformat.setBackground(mi.background);
-    if (mi.foreground.isValid() && mi.foreground.rgba())
+    if (m_document->metafgVisible() && mi.foreground.isValid() &&
+        mi.foreground.rgba())
       charformat.setForeground(mi.foreground);
-    if (!mi.comment.isEmpty())
+    if (m_document->metaCommentVisible() && !mi.comment.isEmpty())
       charformat.setUnderlineStyle(QTextCharFormat::SingleUnderline);
 
     textcursor.setPosition(mi.start * factor);
@@ -521,7 +523,12 @@ void QHexRenderer::drawString(QPainter *painter, const QPalette &palette,
 
   this->applyDocumentStyles(painter, &textdocument);
   this->applyBasicStyle(textcursor, rawline, String);
-  this->applyMetadata(textcursor, line, String);
+
+  auto dis = !m_document->metabgVisible() && !m_document->metafgVisible() &&
+             !m_document->metaCommentVisible();
+
+  if (dis)
+    this->applyMetadata(textcursor, line, String);
   this->applySelection(textcursor, line, String);
   this->applyCursorAscii(textcursor, line);
 

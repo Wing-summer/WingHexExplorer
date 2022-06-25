@@ -42,6 +42,19 @@
   if (hexfiles.count() == 0)                                                   \
     return;
 
+#define SaveWorkSpaceInitInfo                                                  \
+  WorkSpaceInfo infos;                                                         \
+  infos.base = doc->baseAddress();                                             \
+  infos.locked = doc->isLocked();                                              \
+  infos.keepsize = doc->isKeepSize();                                          \
+  infos.showstr = render->stringVisible();                                     \
+  infos.showaddr = render->addressVisible();                                   \
+  infos.showheader = render->headerVisible();                                  \
+  infos.encoding = render->encoding();                                         \
+  infos.showmetabg = doc->metabgVisible();                                     \
+  infos.showmetafg = doc->metafgVisible();                                     \
+  infos.showmetacomment = doc->metaCommentVisible();
+
 MainWindow::MainWindow(DMainWindow *parent) {
   Q_UNUSED(parent)
 
@@ -69,6 +82,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
           &MainWindow::on_tabAddRequested);
   connect(tabs, &DTabBar::tabMoved, this, &MainWindow::on_tabMoved);
 
+  iconmetah = ICONRES("metadatah");
+  iconmetas = ICONRES("metadata");
+
   DLabel *l;
   w = new QWidget(this);
   setCentralWidget(w);
@@ -82,6 +98,20 @@ MainWindow::MainWindow(DMainWindow *parent) {
   l->setPixmap(QPixmap(Utilities::isRoot() ? ":/images/iconroot.png"
                                            : ":/images/icon.png"));
   vlayout = new QVBoxLayout(w);
+
+  hexeditor = new QHexView(this);
+  hexeditor->setVisible(false);
+  hexeditor->setAddressBase(_showaddr);
+  hexeditor->setHeaderVisible(_showheader);
+  hexeditor->setAsciiVisible(_showascii);
+  vlayout->addWidget(hexeditor);
+  hexeditor->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(hexeditor, &QHexView::customContextMenuRequested, this,
+          &MainWindow::on_hexeditor_customContextMenuRequested);
+  connect(hexeditor, &QHexView::documentSwitched, this,
+          &MainWindow::on_documentSwitched);
+  connect(hexeditor, &QHexView::documentBookMarkChanged, this,
+          &MainWindow::on_bookmarkChanged);
 
   auto menu = new DMenu(this);
   toolmenu = menu;
@@ -145,6 +175,16 @@ MainWindow::MainWindow(DMainWindow *parent) {
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::ShiftModifier |
                    Qt::KeyboardModifier::AltModifier | Qt::Key_M);
+  auto keymetafg =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_0);
+  auto keymetabg =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_1);
+  auto keymetacom =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_2);
+  auto keymetashow =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_Plus);
+  auto keymetahide =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_Minus);
   auto keybookmark =
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_B);
   auto keybookmarkdel =
@@ -272,6 +312,16 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm = new DMenu(this);
   tm->setTitle(tr("Mark"));
   tm->setIcon(ICONRES("mark"));
+  AddToolSubMenuShortcutAction("bookmark", tr("BookMark"),
+                               MainWindow::on_bookmark, keybookmark);
+  AddMenuDB(ToolBoxIndex::BookMark);
+  AddToolSubMenuShortcutAction("bookmarkdel", tr("DeleteBookMark"),
+                               MainWindow::on_bookmarkdel, keybookmarkdel);
+  AddMenuDB(ToolBoxIndex::DelBookMark);
+  AddToolSubMenuShortcutAction("bookmarkcls", tr("ClearBookMark"),
+                               MainWindow::on_bookmarkcls, keybookmarkcls);
+  AddMenuDB(ToolBoxIndex::ClsBookMark);
+  tm->addSeparator();
   AddToolSubMenuShortcutAction("metadata", tr("MetaData"),
                                MainWindow::on_metadata, keymetadata);
   AddMenuDB(ToolBoxIndex::Meta);
@@ -285,15 +335,33 @@ MainWindow::MainWindow(DMainWindow *parent) {
                                MainWindow::on_metadatacls, keymetadatacls);
   AddMenuDB(ToolBoxIndex::ClsMeta);
   tm->addSeparator();
-  AddToolSubMenuShortcutAction("bookmark", tr("BookMark"),
-                               MainWindow::on_bookmark, keybookmark);
-  AddMenuDB(ToolBoxIndex::BookMark);
-  AddToolSubMenuShortcutAction("bookmarkdel", tr("DeleteBookMark"),
-                               MainWindow::on_bookmarkdel, keybookmarkdel);
-  AddMenuDB(ToolBoxIndex::DelBookMark);
-  AddToolSubMenuShortcutAction("bookmarkcls", tr("ClearBookMark"),
-                               MainWindow::on_bookmarkcls, keybookmarkcls);
-  AddMenuDB(ToolBoxIndex::ClsBookMark);
+
+#define AddCheckMenu(Title, ShorCut, Slot, StatusSlot)                         \
+  a = new QAction(Title, tm);                                                  \
+  a->setShortcut(ShorCut);                                                     \
+  a->setShortcutVisibleInContextMenu(true);                                    \
+  a->setCheckable(true);                                                       \
+  connect(a, &QAction::triggered, this, Slot);                                 \
+  connect(hexeditor, &StatusSlot, a, &QAction::setChecked);                    \
+  tm->addAction(a);
+
+  AddCheckMenu(tr("ShowMetafg"), keymetafg,
+               [=](bool b) { hexeditor->document()->setMetafgVisible(b); },
+               QHexView::metafgVisibleChanged);
+  AddMenuDB(ToolBoxIndex::Metafg);
+  AddCheckMenu(tr("ShowMetabg"), keymetabg,
+               [=](bool b) { hexeditor->document()->setMetabgVisible(b); },
+               QHexView::metabgVisibleChanged);
+  AddMenuDB(ToolBoxIndex::Metabg);
+  AddCheckMenu(tr("ShowMetaComment"), keymetacom,
+               [=](bool b) { hexeditor->document()->setMetaCommentVisible(b); },
+               QHexView::metaCommentVisibleChanged);
+  AddMenuDB(ToolBoxIndex::MetaComment);
+  tm->addSeparator();
+  AddToolSubMenuShortcutAction("metashow", tr("MetaShowAll"),
+                               MainWindow::on_metashowall, keymetashow);
+  AddToolSubMenuShortcutAction("metahide", tr("MetaHideAll"),
+                               MainWindow::on_metahideall, keymetahide);
   menu->addMenu(tm);
 
   tm = new DMenu(this);
@@ -472,6 +540,14 @@ MainWindow::MainWindow(DMainWindow *parent) {
   }
   AddToolBtnEnd(ToolBoxIndex::Fill);
 
+#define AddToolCheckBtn(Title, Slot, StatusSlot)                               \
+  a = new QAction(Title, this);                                                \
+  a->setCheckable(true);                                                       \
+  a->setChecked(true);                                                         \
+  connect(a, &QAction::triggered, this, Slot);                                 \
+  connect(hexeditor, &StatusSlot, a, &QAction::setChecked);                    \
+  tmenu->addAction(a);
+
   AddToolBtnBegin("metadata") {
     AddToolBtnBtn("metadata", tr("MetaData"), MainWindow::on_metadata);
     AddToolBtnBtn("metadataedit", tr("MetaDataEdit"),
@@ -480,8 +556,29 @@ MainWindow::MainWindow(DMainWindow *parent) {
                   MainWindow::on_metadatadel);
     AddToolBtnBtn("metadatacls", tr("ClearMetaData"),
                   MainWindow::on_metadatacls);
+    tmenu->addSeparator();
+
+    AddToolCheckBtn(tr("ShowMetafg"),
+                    [=](bool b) { hexeditor->document()->setMetafgVisible(b); },
+                    QHexView::metafgVisibleChanged);
+
+    AddToolCheckBtn(tr("ShowMetabg"),
+                    [=](bool b) { hexeditor->document()->setMetabgVisible(b); },
+                    QHexView::metabgVisibleChanged);
+    AddToolCheckBtn(
+        tr("ShowMetaComment"),
+        [=](bool b) { hexeditor->document()->setMetaCommentVisible(b); },
+        QHexView::metaCommentVisibleChanged);
+
+    tmenu->addSeparator();
+
+    AddToolBtnBtn("metashow", tr("MetaShowAll"), MainWindow::on_metashowall);
+    AddToolBtnBtn("metahide", tr("MetaHideAll"), MainWindow::on_metahideall);
   }
   AddToolBtnEnd(ToolBoxIndex::Meta);
+
+  connect(hexeditor, &QHexView::metaStatusChanged, this,
+          &MainWindow::on_metastatusChanged);
 
   AddToolBtnBegin("bookmark") {
     AddToolBtnBtn("bookmark", tr("BookMark"), MainWindow::on_bookmark);
@@ -499,19 +596,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolBarTool("soft", MainWindow::on_about, tr("About"));
   this->addToolBar(toolbar);
 
-  hexeditor = new QHexView(this);
-  hexeditor->setVisible(false);
-  hexeditor->setAddressBase(_showaddr);
-  hexeditor->setHeaderVisible(_showheader);
-  hexeditor->setAsciiVisible(_showascii);
-  vlayout->addWidget(hexeditor);
-  hexeditor->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(hexeditor, &QHexView::customContextMenuRequested, this,
-          &MainWindow::on_hexeditor_customContextMenuRequested);
-  connect(hexeditor, &QHexView::documentSwitched, this,
-          &MainWindow::on_documentSwitched);
-  connect(hexeditor, &QHexView::documentBookMarkChanged, this,
-          &MainWindow::on_bookmarkChanged);
   status = new DStatusBar(this);
   status->setEnabled(false);
   this->setStatusBar(status);
@@ -1146,7 +1230,6 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   connect(&plugin->controller, &Signal, this, &Slot)
 #define ConnectControlLamba2(Signal, Function)                                 \
   connect(&plugin->controller, &Signal, Function)
-
   ConnectControlLamba2(WingPlugin::Controller::switchDocument,
                        [=](int index, bool gui) {
                          if (gui) {
@@ -2183,15 +2266,7 @@ ErrFile MainWindow::save(int index) {
           auto doc = hexeditor->document();
           auto render = hexeditor->renderer();
 
-          WorkSpaceInfo infos;
-          infos.base = doc->baseAddress();
-          infos.locked = doc->isLocked();
-          infos.keepsize = doc->isKeepSize();
-          infos.showstr = render->stringVisible();
-          infos.showaddr = render->addressVisible();
-          infos.showheader = render->headerVisible();
-          infos.encoding = render->encoding();
-
+          SaveWorkSpaceInitInfo;
           auto b = WorkSpaceManager::saveWorkSpace(
               w, f.filename, doc->getAllBookMarks(),
               doc->metadata()->getallMetas(), infos);
@@ -2205,15 +2280,7 @@ ErrFile MainWindow::save(int index) {
           auto doc = hexeditor->document();
           auto render = hexeditor->renderer();
 
-          WorkSpaceInfo infos;
-          infos.base = doc->baseAddress();
-          infos.locked = doc->isLocked();
-          infos.keepsize = doc->isKeepSize();
-          infos.showstr = render->stringVisible();
-          infos.showaddr = render->addressVisible();
-          infos.showheader = render->headerVisible();
-          infos.encoding = render->encoding();
-
+          SaveWorkSpaceInitInfo;
           auto b = WorkSpaceManager::saveWorkSpace(
               f.filename + PROEXT, f.filename, doc->getAllBookMarks(),
               doc->metadata()->getallMetas(), infos);
@@ -2246,15 +2313,7 @@ ErrFile MainWindow::exportFile(QString filename, int index) {
         auto doc = hexeditor->document();
         auto render = hexeditor->renderer();
 
-        WorkSpaceInfo infos;
-        infos.base = doc->baseAddress();
-        infos.locked = doc->isLocked();
-        infos.keepsize = doc->isKeepSize();
-        infos.showstr = render->stringVisible();
-        infos.showaddr = render->addressVisible();
-        infos.showheader = render->headerVisible();
-        infos.encoding = render->encoding();
-
+        SaveWorkSpaceInitInfo;
         auto b = WorkSpaceManager::saveWorkSpace(
             filename + PROEXT, filename, doc->getAllBookMarks(),
             doc->metadata()->getallMetas(), infos);
@@ -2285,15 +2344,7 @@ ErrFile MainWindow::saveAs(QString filename, int index) {
         auto doc = hexeditor->document();
         auto render = hexeditor->renderer();
 
-        WorkSpaceInfo infos;
-        infos.base = doc->baseAddress();
-        infos.locked = doc->isLocked();
-        infos.keepsize = doc->isKeepSize();
-        infos.showstr = render->stringVisible();
-        infos.showaddr = render->addressVisible();
-        infos.showheader = render->headerVisible();
-        infos.encoding = render->encoding();
-
+        SaveWorkSpaceInitInfo;
         auto b = WorkSpaceManager::saveWorkSpace(
             filename + PROEXT, filename, doc->getAllBookMarks(),
             doc->metadata()->getallMetas(), infos);
@@ -2384,6 +2435,32 @@ void MainWindow::on_metadatadel() {
 void MainWindow::on_metadatacls() {
   CheckEnabled;
   hexeditor->document()->metadata()->Clear();
+}
+
+void MainWindow::on_metashowall() {
+  CheckEnabled;
+  auto doc = hexeditor->document();
+  doc->setMetabgVisible(true);
+  doc->setMetafgVisible(true);
+  doc->setMetaCommentVisible(true);
+}
+
+void MainWindow::on_metastatusChanged() {
+  auto doc = hexeditor->document();
+  if (hexfiles.count() && (!doc->metabgVisible() || !doc->metafgVisible() ||
+                           !doc->metaCommentVisible())) {
+    toolbtnstools[ToolBoxIndex::Meta]->setIcon(iconmetah);
+  } else {
+    toolbtnstools[ToolBoxIndex::Meta]->setIcon(iconmetas);
+  }
+}
+
+void MainWindow::on_metahideall() {
+  CheckEnabled;
+  auto doc = hexeditor->document();
+  doc->setMetabgVisible(false);
+  doc->setMetafgVisible(false);
+  doc->setMetaCommentVisible(false);
 }
 
 void MainWindow::on_setting_plugin() {
@@ -2625,6 +2702,9 @@ ErrFile MainWindow::openWorkSpace(QString filename, bool readonly,
     doc->setBaseAddress(infos.base);
     doc->setLockedFile(infos.locked);
     doc->setKeepSize(infos.keepsize);
+    doc->setMetabgVisible(infos.showmetabg);
+    doc->setMetafgVisible(infos.showmetafg);
+    doc->setMetaCommentVisible(infos.showmetacomment);
     render->setAsciiVisible(infos.showstr);
     render->setHeaderVisible(infos.showheader);
     render->setAddressVisible(infos.showaddr);

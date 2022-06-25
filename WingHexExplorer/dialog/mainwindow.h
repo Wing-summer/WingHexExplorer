@@ -79,6 +79,11 @@ class MainWindow : public DMainWindow {
     MetaEdit,
     DelMeta,
     ClsMeta,
+    Metafg,
+    Metabg,
+    MetaComment,
+    MetaShow,
+    MetaHide,
     BookMark,
     DelBookMark,
     ClsBookMark,
@@ -186,6 +191,9 @@ private:
   void on_metadataedit();
   void on_metadatadel();
   void on_metadatacls();
+  void on_metashowall();
+  void on_metastatusChanged();
+  void on_metahideall();
   void on_bookmark();
   void on_bookmarkdel();
   void on_bookmarkcls();
@@ -263,6 +271,9 @@ private:
   QIcon infoLock;
   QIcon infoUnLock;
   QIcon infoLockg;
+
+  QIcon iconmetas;
+  QIcon iconmetah;
 
   QTextBrowser *pluginInfo;
   DTableWidget *numshowtable;

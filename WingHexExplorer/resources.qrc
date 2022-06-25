@@ -72,6 +72,9 @@
         <file>images/pro.png</file>
         <file>images/win.png</file>
         <file>images/newb.png</file>
+        <file>images/metahide.png</file>
+        <file>images/metashow.png</file>
+        <file>images/metadatah.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>
