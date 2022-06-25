@@ -43,6 +43,9 @@ public:
 
   /*======================*/
   // added by wingsummer
+
+  void addUndoCommand(QUndoCommand *command);
+
   bool setLockedFile(bool b);
   bool setKeepSize(bool b);
   bool isReadOnly();

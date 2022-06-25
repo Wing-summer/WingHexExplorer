@@ -17,6 +17,11 @@
 /*======================*/
 // added by wingsummer
 
+void QHexDocument::addUndoCommand(QUndoCommand *command) {
+  if (command)
+    m_undostack.push(command);
+}
+
 void QHexDocument::SetMetaVisible(bool b) {
   m_undostack.push(new MetaShowCommand(this, ShowType::All, b));
 }

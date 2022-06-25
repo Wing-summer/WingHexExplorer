@@ -1,4 +1,5 @@
 #include "qhexrenderer.h"
+#include "document/commands/encodingchangecommand.h"
 #include <QApplication>
 #include <QTextCodec>
 #include <QTextCursor>
@@ -34,10 +35,14 @@ void QHexRenderer::setAddressVisible(bool b) {
 
 QString QHexRenderer::encoding() { return m_encoding; }
 
+void QHexRenderer::SetEncoding(QString encoding) {
+  m_document->addUndoCommand(
+      new EncodingChangeCommand(this, m_encoding, encoding));
+}
+
 bool QHexRenderer::setEncoding(QString encoding) {
   if (QTextCodec::codecForName(encoding.toUtf8())) {
     m_encoding = encoding;
-    m_document->setDocSaved(false);
     return true;
   }
   return false;

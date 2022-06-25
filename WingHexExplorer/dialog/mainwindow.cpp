@@ -2519,7 +2519,7 @@ void MainWindow::on_encoding() {
   EncodingDialog d;
   if (d.exec()) {
     auto res = d.getResult();
-    hexeditor->renderer()->setEncoding(res);
+    hexeditor->renderer()->SetEncoding(res);
   }
 }
 
