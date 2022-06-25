@@ -59,13 +59,15 @@ bool QHexView::isLocked() { return m_document->isLocked(); }
 
 bool QHexView::setLockedFile(bool b) {
   bool res = m_document->setLockedFile(b);
-  emit documentLockedFile(b);
+  if (res)
+    emit documentLockedFile(b);
   return res;
 }
 
 bool QHexView::setKeepSize(bool b) {
   bool res = m_document->setKeepSize(b);
-  emit documentKeepSize(b);
+  if (res)
+    emit documentKeepSize(b);
   return res;
 }
 

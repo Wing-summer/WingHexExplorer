@@ -134,3 +134,8 @@ void MetaDialog::setForeGroundColor(QColor color) {
     iforeground->setPalette(pe);
   }
 }
+
+void MetaDialog::closeEvent(QCloseEvent *event) {
+  Q_UNUSED(event);
+  done(0);
+}

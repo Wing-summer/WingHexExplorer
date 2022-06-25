@@ -42,3 +42,8 @@ void EncodingDialog::on_accept() {
 }
 
 void EncodingDialog::on_reject() { done(0); }
+
+void EncodingDialog::closeEvent(QCloseEvent *event) {
+  Q_UNUSED(event);
+  done(0);
+}

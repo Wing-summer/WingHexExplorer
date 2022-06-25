@@ -23,6 +23,9 @@ private:
   void on_accept();
   void on_reject();
 
+protected:
+  void closeEvent(QCloseEvent *event) override;
+
 private:
   QHexView *m_hexeditor;
   DLineEdit *m_lineeditor;

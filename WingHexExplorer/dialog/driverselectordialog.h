@@ -27,6 +27,9 @@ private:
 
   void on_accepted();
   void on_rejected();
+
+protected:
+  void closeEvent(QCloseEvent *event) override;
 };
 
 #endif // DRIVERSELECTORDIALOG_H

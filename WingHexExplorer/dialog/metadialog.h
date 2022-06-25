@@ -39,6 +39,9 @@ private:
   QColor _foreground;
   QColor _background;
   QString _comment;
+
+protected:
+  void closeEvent(QCloseEvent *event) override;
 };
 
 #endif // METADIALOG_H

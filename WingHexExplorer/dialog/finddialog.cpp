@@ -114,3 +114,8 @@ void FindDialog::on_reject() {
   _findarr.clear();
   done(0);
 }
+
+void FindDialog::closeEvent(QCloseEvent *event) {
+  Q_UNUSED(event);
+  done(0);
+}

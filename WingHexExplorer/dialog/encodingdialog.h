@@ -22,6 +22,9 @@ private:
 private:
   DListWidget *enclist;
   QString result;
+
+protected:
+  void closeEvent(QCloseEvent *event) override;
 };
 
 #endif // ENCODINGDIALOG_H

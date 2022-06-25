@@ -69,3 +69,8 @@ void DriverSelectorDialog::on_accepted() {
 void DriverSelectorDialog::on_rejected() { done(0); }
 
 QStorageInfo DriverSelectorDialog::GetResult() { return m_si; }
+
+void DriverSelectorDialog::closeEvent(QCloseEvent *event) {
+  Q_UNUSED(event);
+  done(0);
+}
