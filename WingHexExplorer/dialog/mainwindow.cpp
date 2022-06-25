@@ -176,11 +176,11 @@ MainWindow::MainWindow(DMainWindow *parent) {
                    Qt::KeyboardModifier::ShiftModifier |
                    Qt::KeyboardModifier::AltModifier | Qt::Key_M);
   auto keymetafg =
-      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_0);
-  auto keymetabg =
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_1);
-  auto keymetacom =
+  auto keymetabg =
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_2);
+  auto keymetacom =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_3);
   auto keymetashow =
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_Plus);
   auto keymetahide =
@@ -341,20 +341,18 @@ MainWindow::MainWindow(DMainWindow *parent) {
   a->setShortcut(ShorCut);                                                     \
   a->setShortcutVisibleInContextMenu(true);                                    \
   a->setCheckable(true);                                                       \
-  connect(a, &QAction::triggered, this, Slot);                                 \
+  connect(a, &QAction::triggered, this, &Slot);                                \
   connect(hexeditor, &StatusSlot, a, &QAction::setChecked);                    \
   tm->addAction(a);
 
-  AddCheckMenu(tr("ShowMetafg"), keymetafg,
-               [=](bool b) { hexeditor->document()->setMetafgVisible(b); },
+  AddCheckMenu(tr("ShowMetafg"), keymetafg, MainWindow::on_metadatafg,
                QHexView::metafgVisibleChanged);
   AddMenuDB(ToolBoxIndex::Metafg);
-  AddCheckMenu(tr("ShowMetabg"), keymetabg,
-               [=](bool b) { hexeditor->document()->setMetabgVisible(b); },
+  AddCheckMenu(tr("ShowMetabg"), keymetabg, MainWindow::on_metadatabg,
                QHexView::metabgVisibleChanged);
   AddMenuDB(ToolBoxIndex::Metabg);
   AddCheckMenu(tr("ShowMetaComment"), keymetacom,
-               [=](bool b) { hexeditor->document()->setMetaCommentVisible(b); },
+               MainWindow::on_metadatacomment,
                QHexView::metaCommentVisibleChanged);
   AddMenuDB(ToolBoxIndex::MetaComment);
   tm->addSeparator();
@@ -544,7 +542,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   a = new QAction(Title, this);                                                \
   a->setCheckable(true);                                                       \
   a->setChecked(true);                                                         \
-  connect(a, &QAction::triggered, this, Slot);                                 \
+  connect(a, &QAction::triggered, this, &Slot);                                \
   connect(hexeditor, &StatusSlot, a, &QAction::setChecked);                    \
   tmenu->addAction(a);
 
@@ -558,17 +556,13 @@ MainWindow::MainWindow(DMainWindow *parent) {
                   MainWindow::on_metadatacls);
     tmenu->addSeparator();
 
-    AddToolCheckBtn(tr("ShowMetafg"),
-                    [=](bool b) { hexeditor->document()->setMetafgVisible(b); },
+    AddToolCheckBtn(tr("ShowMetafg"), MainWindow::on_metadatafg,
                     QHexView::metafgVisibleChanged);
 
-    AddToolCheckBtn(tr("ShowMetabg"),
-                    [=](bool b) { hexeditor->document()->setMetabgVisible(b); },
+    AddToolCheckBtn(tr("ShowMetabg"), MainWindow::on_metadatabg,
                     QHexView::metabgVisibleChanged);
-    AddToolCheckBtn(
-        tr("ShowMetaComment"),
-        [=](bool b) { hexeditor->document()->setMetaCommentVisible(b); },
-        QHexView::metaCommentVisibleChanged);
+    AddToolCheckBtn(tr("ShowMetaComment"), MainWindow::on_metadatacomment,
+                    QHexView::metaCommentVisibleChanged);
 
     tmenu->addSeparator();
 
@@ -733,7 +727,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddMenuAction("del", tr("ClearFindResult"), MainWindow::on_clearfindresult,
                 findresultMenu);
 
-  // dockwidgets init
+// dockwidgets init
 #define AddDockWin(title)                                                      \
   a = new QAction(this);                                                       \
   a->setText(title);                                                           \
@@ -871,6 +865,11 @@ MainWindow::MainWindow(DMainWindow *parent) {
 #define ConnectShortCut(ShortCut, Slot)                                        \
   s = new QShortcut(ShortCut, this);                                           \
   connect(s, &QShortcut::activated, this, &Slot);
+
+#define ConnectShortCut2(ShortCut, Slot)                                       \
+  s = new QShortcut(ShortCut, this);                                           \
+  connect(s, &QShortcut::activated, this, Slot);
+
   QShortcut *s;
   ConnectShortCut(QKeySequence::New, MainWindow::on_newfile);
   ConnectShortCut(keynewb, MainWindow::on_newbigfile);
@@ -901,6 +900,17 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keybookmark, MainWindow::on_bookmark);
   ConnectShortCut(keybookmarkcls, MainWindow::on_bookmarkcls);
   ConnectShortCut(keybookmarkdel, MainWindow::on_bookmarkdel);
+  ConnectShortCut2(keymetabg, [=] {
+    this->on_metadatabg(!hexeditor->document()->metabgVisible());
+  });
+  ConnectShortCut2(keymetafg, [=] {
+    this->on_metadatafg(!hexeditor->document()->metafgVisible());
+  });
+  ConnectShortCut2(keymetacom, [=] {
+    this->on_metadatacomment(!hexeditor->document()->metaCommentVisible());
+  });
+  ConnectShortCut(keymetashow, MainWindow::on_metashowall);
+  ConnectShortCut(keymetahide, MainWindow::on_metahideall);
 
   logger->logMessage(INFOLOG(tr("SettingLoading")));
 
@@ -2439,10 +2449,7 @@ void MainWindow::on_metadatacls() {
 
 void MainWindow::on_metashowall() {
   CheckEnabled;
-  auto doc = hexeditor->document();
-  doc->setMetabgVisible(true);
-  doc->setMetafgVisible(true);
-  doc->setMetaCommentVisible(true);
+  hexeditor->document()->SetMetaVisible(true);
 }
 
 void MainWindow::on_metastatusChanged() {
@@ -2457,10 +2464,7 @@ void MainWindow::on_metastatusChanged() {
 
 void MainWindow::on_metahideall() {
   CheckEnabled;
-  auto doc = hexeditor->document();
-  doc->setMetabgVisible(false);
-  doc->setMetafgVisible(false);
-  doc->setMetaCommentVisible(false);
+  hexeditor->document()->SetMetaVisible(false);
 }
 
 void MainWindow::on_setting_plugin() {
@@ -2557,6 +2561,18 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
     }
     bookmarks->clear();
   }
+}
+
+void MainWindow::on_metadatabg(bool b) {
+  hexeditor->document()->SetMetabgVisible(b);
+}
+
+void MainWindow::on_metadatafg(bool b) {
+  hexeditor->document()->SetMetafgVisible(b);
+}
+
+void MainWindow::on_metadatacomment(bool b) {
+  hexeditor->document()->SetMetaCommentVisible(b);
 }
 
 void MainWindow::enableDirverLimit(bool b) {

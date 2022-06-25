@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QUndoCommand>
 
-#include "../qhexmetadata.h"
+#include "../../qhexmetadata.h"
 
 // this class is newed by wingsummer
 

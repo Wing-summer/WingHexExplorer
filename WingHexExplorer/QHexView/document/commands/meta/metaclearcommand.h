@@ -1,7 +1,7 @@
 #ifndef METACLEARCOMMAND_H
 #define METACLEARCOMMAND_H
 
-#include "../qhexmetadata.h"
+#include "../../qhexmetadata.h"
 #include <QList>
 #include <QObject>
 #include <QUndoCommand>

@@ -1,7 +1,7 @@
 #ifndef METAREMOVEPOSCOMMAND_H
 #define METAREMOVEPOSCOMMAND_H
 
-#include "../qhexmetadata.h"
+#include "../../qhexmetadata.h"
 #include <QList>
 #include <QObject>
 #include <QUndoCommand>

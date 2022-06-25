@@ -1,12 +1,13 @@
 #include "qhexdocument.h"
 #include "buffer/qfilebuffer.h"
-#include "commands/bookmarkaddcommand.h"
-#include "commands/bookmarkclearcommand.h"
-#include "commands/bookmarkremovecommand.h"
-#include "commands/bookmarkreplacecommand.h"
-#include "commands/insertcommand.h"
-#include "commands/removecommand.h"
-#include "commands/replacecommand.h"
+#include "commands/bookmark/bookmarkaddcommand.h"
+#include "commands/bookmark/bookmarkclearcommand.h"
+#include "commands/bookmark/bookmarkremovecommand.h"
+#include "commands/bookmark/bookmarkreplacecommand.h"
+#include "commands/hex/insertcommand.h"
+#include "commands/hex/removecommand.h"
+#include "commands/hex/replacecommand.h"
+#include "commands/meta/metashowcommand.h"
 #include <QApplication>
 #include <QBuffer>
 #include <QClipboard>
@@ -15,23 +16,36 @@
 /*======================*/
 // added by wingsummer
 
+void QHexDocument::SetMetaVisible(bool b) {
+  m_undostack.push(new MetaShowCommand(this, ShowType::All, b));
+}
+
+void QHexDocument::SetMetabgVisible(bool b) {
+  m_undostack.push(new MetaShowCommand(this, ShowType::BgColor, b));
+}
+
+void QHexDocument::SetMetafgVisible(bool b) {
+  m_undostack.push(new MetaShowCommand(this, ShowType::FgColor, b));
+}
+
+void QHexDocument::SetMetaCommentVisible(bool b) {
+  m_undostack.push(new MetaShowCommand(this, ShowType::Comment, b));
+}
+
 void QHexDocument::setMetabgVisible(bool b) {
   m_metabg = b;
-  setDocSaved(false);
   emit viewSettingChanged();
   emit metabgVisibleChanged(b);
 }
 
 void QHexDocument::setMetafgVisible(bool b) {
   m_metafg = b;
-  setDocSaved(false);
   emit viewSettingChanged();
   emit metafgVisibleChanged(b);
 }
 
 void QHexDocument::setMetaCommentVisible(bool b) {
   m_metacomment = b;
-  setDocSaved(false);
   emit viewSettingChanged();
   emit metaCommentVisibleChanged(b);
 }

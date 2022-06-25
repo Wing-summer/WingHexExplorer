@@ -1,9 +1,9 @@
 QT += widgets
 
-HEADERS += $$PWD/document/commands/hexcommand.h \
-           $$PWD/document/commands/insertcommand.h \
-           $$PWD/document/commands/removecommand.h \
-           $$PWD/document/commands/replacecommand.h \
+HEADERS += $$PWD/document/commands/hex/hexcommand.h \
+           $$PWD/document/commands/hex/insertcommand.h \
+           $$PWD/document/commands/hex/removecommand.h \
+           $$PWD/document/commands/hex/replacecommand.h \
            $$PWD/document/buffer/qhexbuffer.h \
            $$PWD/document/buffer/qmemoryrefbuffer.h \
            $$PWD/document/buffer/qmemorybuffer.h \
@@ -13,23 +13,24 @@ HEADERS += $$PWD/document/commands/hexcommand.h \
            $$PWD/document/qhexmetadata.h \
            $$PWD/document/qhexrenderer.h \
            $$PWD/qhexview.h \
-    $$PWD/document/commands/metacommand.h \
-    $$PWD/document/commands/metaaddcommand.h \
-    $$PWD/document/commands/metaremovecommand.h \
-    $$PWD/document/commands/metareplacecommand.h \
-    $$PWD/document/commands/metaclearcommand.h \
-    $$PWD/document/commands/metaremoveposcommand.h \
-    $$PWD/document/commands/bookmarkcommand.h \
-    $$PWD/document/commands/bookmarkaddcommand.h \
-    $$PWD/document/commands/bookmarkremovecommand.h \
-    $$PWD/document/commands/bookmarkreplacecommand.h \
-    $$PWD/document/commands/bookmarkclearcommand.h \
-    $$PWD/QHexEdit2/chunks.h
+    $$PWD/document/commands/meta/metacommand.h \
+    $$PWD/document/commands/meta/metaaddcommand.h \
+    $$PWD/document/commands/meta/metaremovecommand.h \
+    $$PWD/document/commands/meta/metareplacecommand.h \
+    $$PWD/document/commands/meta/metaclearcommand.h \
+    $$PWD/document/commands/meta/metaremoveposcommand.h \
+    $$PWD/document/commands/bookmark/bookmarkcommand.h \
+    $$PWD/document/commands/bookmark/bookmarkaddcommand.h \
+    $$PWD/document/commands/bookmark/bookmarkremovecommand.h \
+    $$PWD/document/commands/bookmark/bookmarkreplacecommand.h \
+    $$PWD/document/commands/bookmark/bookmarkclearcommand.h \
+    $$PWD/QHexEdit2/chunks.h \
+    $$PWD/document/commands/meta/metashowcommand.h
 
-SOURCES += $$PWD/document/commands/hexcommand.cpp \
-           $$PWD/document/commands/insertcommand.cpp \
-           $$PWD/document/commands/removecommand.cpp \
-           $$PWD/document/commands/replacecommand.cpp \
+SOURCES += $$PWD/document/commands/hex/hexcommand.cpp \
+           $$PWD/document/commands/hex/insertcommand.cpp \
+           $$PWD/document/commands/hex/removecommand.cpp \
+           $$PWD/document/commands/hex/replacecommand.cpp \
            $$PWD/document/buffer/qhexbuffer.cpp \
            $$PWD/document/buffer/qmemoryrefbuffer.cpp \
            $$PWD/document/buffer/qmemorybuffer.cpp \
@@ -39,17 +40,18 @@ SOURCES += $$PWD/document/commands/hexcommand.cpp \
            $$PWD/document/qhexmetadata.cpp \
            $$PWD/document/qhexrenderer.cpp \
            $$PWD/qhexview.cpp \
-    $$PWD/document/commands/metacommand.cpp \
-    $$PWD/document/commands/metaaddcommand.cpp \
-    $$PWD/document/commands/metaremovecommand.cpp \
-    $$PWD/document/commands/metareplacecommand.cpp \
-    $$PWD/document/commands/metaclearcommand.cpp \
-    $$PWD/document/commands/metaremoveposcommand.cpp \
-    $$PWD/document/commands/bookmarkcommand.cpp \
-    $$PWD/document/commands/bookmarkaddcommand.cpp \
-    $$PWD/document/commands/bookmarkremovecommand.cpp \
-    $$PWD/document/commands/bookmarkreplacecommand.cpp \
-    $$PWD/document/commands/bookmarkclearcommand.cpp \
-    $$PWD/QHexEdit2/chunks.cpp
+    $$PWD/document/commands/meta/metacommand.cpp \
+    $$PWD/document/commands/meta/metaaddcommand.cpp \
+    $$PWD/document/commands/meta/metaremovecommand.cpp \
+    $$PWD/document/commands/meta/metareplacecommand.cpp \
+    $$PWD/document/commands/meta/metaclearcommand.cpp \
+    $$PWD/document/commands/meta/metaremoveposcommand.cpp \
+    $$PWD/document/commands/bookmark/bookmarkcommand.cpp \
+    $$PWD/document/commands/bookmark/bookmarkaddcommand.cpp \
+    $$PWD/document/commands/bookmark/bookmarkremovecommand.cpp \
+    $$PWD/document/commands/bookmark/bookmarkreplacecommand.cpp \
+    $$PWD/document/commands/bookmark/bookmarkclearcommand.cpp \
+    $$PWD/QHexEdit2/chunks.cpp \
+    $$PWD/document/commands/meta/metashowcommand.cpp
 
 INCLUDEPATH += $$PWD

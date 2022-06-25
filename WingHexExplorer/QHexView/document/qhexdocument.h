@@ -83,6 +83,12 @@ public:
   void setMetabgVisible(bool b);
   void setMetaCommentVisible(bool b);
 
+  void SetMetafgVisible(bool b);
+  void SetMetabgVisible(bool b);
+  void SetMetaCommentVisible(bool b);
+
+  void SetMetaVisible(bool b);
+
   bool metafgVisible();
   bool metabgVisible();
   bool metaCommentVisible();

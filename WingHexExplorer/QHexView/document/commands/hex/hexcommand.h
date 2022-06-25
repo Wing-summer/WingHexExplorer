@@ -1,7 +1,7 @@
 #ifndef HEXCOMMAND_H
 #define HEXCOMMAND_H
 
-#include "../buffer/qhexbuffer.h"
+#include "../../buffer/qhexbuffer.h"
 #include <QUndoCommand>
 
 class HexCommand : public QUndoCommand {

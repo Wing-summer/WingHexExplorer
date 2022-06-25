@@ -211,6 +211,9 @@ private:
   void on_openworkspace();
   void on_bookmarkChanged(BookMarkModEnum flag, int index, qint64 pos,
                           QString comment);
+  void on_metadatabg(bool b);
+  void on_metadatafg(bool b);
+  void on_metadatacomment(bool b);
 
 private:
   QList<HexFile> hexfiles;
