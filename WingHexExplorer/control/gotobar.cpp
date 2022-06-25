@@ -71,15 +71,13 @@ void GotoBar::activeInput(int oldrow, int oldcolumn, quint64 oldoffset,
 
 void GotoBar::handleLineChanged() {
   QString content = m_editLine->lineEdit()->text();
-  if (content != "") {
-    auto ps = SEEKPOS::Invaild;
-    auto isline = m_line->isChecked();
-    auto p = Convert2Pos(content, ps, isline);
-    if (ps != SEEKPOS::Invaild)
-      jumpToLine(p, isline);
-    else
-      m_editLine->showAlertMessage(tr("InvalidContent"), 1500);
-  }
+  auto ps = SEEKPOS::Invaild;
+  auto isline = m_line->isChecked();
+  auto p = Convert2Pos(content, ps, isline);
+  if (ps != SEEKPOS::Invaild)
+    jumpToLine(p, isline);
+  else
+    m_editLine->showAlertMessage(tr("InvalidContent"), 1500);
 }
 
 void GotoBar::jumpCancel() {
@@ -193,6 +191,9 @@ qint64 GotoBar::Convert2Pos(QString value, SEEKPOS &ps, bool isline) {
         }
       }
     }
+  } else {
+    ps = SEEKPOS::Relative;
+    res = isline ? qint64(m_rowBeforeJump) : qint64(m_oldFileOffsetBeforeJump);
   }
   return res;
 }
