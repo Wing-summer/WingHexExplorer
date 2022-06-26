@@ -142,6 +142,8 @@ namespace WingPlugin {
 class Reader : public QObject {
   Q_OBJECT
 signals:
+  int currentDoc();
+
   // document
   bool isReadOnly();
   bool isKeepSize();
@@ -155,7 +157,7 @@ signals:
   quint64 currentOffset();
   quint64 selectlength();
 
-  bool asciiVisible();
+  bool stringVisible();
   bool addressVisible();
   bool headerVisible();
   quint64 addressBase();
@@ -173,7 +175,7 @@ signals:
   qint64 searchForward(const QByteArray &ba);
   qint64 searchBackward(const QByteArray &ba);
   void findAllBytes(qlonglong begin, qlonglong end, QByteArray b,
-                    QList<quint64> &results);
+                    QList<quint64> &results, int maxCount = -1);
 
   // render
   bool editableArea(int area);

@@ -305,6 +305,8 @@ void QHexDocument::applyBookMarks(QList<BookMarkStruct> books) {
 void QHexDocument::findAllBytes(qint64 begin, qint64 end, QByteArray b,
                                 QList<quint64> &results, int maxCount) {
   results.clear();
+  if (!b.length())
+    return;
   qlonglong p = begin > 0 ? begin : 0;
   qlonglong e = end > begin ? end : -1;
   auto offset = b.count();

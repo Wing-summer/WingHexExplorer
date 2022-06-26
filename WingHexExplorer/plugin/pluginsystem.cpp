@@ -167,3 +167,5 @@ void PluginSystem::initControl(IWingPlugin *plugin) {
   curpluginctl = plugin;
   plugintimer[plugin]->start(5000);
 }
+
+bool PluginSystem::hasControl() { return curpluginctl != nullptr; }

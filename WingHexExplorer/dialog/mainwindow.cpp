@@ -1086,6 +1086,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
     return T;                                                                  \
   return F;
 
+  ConnectBaseLamba2(WingPlugin::Reader::currentDoc, [=] { return _pcurfile; });
   ConnectBaseLamba2(WingPlugin::Reader::isLocked, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->isLocked(), true);
   });
@@ -1094,7 +1095,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->isLocked(), true);
   });
   ConnectBaseLamba2(WingPlugin::Reader::isEmpty, [=] {
-    PCHECKRETURN(hexeditor->document()->isEmpty(), true);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->isEmpty(), true);
   });
   ConnectBaseLamba2(WingPlugin::Reader::isKeepSize, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->isKeepSize(), true);
@@ -1113,6 +1114,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   });
   ConnectBaseLamba2(WingPlugin::Reader::currentPos, [=] {
     HexPosition pos;
+    memset(&pos, 0, sizeof(HexPosition));
     PCHECK(
         {
           auto qpos = hexfiles[_pcurfile].doc->cursor()->position();
@@ -1125,6 +1127,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   });
   ConnectBaseLamba2(WingPlugin::Reader::selectionPos, [=] {
     HexPosition pos;
+    memset(&pos, 0, sizeof(HexPosition));
     PCHECK(
         {
           auto cur = hexfiles[_pcurfile].doc->cursor();
@@ -1152,7 +1155,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
     PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->cursor()->selectionLength()),
                  quint64(0));
   });
-  ConnectBaseLamba2(WingPlugin::Reader::asciiVisible, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::stringVisible, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->stringVisible(), true);
   });
   ConnectBaseLamba2(WingPlugin::Reader::headerVisible, [=] {
@@ -1211,12 +1214,12 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   ConnectBaseLamba2(WingPlugin::Reader::read, [=](qint64 offset, int len) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->read(offset, len), QByteArray());
   });
-  ConnectBaseLamba2(
-      WingPlugin::Reader::findAllBytes,
-      [=](qlonglong begin, qlonglong end, QByteArray b,
-          QList<quint64> &results) {
-        PCHECK(hexfiles[_pcurfile].doc->findAllBytes(begin, end, b, results), );
-      });
+  ConnectBaseLamba2(WingPlugin::Reader::findAllBytes,
+                    [=](qlonglong begin, qlonglong end, QByteArray b,
+                        QList<quint64> &results, int maxCount) {
+                      PCHECK(hexfiles[_pcurfile].doc->findAllBytes(
+                                 begin, end, b, results, maxCount), );
+                    });
   ConnectBaseLamba2(
       WingPlugin::Reader::searchForward, [=](const QByteArray &ba) {
         PCHECKRETURN(hexfiles[_pcurfile].doc->searchForward(ba), qint64(-1));
@@ -1645,6 +1648,8 @@ void MainWindow::setFilePage(int index) {
       hexfiles[_currentfile].vBarValue = s;
     }
     _currentfile = index;
+    if (!plgsys->hasControl())
+      _pcurfile = index;
     auto d = hexfiles.at(index);
     if (d.doc == hexeditor->document())
       return;
