@@ -1300,60 +1300,76 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
 
 void MainWindow::connectControl(IWingPlugin *plugin) {
 
-#define ConnectControl(Signal, Slot) connect(plugin, &Signal, this, &Slot)
 #define ConnectControlLamba(Signal, Function) connect(plugin, &Signal, Function)
-#define ConnectControl2(Signal, Slot)                                          \
-  connect(&plugin->controller, &Signal, this, &Slot)
 #define ConnectControlLamba2(Signal, Function)                                 \
   connect(&plugin->controller, &Signal, Function)
-  ConnectControlLamba2(WingPlugin::Controller::switchDocument,
-                       [=](int index, bool gui) {
-                         if (gui) {
-                           setFilePage(index);
-                           _pcurfile = _currentfile;
-                         } else {
-                           if (index >= 0 && index < hexfiles.count())
-                             _pcurfile = index;
-                         }
-                       });
+
+  ConnectControlLamba2(
+      WingPlugin::Controller::switchDocument, [=](int index, bool gui) {
+        if (gui) {
+          setFilePage(index);
+          _pcurfile = _currentfile;
+        } else {
+          if (index >= 0 && index < hexfiles.count())
+            _pcurfile = index;
+        }
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+      });
 
   ConnectControlLamba2(WingPlugin::Controller::setLockedFile, [=](bool b) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     return (_pcurfile == _currentfile && _pcurfile >= 0)
                ? hexeditor->setLockedFile(b)
                : hexfiles[_pcurfile].doc->setLockedFile(b);
   });
   ConnectControlLamba2(WingPlugin::Controller::setKeepSize, [=](bool b) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     return (_pcurfile == _currentfile && _pcurfile >= 0)
                ? hexeditor->setKeepSize(b)
                : hexfiles[_pcurfile].doc->setKeepSize(b);
   });
   ConnectControlLamba2(WingPlugin::Controller::setAsciiVisible, [=](bool b) {
     hexfiles[_pcurfile].render->setAsciiVisible(b);
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
   });
   ConnectControlLamba2(WingPlugin::Controller::setHeaderVisible, [=](bool b) {
     hexfiles[_pcurfile].render->setHeaderVisible(b);
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
   });
   ConnectControlLamba2(WingPlugin::Controller::setAddressVisible, [=](bool b) {
     hexfiles[_pcurfile].render->setAddressVisible(b);
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
   });
   ConnectControlLamba2(
-      WingPlugin::Controller::setAddressBase,
-      [=](quint64 base) { hexfiles[_pcurfile].doc->setBaseAddress(base); });
+      WingPlugin::Controller::setAddressBase, [=](quint64 base) {
+        hexfiles[_pcurfile].doc->setBaseAddress(base);
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+      });
   ConnectControlLamba2(
-      WingPlugin::Controller::setAreaIndent,
-      [=](quint8 value) { hexfiles[_pcurfile].doc->setAreaIndent(value); });
+      WingPlugin::Controller::setAreaIndent, [=](quint8 value) {
+        hexfiles[_pcurfile].doc->setAreaIndent(value);
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+      });
   ConnectControlLamba2(
-      WingPlugin::Controller::setHexLineWidth,
-      [=](quint8 value) { hexfiles[_pcurfile].doc->setHexLineWidth(value); });
-  ConnectControlLamba2(WingPlugin::Controller::undo,
-                       [=] { hexfiles[_pcurfile].doc->undo(); });
-  ConnectControlLamba2(WingPlugin::Controller::redo,
-                       [=] { hexfiles[_pcurfile].doc->redo(); });
+      WingPlugin::Controller::setHexLineWidth, [=](quint8 value) {
+        hexfiles[_pcurfile].doc->setHexLineWidth(value);
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+      });
+  ConnectControlLamba2(WingPlugin::Controller::undo, [=] {
+    hexfiles[_pcurfile].doc->undo();
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+  });
+  ConnectControlLamba2(WingPlugin::Controller::redo, [=] {
+    hexfiles[_pcurfile].doc->redo();
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+  });
   ConnectControlLamba2(WingPlugin::Controller::cut, [=](bool hex) {
     return hexfiles[_pcurfile].doc->cut(hex);
   });
-  ConnectControlLamba2(WingPlugin::Controller::paste,
-                       [=](bool hex) { hexfiles[_pcurfile].doc->paste(hex); });
+  ConnectControlLamba2(WingPlugin::Controller::paste, [=](bool hex) {
+    hexfiles[_pcurfile].doc->paste(hex);
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+  });
 
 #define ConnectControlLamba3(Signal, Function)                                 \
   connect(&plugin->controller, Signal, Function)
@@ -1364,9 +1380,11 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
       qint64 offset, const QByteArray &data) = &WingPlugin::Controller::insert;
 
   ConnectControlLamba3(insertchar, [=](qint64 offset, uchar b) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     return hexfiles[_pcurfile].doc->insert(offset, b);
   });
   ConnectControlLamba3(insertarr, [=](qint64 offset, const QByteArray &data) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     return hexfiles[_pcurfile].doc->insert(offset, data);
   });
 
@@ -1375,15 +1393,18 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   bool (WingPlugin::Controller::*replacearr)(
       qint64 offset, const QByteArray &data) = &WingPlugin::Controller::replace;
   ConnectControlLamba3(replacechar, [=](qint64 offset, uchar b) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     return hexfiles[_pcurfile].doc->replace(offset, b);
   });
   ConnectControlLamba3(replacearr, [=](qint64 offset, const QByteArray &data) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     return hexfiles[_pcurfile].doc->replace(offset, data);
   });
-  ConnectControlLamba2(WingPlugin::Controller::remove,
-                       [=](qint64 offset, int len) {
-                         return hexfiles[_pcurfile].doc->remove(offset, len);
-                       });
+  ConnectControlLamba2(
+      WingPlugin::Controller::remove, [=](qint64 offset, int len) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        return hexfiles[_pcurfile].doc->remove(offset, len);
+      });
 
   void (WingPlugin::Controller::*moveToHP)(const HexPosition &pos) =
       &WingPlugin::Controller::moveTo;
@@ -1393,6 +1414,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
 
   void (WingPlugin::Controller::*moveToOff)(qint64 offset);
   ConnectControlLamba3(moveToHP, [=](const HexPosition &pos) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     QHexPosition p;
     p.line = pos.line;
     p.column = pos.column;
@@ -1401,9 +1423,11 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     hexfiles[_pcurfile].doc->cursor()->moveTo(p);
   });
   ConnectControlLamba3(moveTo, [=](quint64 line, int column, int nibbleindex) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     hexfiles[_pcurfile].doc->cursor()->moveTo(line, column, nibbleindex);
   });
   ConnectControlLamba3(moveToOff, [=](qint64 offset) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     hexfiles[_pcurfile].doc->cursor()->moveTo(offset);
   });
 
@@ -1415,6 +1439,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
 
   void (WingPlugin::Controller::*selectL)(int length);
   ConnectControlLamba3(selectHP, [=](const HexPosition &pos) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     QHexPosition p;
     p.line = pos.line;
     p.column = pos.column;
@@ -1423,22 +1448,27 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     hexfiles[_pcurfile].doc->cursor()->select(p);
   });
   ConnectControlLamba3(select, [=](quint64 line, int column, int nibbleindex) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     hexfiles[_pcurfile].doc->cursor()->select(line, column, nibbleindex);
   });
   ConnectControlLamba3(selectL, [=](int length) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     hexfiles[_pcurfile].doc->cursor()->select(length);
   });
 
   ConnectControlLamba2(
       WingPlugin::Controller::selectOffset, [=](qint64 offset, int length) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         hexfiles[_pcurfile].doc->cursor()->selectOffset(offset, length);
       });
   ConnectControlLamba2(
       WingPlugin::Controller::setInsertionMode, [=](bool isinsert) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         hexfiles[_pcurfile].doc->cursor()->setInsertionMode(
             isinsert ? QHexCursor::InsertMode : QHexCursor::OverwriteMode);
       });
   ConnectControlLamba2(WingPlugin::Controller::setLineWidth, [=](quint8 width) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     hexfiles[_pcurfile].doc->cursor()->setLineWidth(width);
   });
 
@@ -1458,6 +1488,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         if (!doc->isKeepSize())
           return false;
         doc->metadata()->metadata(begin, end, fgcolor, bgcolor, comment);
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         return true;
       });
   ConnectControlLamba3(metadataL, [=](quint64 line, int start, int length,
@@ -1468,12 +1499,14 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     if (!doc->isKeepSize())
       return false;
     doc->metadata()->metadata(line, start, length, fgcolor, bgcolor, comment);
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     return true;
   });
 
   ConnectControlLamba2(
       WingPlugin::Controller::removeMetadata, [=](qint64 offset) {
         hexfiles[_pcurfile].doc->metadata()->removeMetadata(offset);
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
       });
 
   bool (WingPlugin::Controller::*clear)() = &WingPlugin::Controller::clearMeta;
@@ -1482,19 +1515,21 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     if (!doc->isKeepSize())
       return false;
     doc->metadata()->clear();
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     return true;
   });
 
-  ConnectControlLamba2(WingPlugin::Controller::color,
-                       [=](quint64 line, int start, int length,
-                           const QColor &fgcolor, const QColor &bgcolor) {
-                         auto doc = hexfiles[_pcurfile].doc;
-                         if (!doc->isKeepSize())
-                           return false;
-                         doc->metadata()->color(line, start, length, fgcolor,
-                                                bgcolor);
-                         return true;
-                       });
+  ConnectControlLamba2(
+      WingPlugin::Controller::color,
+      [=](quint64 line, int start, int length, const QColor &fgcolor,
+          const QColor &bgcolor) {
+        auto doc = hexfiles[_pcurfile].doc;
+        if (!doc->isKeepSize())
+          return false;
+        doc->metadata()->color(line, start, length, fgcolor, bgcolor);
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        return true;
+      });
 
   ConnectControlLamba2(
       WingPlugin::Controller::comment,
@@ -1503,6 +1538,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         if (!doc->isKeepSize())
           return false;
         doc->metadata()->comment(line, start, length, comment);
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         return true;
       });
 
@@ -1513,6 +1549,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         if (!doc->isKeepSize())
           return false;
         doc->metadata()->foreground(line, start, length, fgcolor);
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         return true;
       });
   ConnectControlLamba2(
@@ -1522,10 +1559,13 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         if (!doc->isKeepSize())
           return false;
         doc->metadata()->background(line, start, length, bgcolor);
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         return true;
       });
   ConnectControlLamba2(WingPlugin::Controller::applyMetas,
                        [=](QList<HexMetadataAbsoluteItem> metas) {
+                         plgsys->resetTimeout(
+                             qobject_cast<IWingPlugin *>(sender()));
                          QList<QHexMetadataAbsoluteItem> ms;
                          for (auto item : metas) {
                            QHexMetadataAbsoluteItem i;
@@ -1539,75 +1579,138 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
                          hexfiles[_pcurfile].doc->metadata()->applyMetas(ms);
                        });
   ConnectControlLamba2(WingPlugin::Controller::setMetafgVisible, [=](bool b) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     return hexfiles[_pcurfile].doc->setMetafgVisible(b);
   });
   ConnectControlLamba2(WingPlugin::Controller::setMetabgVisible, [=](bool b) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     return hexfiles[_pcurfile].doc->setMetabgVisible(b);
   });
   ConnectControlLamba2(
       WingPlugin::Controller::setMetaCommentVisible, [=](bool b) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         return hexfiles[_pcurfile].doc->setMetaCommentVisible(b);
       });
 
   ConnectControlLamba2(
       WingPlugin::Controller::setCurrentEncoding, [=](QString encoding) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         return hexfiles[_pcurfile].render->setEncoding(encoding);
       });
   ConnectControlLamba2(
       WingPlugin::Controller::addBookMark, [=](qint64 pos, QString comment) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         return hexfiles[_pcurfile].doc->addBookMark(pos, comment);
       });
   ConnectControlLamba2(
       WingPlugin::Controller::modBookMark, [=](qint64 pos, QString comment) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         return hexfiles[_pcurfile].doc->modBookMark(pos, comment);
       });
   ConnectControlLamba2(WingPlugin::Controller::removeBookMark, [=](qint64 pos) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     return hexfiles[_pcurfile].doc->removeBookMark(pos);
   });
   ConnectControlLamba2(WingPlugin::Controller::clearBookMark, [=] {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     return hexfiles[_pcurfile].doc->clearBookMark();
   });
-  ConnectControlLamba2(WingPlugin::Controller::applyBookMarks,
-                       [=](QList<BookMark> books) {
-                         QList<BookMarkStruct> bs;
-                         for (auto item : books) {
-                           BookMarkStruct b;
-                           b.pos = item.pos;
-                           b.comment = item.comment;
-                           bs.append(b);
-                         }
-                         hexfiles[_pcurfile].doc->applyBookMarks(bs);
-                       });
+  ConnectControlLamba2(
+      WingPlugin::Controller::applyBookMarks, [=](QList<BookMark> books) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        QList<BookMarkStruct> bs;
+        for (auto item : books) {
+          BookMarkStruct b;
+          b.pos = item.pos;
+          b.comment = item.comment;
+          bs.append(b);
+        }
+        hexfiles[_pcurfile].doc->applyBookMarks(bs);
+      });
 
   ConnectControlLamba2(WingPlugin::Controller::openWorkSpace,
                        [=](QString filename, bool readonly) {
+                         plgsys->resetTimeout(
+                             qobject_cast<IWingPlugin *>(sender()));
                          return openWorkSpace(filename, readonly);
                        });
-  ConnectControl2(WingPlugin::Controller::newFile, MainWindow::newFile);
-  ConnectControlLamba2(WingPlugin::Controller::openFile,
-                       [=](QString filename, bool readonly) {
-                         return openFile(filename, readonly);
-                       });
-  ConnectControl2(WingPlugin::Controller::openDriver, MainWindow::openDriver);
-  ConnectControl2(WingPlugin::Controller::closeFile, MainWindow::closeFile);
-  ConnectControl2(WingPlugin::Controller::saveFile, MainWindow::save);
-  ConnectControl2(WingPlugin::Controller::exportFile, MainWindow::exportFile);
-  ConnectControl2(WingPlugin::Controller::exportFileGUI,
-                  MainWindow::on_exportfile);
-  ConnectControl2(WingPlugin::Controller::saveasFile, MainWindow::saveAs);
-  ConnectControl2(WingPlugin::Controller::saveasFileGUI, MainWindow::on_saveas);
-  ConnectControl2(WingPlugin::Controller::closeCurrentFile,
-                  MainWindow::closeCurrentFile);
-  ConnectControl2(WingPlugin::Controller::saveCurrentFile,
-                  MainWindow::saveCurrent);
-  ConnectControl2(WingPlugin::Controller::openFileGUI, MainWindow::on_openfile);
-  ConnectControl2(WingPlugin::Controller::openDriverGUI,
-                  MainWindow::on_opendriver);
-  ConnectControl2(WingPlugin::Controller::gotoGUI, MainWindow::on_gotoline);
-  ConnectControl2(WingPlugin::Controller::findGUI, MainWindow::on_findfile);
-  ConnectControl2(WingPlugin::Controller::fillGUI, MainWindow::on_fill);
-  ConnectControl2(WingPlugin::Controller::fillzeroGUI, MainWindow::on_fillzero);
-  ConnectControl2(WingPlugin::Controller::fillnopGUI, MainWindow::on_fillnop);
+  ConnectControlLamba2(WingPlugin::Controller::newFile, [=] {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    newFile();
+  });
+  ConnectControlLamba2(
+      WingPlugin::Controller::openFile, [=](QString filename, bool readonly) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        return openFile(filename, readonly);
+      });
+  ConnectControlLamba2(WingPlugin::Controller::openDriver, [=](QString driver) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    return openDriver(driver);
+  });
+  ConnectControlLamba2(
+      WingPlugin::Controller::closeFile, [=](int index, bool force) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        return closeFile(index, force);
+      });
+  ConnectControlLamba2(WingPlugin::Controller::saveFile, [=](int index) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    return save(index);
+  });
+  ConnectControlLamba2(
+      WingPlugin::Controller::exportFile, [=](QString filename, int index) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        return exportFile(filename, index);
+      });
+  ConnectControlLamba2(WingPlugin::Controller::exportFileGUI, [=] {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    on_exportfile();
+  });
+  ConnectControlLamba2(
+      WingPlugin::Controller::saveasFile, [=](QString filename, int index) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        return saveAs(filename, index);
+      });
+  ConnectControlLamba2(WingPlugin::Controller::saveasFileGUI, [=] {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    on_saveas();
+  });
+  ConnectControlLamba2(
+      WingPlugin::Controller::closeCurrentFile, [=](bool force) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        return closeCurrentFile(force);
+      });
+  ConnectControlLamba2(WingPlugin::Controller::saveCurrentFile, [=] {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    return saveCurrent();
+  });
+  ConnectControlLamba2(WingPlugin::Controller::openFileGUI, [=] {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    on_openfile();
+  });
+  ConnectControlLamba2(WingPlugin::Controller::openDriverGUI, [=] {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    on_opendriver();
+  });
+  ConnectControlLamba2(WingPlugin::Controller::gotoGUI, [=] {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    on_gotoline();
+  });
+  ConnectControlLamba2(WingPlugin::Controller::findGUI, [=] {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    on_findfile();
+  });
+  ConnectControlLamba2(WingPlugin::Controller::fillGUI, [=] {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    on_fill();
+  });
+  ConnectControlLamba2(WingPlugin::Controller::fillzeroGUI, [=] {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    on_fillzero();
+  });
+  ConnectControlLamba2(WingPlugin::Controller::fillnopGUI, [=] {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    on_fillnop();
+  });
 }
 
 bool MainWindow::requestControl(int timeout) {

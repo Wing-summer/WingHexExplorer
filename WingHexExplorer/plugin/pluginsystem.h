@@ -26,6 +26,7 @@ public:
   bool requestControl(IWingPlugin *plugin, int timeout = 1500);
   bool requestRelease(IWingPlugin *plugin);
   bool hasControl();
+  void resetTimeout(IWingPlugin *plugin);
 
   void initControl(IWingPlugin *plugin);
   void loadPlugin(QFileInfo filename);

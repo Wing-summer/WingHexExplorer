@@ -147,6 +147,14 @@ bool PluginSystem::requestRelease(IWingPlugin *plugin) {
   return false;
 }
 
+void PluginSystem::resetTimeout(IWingPlugin *plugin) {
+  if (plugin == nullptr)
+    return;
+
+  plugintimer[plugin]->start(1000);
+  plugintimeout[plugin] = false;
+}
+
 void PluginSystem::initControl(IWingPlugin *plugin) {
   if (!plugintimer.contains(plugin)) {
     auto timer = new QTimer(this);
@@ -165,7 +173,7 @@ void PluginSystem::initControl(IWingPlugin *plugin) {
     requestRelease(plugin);
   emit ConnectControl(plugin);
   curpluginctl = plugin;
-  plugintimer[plugin]->start(5000);
+  plugintimer[plugin]->start(1000);
 }
 
 bool PluginSystem::hasControl() { return curpluginctl != nullptr; }
