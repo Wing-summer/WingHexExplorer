@@ -1,9 +1,6 @@
 #include "chunks.h"
 #include <limits.h>
 
-#define NORMAL 0
-#define HIGHLIGHTED 1
-
 #define BUFFER_SIZE 0x10000
 #define CHUNK_SIZE 0x1000
 #define READ_CHUNK_MASK Q_INT64_C(0xfffffffffffff000)
@@ -43,7 +40,7 @@ bool Chunks::setIODevice(QIODevice *ioDevice) {
 
 // ***************************************** Getting data out of Chunks
 
-QByteArray Chunks::data(qint64 pos, qint64 maxSize, QByteArray *changed) {
+QByteArray Chunks::data(qint64 pos, qint64 maxSize) {
   qint64 ioDelta = 0;
   int chunkIdx = 0;
 
@@ -51,8 +48,6 @@ QByteArray Chunks::data(qint64 pos, qint64 maxSize, QByteArray *changed) {
   QByteArray buffer;
 
   // Do some checks and some arrangements
-  if (changed)
-    changed->clear();
 
   if (pos >= _size)
     return buffer;
@@ -89,8 +84,6 @@ QByteArray Chunks::data(qint64 pos, qint64 maxSize, QByteArray *changed) {
           buffer += chunk.data.mid(int(chunkOfs), int(count));
           maxSize -= count;
           pos += quint64(count);
-          if (changed)
-            *changed += chunk.dataChanged.mid(int(chunkOfs), int(count));
         }
       }
     }
@@ -110,8 +103,6 @@ QByteArray Chunks::data(qint64 pos, qint64 maxSize, QByteArray *changed) {
       _ioDevice->seek(pos + ioDelta);
       readBuffer = _ioDevice->read(byteCount);
       buffer += readBuffer;
-      if (changed)
-        *changed += QByteArray(readBuffer.size(), NORMAL);
       pos += quint64(readBuffer.size());
     }
   }
@@ -131,25 +122,6 @@ bool Chunks::write(QIODevice *iODevice, qint64 pos, qint64 count) {
     iODevice->close();
   }
   return ok;
-}
-
-// ***************************************** Set and get highlighting infos
-
-void Chunks::setDataChanged(qint64 pos, bool dataChanged) {
-  if (pos >= _size)
-    return;
-  int chunkIdx = getChunkIndex(pos);
-  qint64 posInBa = pos - _chunks[chunkIdx].absPos;
-  _chunks[chunkIdx].dataChanged[int(posInBa)] = char(dataChanged);
-}
-
-bool Chunks::dataChanged(qint64 pos) {
-  QByteArray highlighted;
-  data(pos, 1, &highlighted);
-  // fix the bug
-  if (highlighted.isEmpty())
-    return true;
-  return bool(highlighted.at(0));
 }
 
 // ***************************************** Search API

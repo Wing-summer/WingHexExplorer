@@ -2112,6 +2112,7 @@ void MainWindow::on_gotoline() {
                        int(hexeditor->currentColumn()),
                        hexeditor->currentOffset(), hexeditor->documentBytes(),
                        int(hexeditor->documentLines()));
+  hexeditor->renderer()->enableCursor();
 }
 
 void MainWindow::on_gotobar(int pos, bool isline) {
@@ -2482,6 +2483,7 @@ void MainWindow::on_bookmark() {
   if (doc->existBookMark(index)) {
     auto b = doc->bookMark(index);
     bool ok;
+    hexeditor->renderer()->enableCursor();
     auto comment =
         DInputDialog::getText(this, tr("BookMark"), tr("InputComment"),
                               QLineEdit::Normal, b.comment, &ok);

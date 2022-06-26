@@ -346,7 +346,7 @@ void QHexRenderer::applyBasicStyle(QTextCursor &textcursor,
     textcursor.setPosition(i * factor);
     textcursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor,
                             factor);
-    textcursor.setCharFormat(charformat);
+    textcursor.mergeCharFormat(charformat);
   }
 }
 
@@ -372,7 +372,7 @@ void QHexRenderer::applyMetadata(QTextCursor &textcursor, quint64 line,
     textcursor.setPosition(mi.start * factor);
     textcursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor,
                             (mi.length * factor) - (factor > 1 ? 1 : 0));
-    textcursor.setCharFormat(charformat);
+    textcursor.mergeCharFormat(charformat);
   }
 }
 
@@ -410,7 +410,7 @@ void QHexRenderer::applySelection(QTextCursor &textcursor, quint64 line,
   QTextCharFormat charformat;
   charformat.setBackground(palette.color(QPalette::Highlight));
   charformat.setForeground(palette.color(QPalette::HighlightedText));
-  textcursor.setCharFormat(charformat);
+  textcursor.mergeCharFormat(charformat);
 }
 
 void QHexRenderer::applyCursorAscii(QTextCursor &textcursor,
@@ -438,7 +438,7 @@ void QHexRenderer::applyCursorAscii(QTextCursor &textcursor,
     charformat.setUnderlineStyle(
         QTextCharFormat::UnderlineStyle::SingleUnderline);
 
-  textcursor.setCharFormat(charformat);
+  textcursor.mergeCharFormat(charformat);
 }
 
 void QHexRenderer::applyCursorHex(QTextCursor &textcursor, quint64 line) const {
@@ -510,7 +510,13 @@ void QHexRenderer::drawHex(QPainter *painter, const QPalette &palette,
 
   this->applyDocumentStyles(painter, &textdocument);
   this->applyBasicStyle(textcursor, rawline, Hex);
-  this->applyMetadata(textcursor, line, Hex);
+
+  auto dis = !m_document->metabgVisible() && !m_document->metafgVisible() &&
+             !m_document->metaCommentVisible();
+  if (!dis)
+    this->applyMetadata(textcursor, line, Hex);
+
+  this->applyBookMark(textcursor, line, Hex);
   this->applySelection(textcursor, line, Hex);
   this->applyCursorHex(textcursor, line);
 
@@ -518,6 +524,33 @@ void QHexRenderer::drawHex(QPainter *painter, const QPalette &palette,
   painter->translate(hexrect.topLeft());
   textdocument.drawContents(painter);
   painter->restore();
+}
+
+void QHexRenderer::applyBookMark(QTextCursor &textcursor, quint64 line,
+                                 Factor factor) {
+
+  if (!m_document->lineHasBookMark(line))
+    return;
+
+  auto pos = m_document->getsBookmarkPos(line);
+  for (auto item : pos) {
+    textcursor.setPosition(int((item % hexLineWidth()) * factor) + 2);
+    auto charformat = textcursor.charFormat();
+    textcursor.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor,
+                            factor - 1);
+    charformat.setFontOverline(true);
+
+    if (charformat.underlineStyle() ==
+        QTextCharFormat::UnderlineStyle::NoUnderline) {
+      charformat.setUnderlineStyle(
+          QTextCharFormat::UnderlineStyle::DashUnderline);
+    } else {
+      charformat.setUnderlineStyle(
+          QTextCharFormat::UnderlineStyle::WaveUnderline);
+    }
+
+    textcursor.setCharFormat(charformat);
+  }
 }
 
 void QHexRenderer::drawString(QPainter *painter, const QPalette &palette,
@@ -541,9 +574,9 @@ void QHexRenderer::drawString(QPainter *painter, const QPalette &palette,
 
   auto dis = !m_document->metabgVisible() && !m_document->metafgVisible() &&
              !m_document->metaCommentVisible();
-
-  if (dis)
+  if (!dis)
     this->applyMetadata(textcursor, line, String);
+
   this->applySelection(textcursor, line, String);
   this->applyCursorAscii(textcursor, line);
 

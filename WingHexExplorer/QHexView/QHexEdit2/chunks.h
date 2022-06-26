@@ -39,13 +39,8 @@ public:
   bool setIODevice(QIODevice *ioDevice);
 
   // Getting data out of Chunks
-  QByteArray data(qint64 pos = 0, qint64 maxSize = -1,
-                  QByteArray *changed = nullptr);
+  QByteArray data(qint64 pos = 0, qint64 maxSize = -1);
   bool write(QIODevice *iODevice, qint64 pos = 0, qint64 count = -1);
-
-  // Set and get highlighting infos
-  void setDataChanged(qint64 pos, bool dataChanged);
-  bool dataChanged(qint64 pos);
 
   // Search API
   qint64 indexOf(const QByteArray &ba, qint64 from);

@@ -95,6 +95,8 @@ private:
                      Factor factor) const;
   void applySelection(QTextCursor &textcursor, quint64 line,
                       Factor factor) const;
+  void applyBookMark(QTextCursor &textcursor, quint64 line,
+                     Factor factor); // added by wingsummer
   void applyCursorAscii(QTextCursor &textcursor, quint64 line) const;
   void applyCursorHex(QTextCursor &textcursor, quint64 line) const;
   void drawAddress(QPainter *painter, const QPalette &palette,

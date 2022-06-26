@@ -1,10 +1,10 @@
 #include "qhexmetadata.h"
-#include "commands/metaaddcommand.h"
-#include "commands/metaclearcommand.h"
-#include "commands/metacommand.h"
-#include "commands/metaremovecommand.h"
-#include "commands/metaremoveposcommand.h"
-#include "commands/metareplacecommand.h"
+#include "commands/meta/metaaddcommand.h"
+#include "commands/meta/metaclearcommand.h"
+#include "commands/meta/metacommand.h"
+#include "commands/meta/metaremovecommand.h"
+#include "commands/meta/metaremoveposcommand.h"
+#include "commands/meta/metareplacecommand.h"
 
 QHexMetadata::QHexMetadata(QUndoStack *undo, QObject *parent)
     : QObject(parent), m_undo(undo) {}

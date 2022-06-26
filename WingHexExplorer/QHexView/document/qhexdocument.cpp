@@ -17,6 +17,27 @@
 /*======================*/
 // added by wingsummer
 
+QList<qint64> QHexDocument::getsBookmarkPos(quint64 line) {
+  QList<qint64> pos;
+  auto begin = qint64(m_hexlinewidth * line);
+  auto end = m_hexlinewidth + begin;
+  for (auto item : bookmarks) {
+    if (item.pos >= begin && item.pos <= end)
+      pos.push_back(item.pos);
+  }
+  return pos;
+}
+
+bool QHexDocument::lineHasBookMark(quint64 line) {
+  auto begin = qint64(m_hexlinewidth * line);
+  auto end = m_hexlinewidth + begin;
+  for (auto item : bookmarks) {
+    if (item.pos >= begin && item.pos <= end)
+      return true;
+  }
+  return false;
+}
+
 void QHexDocument::addUndoCommand(QUndoCommand *command) {
   if (command)
     m_undostack.push(command);
@@ -116,6 +137,7 @@ bool QHexDocument::addBookMark(qint64 pos, QString comment) {
     BookMarkStruct b{pos, comment};
     bookmarks.append(b);
     setDocSaved(false);
+    emit documentChanged();
     emit bookMarkChanged(BookMarkModEnum::Insert, -1, pos, comment);
     return true;
   }
@@ -166,6 +188,7 @@ void QHexDocument::removeBookMark(qint64 pos) {
       if (pos == item.pos) {
         bookmarks.removeAt(index);
         setDocSaved(false);
+        emit documentChanged();
         emit bookMarkChanged(BookMarkModEnum::Remove, index, -1, QString());
         break;
       }
@@ -178,6 +201,7 @@ void QHexDocument::removeBookMark(int index) {
   if (index >= 0 && index < bookmarks.count()) {
     bookmarks.removeAt(index);
     setDocSaved(false);
+    emit documentChanged();
     emit bookMarkChanged(BookMarkModEnum::Remove, index, -1, QString());
   }
 }
@@ -201,6 +225,7 @@ bool QHexDocument::modBookMark(qint64 pos, QString comment) {
 void QHexDocument::clearBookMark() {
   bookmarks.clear();
   setDocSaved(false);
+  emit documentChanged();
   emit bookMarkChanged(BookMarkModEnum::Clear, -1, -1, QString());
 }
 
@@ -242,6 +267,7 @@ QList<BookMarkStruct> QHexDocument::getAllBookMarks() { return bookmarks; }
 void QHexDocument::applyBookMarks(QList<BookMarkStruct> books) {
   bookmarks.append(books);
   setDocSaved(false);
+  emit documentChanged();
   emit bookMarkChanged(BookMarkModEnum::Apply, -1, -1, QString());
 }
 

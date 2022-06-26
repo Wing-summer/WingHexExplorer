@@ -45,6 +45,8 @@ public:
   // added by wingsummer
 
   void addUndoCommand(QUndoCommand *command);
+  bool lineHasBookMark(quint64 line);
+  QList<qint64> getsBookmarkPos(quint64 line);
 
   bool setLockedFile(bool b);
   bool setKeepSize(bool b);
