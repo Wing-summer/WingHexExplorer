@@ -886,14 +886,10 @@ MainWindow::MainWindow(DMainWindow *parent) {
     CheckEnabled;
     iSaved->setPixmap(b ? infoSaved : infoUnsaved);
   });
-  connect(hexeditor, &QHexView::documentKeepSize, this, [=](bool b) {
-    CheckEnabled;
-    iOver->setIcon(b ? infoCannotOver : infoCanOver);
-  });
-  connect(hexeditor, &QHexView::documentLockedFile, this, [=](bool b) {
-    CheckEnabled;
-    iLocked->setIcon(b ? infoLock : infoUnLock);
-  });
+  connect(hexeditor, &QHexView::documentKeepSize, this,
+          [=](bool b) { iOver->setIcon(b ? infoCannotOver : infoCanOver); });
+  connect(hexeditor, &QHexView::documentLockedFile, this,
+          [=](bool b) { iLocked->setIcon(b ? infoLock : infoUnLock); });
 
 #define ConnectShortCut(ShortCut, Slot)                                        \
   s = new QShortcut(ShortCut, this);                                           \
