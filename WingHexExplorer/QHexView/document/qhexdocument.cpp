@@ -43,38 +43,66 @@ void QHexDocument::addUndoCommand(QUndoCommand *command) {
     m_undostack.push(command);
 }
 
-void QHexDocument::SetMetaVisible(bool b) {
+bool QHexDocument::SetMetaVisible(bool b) {
+  if (!m_keepsize) {
+    return false;
+  }
   m_undostack.push(new MetaShowCommand(this, ShowType::All, b));
+  return true;
 }
 
-void QHexDocument::SetMetabgVisible(bool b) {
+bool QHexDocument::SetMetabgVisible(bool b) {
+  if (!m_keepsize) {
+    return false;
+  }
   m_undostack.push(new MetaShowCommand(this, ShowType::BgColor, b));
+  return true;
 }
 
-void QHexDocument::SetMetafgVisible(bool b) {
+bool QHexDocument::SetMetafgVisible(bool b) {
+  if (!m_keepsize) {
+    return false;
+  }
   m_undostack.push(new MetaShowCommand(this, ShowType::FgColor, b));
+  return true;
 }
 
-void QHexDocument::SetMetaCommentVisible(bool b) {
+bool QHexDocument::SetMetaCommentVisible(bool b) {
+  if (!m_keepsize) {
+    return false;
+  }
   m_undostack.push(new MetaShowCommand(this, ShowType::Comment, b));
+  return true;
 }
 
-void QHexDocument::setMetabgVisible(bool b) {
+bool QHexDocument::setMetabgVisible(bool b) {
+  if (!m_keepsize) {
+    return false;
+  }
   m_metabg = b;
   emit documentChanged();
   emit metabgVisibleChanged(b);
+  return true;
 }
 
-void QHexDocument::setMetafgVisible(bool b) {
+bool QHexDocument::setMetafgVisible(bool b) {
+  if (!m_keepsize) {
+    return false;
+  }
   m_metafg = b;
   emit documentChanged();
   emit metafgVisibleChanged(b);
+  return true;
 }
 
-void QHexDocument::setMetaCommentVisible(bool b) {
+bool QHexDocument::setMetaCommentVisible(bool b) {
+  if (!m_keepsize) {
+    return false;
+  }
   m_metacomment = b;
   emit documentChanged();
   emit metaCommentVisibleChanged(b);
+  return true;
 }
 
 bool QHexDocument::metabgVisible() { return m_metabg; }
@@ -119,21 +147,30 @@ void QHexDocument::getBookMarks(QList<BookMarkStruct> &bookmarks) {
   bookmarks.append(this->bookmarks);
 }
 
-void QHexDocument::AddBookMark(qint64 pos, QString comment) {
+bool QHexDocument::AddBookMark(qint64 pos, QString comment) {
+  if (!m_keepsize)
+    return false;
   m_undostack.push(new BookMarkAddCommand(this, pos, comment));
+  return true;
 }
 
-void QHexDocument::ModBookMark(qint64 pos, QString comment) {
+bool QHexDocument::ModBookMark(qint64 pos, QString comment) {
+  if (!m_keepsize)
+    return false;
   m_undostack.push(
       new BookMarkReplaceCommand(this, pos, comment, bookMarkComment(pos)));
+  return true;
 }
 
-void QHexDocument::ClearBookMark() {
+bool QHexDocument::ClearBookMark() {
+  if (!m_keepsize)
+    return false;
   m_undostack.push(new BookMarkClearCommand(this, getAllBookMarks()));
+  return true;
 }
 
 bool QHexDocument::addBookMark(qint64 pos, QString comment) {
-  if (!existBookMark(pos)) {
+  if (m_keepsize && !existBookMark(pos)) {
     BookMarkStruct b{pos, comment};
     bookmarks.append(b);
     setDocSaved(false);
@@ -176,13 +213,16 @@ BookMarkStruct QHexDocument::bookMark(int index) {
   }
 }
 
-void QHexDocument::RemoveBookMark(int index) {
+bool QHexDocument::RemoveBookMark(int index) {
+  if (!m_keepsize)
+    return false;
   auto b = bookmarks.at(index);
   m_undostack.push(new BookMarkRemoveCommand(this, b.pos, b.comment));
+  return true;
 }
 
-void QHexDocument::removeBookMark(qint64 pos) {
-  if (pos >= 0 && pos < m_buffer->length()) {
+bool QHexDocument::removeBookMark(qint64 pos) {
+  if (m_keepsize && pos >= 0 && pos < m_buffer->length()) {
     int index = 0;
     for (auto item : bookmarks) {
       if (pos == item.pos) {
@@ -194,20 +234,24 @@ void QHexDocument::removeBookMark(qint64 pos) {
       }
       index++;
     }
+    return true;
   }
+  return false;
 }
 
-void QHexDocument::removeBookMark(int index) {
-  if (index >= 0 && index < bookmarks.count()) {
+bool QHexDocument::removeBookMark(int index) {
+  if (m_keepsize && index >= 0 && index < bookmarks.count()) {
     bookmarks.removeAt(index);
     setDocSaved(false);
     emit documentChanged();
     emit bookMarkChanged(BookMarkModEnum::Remove, index, -1, QString());
+    return true;
   }
+  return false;
 }
 
 bool QHexDocument::modBookMark(qint64 pos, QString comment) {
-  if (pos > 0 && pos < m_buffer->length()) {
+  if (m_keepsize && pos > 0 && pos < m_buffer->length()) {
     int index = 0;
     for (auto &item : bookmarks) {
       if (item.pos == pos) {
@@ -222,11 +266,15 @@ bool QHexDocument::modBookMark(qint64 pos, QString comment) {
   return false;
 }
 
-void QHexDocument::clearBookMark() {
-  bookmarks.clear();
-  setDocSaved(false);
-  emit documentChanged();
-  emit bookMarkChanged(BookMarkModEnum::Clear, -1, -1, QString());
+bool QHexDocument::clearBookMark() {
+  if (m_keepsize) {
+    bookmarks.clear();
+    setDocSaved(false);
+    emit documentChanged();
+    emit bookMarkChanged(BookMarkModEnum::Clear, -1, -1, QString());
+    return true;
+  }
+  return false;
 }
 
 void QHexDocument::gotoBookMark(int index) {
@@ -327,32 +375,38 @@ void QHexDocument::paste(bool hex) {
     this->replace(pos, data);
 }
 
-void QHexDocument::insert(qint64 offset, uchar b) {
-  if (m_keepsize || m_readonly || m_islocked)
-    return;
-  this->insert(offset, QByteArray(1, char(b)));
+bool QHexDocument::insert(qint64 offset, uchar b) {
+  if (m_keepsize || m_readonly || m_islocked ||
+      (offset < m_buffer->length() && m_metadata->hasMetadata()))
+    return false;
+  return this->insert(offset, QByteArray(1, char(b)));
 }
 
-void QHexDocument::insert(qint64 offset, const QByteArray &data) {
-  if (m_keepsize || m_readonly || m_islocked)
-    return;
+bool QHexDocument::insert(qint64 offset, const QByteArray &data) {
+  if (m_keepsize || m_readonly || m_islocked ||
+      (offset < m_buffer->length() && m_metadata->hasMetadata()))
+    return false;
   m_buffer->insert(offset, data);
   emit documentChanged();
+  return true;
 }
 
-void QHexDocument::replace(qint64 offset, uchar b) {
+bool QHexDocument::replace(qint64 offset, uchar b) {
   if (m_readonly || m_islocked)
-    return;
-  this->replace(offset, QByteArray(1, char(b)));
+    return false;
+  return this->replace(offset, QByteArray(1, char(b)));
 }
 
-void QHexDocument::replace(qint64 offset, const QByteArray &data) {
+bool QHexDocument::replace(qint64 offset, const QByteArray &data) {
+  if (m_readonly || m_islocked)
+    return false;
   m_buffer->replace(offset, data);
   emit documentChanged();
+  return true;
 }
 
 bool QHexDocument::remove(qint64 offset, int len) {
-  if (m_keepsize || m_readonly || m_islocked)
+  if (m_keepsize || m_readonly || m_islocked || m_metadata->hasMetadata())
     return false;
   m_buffer->remove(offset, len);
   emit documentChanged();
@@ -532,9 +586,13 @@ void QHexDocument::Replace(qint64 offset, uchar b) {
 }
 
 void QHexDocument::Insert(qint64 offset, const QByteArray &data) {
-  if (m_keepsize || m_readonly || m_islocked)
+  if (m_keepsize || m_readonly || m_islocked ||
+      (offset < m_buffer->length() && m_metadata->hasMetadata()))
     return;
-  m_undostack.push(new InsertCommand(m_buffer, offset, data));
+  if (!m_metadata->hasMetadata())
+    m_undostack.push(new InsertCommand(m_buffer, offset, data));
+  else
+    m_buffer->insert(offset, data);
   emit documentChanged();
 }
 
@@ -546,7 +604,7 @@ void QHexDocument::Replace(qint64 offset, const QByteArray &data) {
 }
 
 bool QHexDocument::Remove(qint64 offset, int len) {
-  if (m_keepsize || m_readonly || m_islocked)
+  if (m_keepsize || m_readonly || m_islocked || m_metadata->hasMetadata())
     return false;
   m_undostack.push(new RemoveCommand(m_buffer, offset, len));
   emit documentChanged();

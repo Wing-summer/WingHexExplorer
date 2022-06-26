@@ -1,8 +1,12 @@
 #include "metadialog.h"
+#include "utilities.h"
 #include <DDialogButtonBox>
+#include <DMessageManager>
 #include <QShortcut>
 
-MetaDialog::MetaDialog(DMainWindow *parent) : DDialog(parent) {
+MetaDialog::MetaDialog(DMainWindow *parent)
+    : DDialog(parent), _foreground(Qt::transparent),
+      _background(Qt::transparent) {
   setWindowTitle(tr("Metadata"));
   cforeground = new DCheckBox(this);
   cforeground->setText(tr("foreground"));
@@ -77,6 +81,16 @@ MetaDialog::MetaDialog(DMainWindow *parent) : DDialog(parent) {
 }
 
 void MetaDialog::on_accept() {
+  if ((cforeground->isChecked() &&
+       (_foreground.isValid() || _foreground.rgba() == 0)) ||
+      (cbackground->isChecked() &&
+       (_background.isValid() || _background.rgba() == 0)) ||
+      (ccomment->isChecked() && m_comment->text().trimmed().length() == 0)) {
+    DMessageManager::instance()->sendMessage(this, ICONRES("metadata"),
+                                             tr("NoChoose"));
+    return;
+  }
+
   _comment = ccomment->text();
   done(1);
 }

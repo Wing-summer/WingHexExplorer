@@ -55,10 +55,10 @@ public:
   bool isLocked();
 
   //----------------------------------
-  void AddBookMark(qint64 pos, QString comment);
-  void RemoveBookMark(int index);
-  void ModBookMark(qint64 pos, QString comment);
-  void ClearBookMark();
+  bool AddBookMark(qint64 pos, QString comment);
+  bool RemoveBookMark(int index);
+  bool ModBookMark(qint64 pos, QString comment);
+  bool ClearBookMark();
   //----------------------------------
 
   bool addBookMark(qint64 pos, QString comment);
@@ -68,9 +68,9 @@ public:
   QString bookMarkComment(qint64 pos);
   QList<BookMarkStruct> getAllBookMarks();
   void applyBookMarks(QList<BookMarkStruct> books);
-  void removeBookMark(int index);
-  void removeBookMark(qint64 pos);
-  void clearBookMark();
+  bool removeBookMark(int index);
+  bool removeBookMark(qint64 pos);
+  bool clearBookMark();
   void getBookMarks(QList<BookMarkStruct> &bookmarks);
   void gotoBookMark(int index);
   bool existBookMark(int &index);
@@ -84,15 +84,14 @@ public:
 
   bool isWorkspace = false;
 
-  void setMetafgVisible(bool b);
-  void setMetabgVisible(bool b);
-  void setMetaCommentVisible(bool b);
+  bool setMetafgVisible(bool b);
+  bool setMetabgVisible(bool b);
+  bool setMetaCommentVisible(bool b);
 
-  void SetMetafgVisible(bool b);
-  void SetMetabgVisible(bool b);
-  void SetMetaCommentVisible(bool b);
-
-  void SetMetaVisible(bool b);
+  bool SetMetafgVisible(bool b);
+  bool SetMetabgVisible(bool b);
+  bool SetMetaCommentVisible(bool b);
+  bool SetMetaVisible(bool b);
 
   bool metafgVisible();
   bool metabgVisible();
@@ -131,10 +130,10 @@ public slots:
 
   bool cut(bool hex = false);
   void paste(bool hex = false);
-  void insert(qint64 offset, uchar b);
-  void insert(qint64 offset, const QByteArray &data);
-  void replace(qint64 offset, uchar b);
-  void replace(qint64 offset, const QByteArray &data);
+  bool insert(qint64 offset, uchar b);
+  bool insert(qint64 offset, const QByteArray &data);
+  bool replace(qint64 offset, uchar b);
+  bool replace(qint64 offset, const QByteArray &data);
   bool remove(qint64 offset, int len);
   bool removeSelection();
 

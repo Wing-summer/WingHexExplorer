@@ -207,13 +207,13 @@ signals:
 
   void undo();
   void redo();
-  void cut(bool hex = false);
+  bool cut(bool hex = false);
   void paste(bool hex = false);
-  void insert(qint64 offset, uchar b);
-  void replace(qint64 offset, uchar b);
-  void insert(qint64 offset, const QByteArray &data);
-  void replace(qint64 offset, const QByteArray &data);
-  void remove(qint64 offset, int len);
+  bool insert(qint64 offset, uchar b);
+  bool replace(qint64 offset, uchar b);
+  bool insert(qint64 offset, const QByteArray &data);
+  bool replace(qint64 offset, const QByteArray &data);
+  bool remove(qint64 offset, int len);
 
   // cursor
   void moveTo(const HexPosition &pos);
@@ -227,17 +227,17 @@ signals:
   void setLineWidth(quint8 width);
 
   // metadata
-  void metadata(qint64 begin, qint64 end, const QColor &fgcolor,
+  bool metadata(qint64 begin, qint64 end, const QColor &fgcolor,
                 const QColor &bgcolor, const QString &comment);
-  void metadata(quint64 line, int start, int length, const QColor &fgcolor,
+  bool metadata(quint64 line, int start, int length, const QColor &fgcolor,
                 const QColor &bgcolor, const QString &comment);
   bool removeMetadata(qint64 offset);
-  void clearMeta();
-  void color(quint64 line, int start, int length, const QColor &fgcolor,
+  bool clearMeta();
+  bool color(quint64 line, int start, int length, const QColor &fgcolor,
              const QColor &bgcolor);
-  void foreground(quint64 line, int start, int length, const QColor &fgcolor);
-  void background(quint64 line, int start, int length, const QColor &bgcolor);
-  void comment(quint64 line, int start, int length, const QString &comment);
+  bool foreground(quint64 line, int start, int length, const QColor &fgcolor);
+  bool background(quint64 line, int start, int length, const QColor &bgcolor);
+  bool comment(quint64 line, int start, int length, const QString &comment);
 
   // mainwindow
   void newFile(bool bigfile = false);
@@ -259,11 +259,11 @@ signals:
   void fillzeroGUI();
   void fillnopGUI();
 
-  // extension
-  void setCurrentEncoding(QString encoding);
+  // bookmark
 
   // workspace
   bool openWorkSpace(QString filename, bool readonly = false);
+  bool setCurrentEncoding(QString encoding);
 };
 } // namespace WingPlugin
 
