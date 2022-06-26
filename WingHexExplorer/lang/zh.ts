@@ -847,7 +847,7 @@
     <message>
         <location filename="../dialog/metadialog.cpp" line="10"/>
         <source>Metadata</source>
-        <translation>添加标注</translation>
+        <translation>标注</translation>
     </message>
     <message>
         <location filename="../dialog/metadialog.cpp" line="12"/>

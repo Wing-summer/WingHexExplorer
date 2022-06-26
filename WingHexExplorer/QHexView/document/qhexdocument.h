@@ -57,6 +57,7 @@ public:
   //----------------------------------
   bool AddBookMark(qint64 pos, QString comment);
   bool RemoveBookMark(int index);
+  bool RemoveBookMarks(QList<qint64> &pos);
   bool ModBookMark(qint64 pos, QString comment);
   bool ClearBookMark();
   //----------------------------------

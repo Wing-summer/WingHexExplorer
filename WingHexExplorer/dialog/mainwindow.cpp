@@ -791,6 +791,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   pluginInfo = new QTextBrowser(this);
   dw->setWindowTitle(tr("Log"));
   dw->setObjectName("Log");
+  dw->setMinimumSize(450, 300);
   pluginInfo->setFocusPolicy(Qt::StrongFocus);
   pluginInfo->setOpenExternalLinks(true);
   dw->setWidget(pluginInfo);
@@ -822,19 +823,40 @@ MainWindow::MainWindow(DMainWindow *parent) {
   }
   dw2->setObjectName("Number");
   dw2->setWindowTitle(tr("Number"));
-  dw2->setMinimumWidth(450);
+  dw2->setMinimumSize(450, 300);
   dw2->setWidget(numshowtable);
   this->addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, dw2);
   this->tabifyDockWidget(dw, dw2);
 
   dw = new DDockWidget(this);
+  dw->setMinimumSize(450, 300);
   AddDockWin(tr("BookMark"));
   bookmarks = new DListWidget(this);
+
+  menu = new DMenu(bookmarks);
+  a = new QAction(ICONRES("bookmarkdel"), tr("DeleteBookMark"), menu);
+  connect(a, &QAction::triggered, this, [=] {
+    auto s = bookmarks->selectedItems();
+    QList<qint64> pos;
+    for (auto item : s) {
+      pos.push_back(item->data(Qt::UserRole).toLongLong());
+    }
+    hexeditor->document()->RemoveBookMarks(pos);
+  });
+  menu->addAction(a);
+  a = new QAction(ICONRES("bookmarkcls"), tr("ClearBookMark"), menu);
+  connect(a, &QAction::triggered, this, &MainWindow::on_bookmarkcls);
+  menu->addAction(a);
+
+  bookmarks->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+  bookmarks->setSelectionMode(DListWidget::SelectionMode::ExtendedSelection);
   bookmarks->setFocusPolicy(Qt::StrongFocus);
   connect(bookmarks, &DListWidget::itemDoubleClicked, [=]() {
     hexeditor->renderer()->enableCursor(true);
     hexeditor->document()->gotoBookMark(bookmarks->currentRow());
   });
+  connect(bookmarks, &DListWidget::customContextMenuRequested, this,
+          [=] { menu->popup(cursor().pos()); });
   dw->setWidget(bookmarks);
   dw->setObjectName("BookMark");
   dw->setWindowTitle(tr("BookMark"));
@@ -860,12 +882,18 @@ MainWindow::MainWindow(DMainWindow *parent) {
     toolbartools[ToolBoxIndex::Redo]->setEnabled(b);
     toolmenutools[ToolBoxIndex::Redo]->setEnabled(b);
   });
-  connect(hexeditor, &QHexView::documentSaved,
-          [=](bool b) { iSaved->setPixmap(b ? infoSaved : infoUnsaved); });
-  connect(hexeditor, &QHexView::documentKeepSize, this,
-          [=](bool b) { iOver->setIcon(b ? infoCannotOver : infoCanOver); });
-  connect(hexeditor, &QHexView::documentLockedFile, this,
-          [=](bool b) { iLocked->setIcon(b ? infoLock : infoUnLock); });
+  connect(hexeditor, &QHexView::documentSaved, [=](bool b) {
+    CheckEnabled;
+    iSaved->setPixmap(b ? infoSaved : infoUnsaved);
+  });
+  connect(hexeditor, &QHexView::documentKeepSize, this, [=](bool b) {
+    CheckEnabled;
+    iOver->setIcon(b ? infoCannotOver : infoCanOver);
+  });
+  connect(hexeditor, &QHexView::documentLockedFile, this, [=](bool b) {
+    CheckEnabled;
+    iLocked->setIcon(b ? infoLock : infoUnLock);
+  });
 
 #define ConnectShortCut(ShortCut, Slot)                                        \
   s = new QShortcut(ShortCut, this);                                           \
@@ -2338,6 +2366,7 @@ void MainWindow::on_bookmarkChanged(BookMarkModEnum flag, int index, qint64 pos,
   case BookMarkModEnum::Insert: {
     QListWidgetItem *litem = new QListWidgetItem;
     litem->setIcon(ICONRES("bookmark"));
+    litem->setData(Qt::UserRole, pos);
     litem->setText(comment);
     litem->setToolTip(QString(tr("Addr : 0x%1")).arg(pos, 0, 16));
     bookmarks->addItem(litem);
@@ -2357,6 +2386,7 @@ void MainWindow::on_bookmarkChanged(BookMarkModEnum flag, int index, qint64 pos,
     for (auto item : bookmaps) {
       QListWidgetItem *litem = new QListWidgetItem;
       litem->setIcon(ICONRES("bookmark"));
+      litem->setData(Qt::UserRole, item.pos);
       litem->setText(item.comment);
       litem->setToolTip(QString(tr("Addr : 0x%1")).arg(item.pos, 0, 16));
       bookmarks->addItem(litem);

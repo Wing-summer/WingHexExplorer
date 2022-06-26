@@ -185,6 +185,17 @@ BookMarkStruct QHexDocument::bookMark(int index) {
   }
 }
 
+bool QHexDocument::RemoveBookMarks(QList<qint64> &pos) {
+  if (!m_keepsize)
+    return false;
+  for (auto p : pos) {
+    m_undostack.push(new BookMarkRemoveCommand(this, p, bookMarkComment(p)));
+  }
+  emit documentChanged();
+  emit bookMarkChanged(BookMarkModEnum::Apply, -1, -1, QString());
+  return true;
+}
+
 bool QHexDocument::RemoveBookMark(int index) {
   if (!m_keepsize)
     return false;
