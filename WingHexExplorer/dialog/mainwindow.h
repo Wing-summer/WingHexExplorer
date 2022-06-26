@@ -142,8 +142,8 @@ private:
   ErrFile closeCurrentFile(bool force = false);
   ErrFile saveCurrent();
   bool isSavedFile(int index);
-  void FindFileBytes(int index, QByteArray arr, QList<int> &indices);
-  void FindAllBytes(QByteArray arr, QList<FindResult> &res);
+  void findFileBytes(int index, QByteArray arr, QList<int> &indices);
+  void findAllBytes(QByteArray arr, QList<FindResult> &res);
   void gotoFileLine(int index, quint64 offset);
   void gotoCurrentLine(quint64 offset);
   void undoCurrent();

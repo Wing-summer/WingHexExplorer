@@ -60,8 +60,9 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
       controller.switchDocument(0);
       auto str = QString("HelloWorld!").toUtf8();
       controller.insert(0, str);
+      controller.setKeepSize(true);
       controller.metadata(0, 2, Qt::red, Qt::transparent, QString());
-      requestRelease(this);
+      requestRelease();
       controller.newFile();
     }
   }

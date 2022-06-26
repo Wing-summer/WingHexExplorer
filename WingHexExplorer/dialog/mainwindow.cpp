@@ -1224,6 +1224,40 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   ConnectBaseLamba2(WingPlugin::Reader::lineHasMetadata, [=](quint64 line) {
     return hexfiles[_pcurfile].doc->metadata()->lineHasMetadata(line);
   });
+
+  ConnectBaseLamba2(WingPlugin::Reader::lineHasBookMark, [=](quint64 line) {
+    PCHECKRETURN(hexfiles[_pcurfile].doc->lineHasBookMark(line), false);
+  });
+  ConnectBaseLamba2(WingPlugin::Reader::getsBookmarkPos, [=](quint64 line) {
+    PCHECKRETURN(hexfiles[_pcurfile].doc->getsBookmarkPos(line),
+                 QList<qint64>());
+  });
+  ConnectBaseLamba2(WingPlugin::Reader::bookMark, [=](qint64 pos) {
+    auto b = hexfiles[_pcurfile].doc->bookMark(pos);
+    BookMark book;
+    book.pos = b.pos;
+    book.comment = b.comment;
+    return book;
+  });
+  ConnectBaseLamba2(WingPlugin::Reader::bookMarkComment, [=](qint64 pos) {
+    PCHECKRETURN(hexfiles[_pcurfile].doc->bookMarkComment(pos), QString());
+  });
+  ConnectBaseLamba2(WingPlugin::Reader::getBookMarks,
+                    [=](QList<BookMark> &bookmarks) {
+                      PCHECK({
+                        auto bs = hexfiles[_pcurfile].doc->getAllBookMarks();
+                        for (auto item : bs) {
+                          BookMark i;
+                          i.pos = item.pos;
+                          i.comment = item.comment;
+                          bookmarks.push_back(i);
+                        }
+                      }, );
+                    });
+  ConnectBaseLamba2(WingPlugin::Reader::existBookMark, [=](qint64 pos) {
+    PCHECKRETURN(hexfiles[_pcurfile].doc->existBookMark(pos), false);
+  });
+
   ConnectBaseLamba2(WingPlugin::Reader::getOpenFiles, [=] {
     QList<QString> files;
     for (auto item : hexfiles) {
@@ -1257,10 +1291,14 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
                        });
 
   ConnectControlLamba2(WingPlugin::Controller::setLockedFile, [=](bool b) {
-    return hexfiles[_pcurfile].doc->setLockedFile(b);
+    return (_pcurfile == _currentfile && _pcurfile >= 0)
+               ? hexeditor->setLockedFile(b)
+               : hexfiles[_pcurfile].doc->setLockedFile(b);
   });
   ConnectControlLamba2(WingPlugin::Controller::setKeepSize, [=](bool b) {
-    return hexfiles[_pcurfile].doc->setKeepSize(b);
+    return (_pcurfile == _currentfile && _pcurfile >= 0)
+               ? hexeditor->setKeepSize(b)
+               : hexfiles[_pcurfile].doc->setKeepSize(b);
   });
   ConnectControlLamba2(WingPlugin::Controller::setAsciiVisible, [=](bool b) {
     hexfiles[_pcurfile].render->setAsciiVisible(b);
@@ -1459,11 +1497,60 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         doc->metadata()->background(line, start, length, bgcolor);
         return true;
       });
+  ConnectControlLamba2(WingPlugin::Controller::applyMetas,
+                       [=](QList<HexMetadataAbsoluteItem> metas) {
+                         QList<QHexMetadataAbsoluteItem> ms;
+                         for (auto item : metas) {
+                           QHexMetadataAbsoluteItem i;
+                           i.begin = item.begin;
+                           i.end = item.end;
+                           i.comment = item.comment;
+                           i.background = item.background;
+                           i.foreground = item.foreground;
+                           ms.append(i);
+                         }
+                         hexfiles[_pcurfile].doc->metadata()->applyMetas(ms);
+                       });
+  ConnectControlLamba2(WingPlugin::Controller::setMetafgVisible, [=](bool b) {
+    return hexfiles[_pcurfile].doc->setMetafgVisible(b);
+  });
+  ConnectControlLamba2(WingPlugin::Controller::setMetabgVisible, [=](bool b) {
+    return hexfiles[_pcurfile].doc->setMetabgVisible(b);
+  });
+  ConnectControlLamba2(
+      WingPlugin::Controller::setMetaCommentVisible, [=](bool b) {
+        return hexfiles[_pcurfile].doc->setMetaCommentVisible(b);
+      });
 
   ConnectControlLamba2(
       WingPlugin::Controller::setCurrentEncoding, [=](QString encoding) {
         return hexfiles[_pcurfile].render->setEncoding(encoding);
       });
+  ConnectControlLamba2(
+      WingPlugin::Controller::addBookMark, [=](qint64 pos, QString comment) {
+        return hexfiles[_pcurfile].doc->addBookMark(pos, comment);
+      });
+  ConnectControlLamba2(
+      WingPlugin::Controller::modBookMark, [=](qint64 pos, QString comment) {
+        return hexfiles[_pcurfile].doc->modBookMark(pos, comment);
+      });
+  ConnectControlLamba2(WingPlugin::Controller::removeBookMark, [=](qint64 pos) {
+    return hexfiles[_pcurfile].doc->removeBookMark(pos);
+  });
+  ConnectControlLamba2(WingPlugin::Controller::clearBookMark, [=] {
+    return hexfiles[_pcurfile].doc->clearBookMark();
+  });
+  ConnectControlLamba2(WingPlugin::Controller::applyBookMarks,
+                       [=](QList<BookMark> books) {
+                         QList<BookMarkStruct> bs;
+                         for (auto item : books) {
+                           BookMarkStruct b;
+                           b.pos = item.pos;
+                           b.comment = item.comment;
+                           bs.append(b);
+                         }
+                         hexfiles[_pcurfile].doc->applyBookMarks(bs);
+                       });
 
   ConnectControlLamba2(WingPlugin::Controller::openWorkSpace,
                        [=](QString filename, bool readonly) {
@@ -2502,12 +2589,6 @@ void MainWindow::on_metadatacls() {
 
 void MainWindow::on_metashowall() {
   CheckEnabled;
-  auto doc = hexeditor->document();
-  if (!doc->isKeepSize()) {
-    DMessageManager::instance()->sendMessage(this, ICONRES("metashow"),
-                                             tr("CheckKeepSize"));
-    return;
-  }
   hexeditor->document()->SetMetaVisible(true);
 }
 
@@ -2523,13 +2604,7 @@ void MainWindow::on_metastatusChanged() {
 
 void MainWindow::on_metahideall() {
   CheckEnabled;
-  auto doc = hexeditor->document();
-  if (!doc->isKeepSize()) {
-    DMessageManager::instance()->sendMessage(this, ICONRES("metahide"),
-                                             tr("CheckKeepSize"));
-    return;
-  }
-  doc->SetMetaVisible(false);
+  hexeditor->document()->SetMetaVisible(false);
 }
 
 void MainWindow::on_setting_plugin() {
@@ -2646,24 +2721,15 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
 }
 
 void MainWindow::on_metadatabg(bool b) {
-  if (!hexeditor->document()->SetMetabgVisible(b)) {
-    DMessageManager::instance()->sendMessage(this, ICONRES("metadata"),
-                                             tr("CheckKeepSize"));
-  }
+  hexeditor->document()->SetMetabgVisible(b);
 }
 
 void MainWindow::on_metadatafg(bool b) {
-  if (!hexeditor->document()->SetMetafgVisible(b)) {
-    DMessageManager::instance()->sendMessage(this, ICONRES("metadata"),
-                                             tr("CheckKeepSize"));
-  }
+  hexeditor->document()->SetMetafgVisible(b);
 }
 
 void MainWindow::on_metadatacomment(bool b) {
-  if (!hexeditor->document()->SetMetaCommentVisible(b)) {
-    DMessageManager::instance()->sendMessage(this, ICONRES("metadata"),
-                                             tr("CheckKeepSize"));
-  }
+  hexeditor->document()->SetMetaCommentVisible(b);
 }
 
 void MainWindow::enableDirverLimit(bool b) {

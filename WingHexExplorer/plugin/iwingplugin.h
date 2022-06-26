@@ -26,6 +26,11 @@ struct FindResult {
   QList<int> indices;
 };
 
+struct BookMark {
+  qlonglong pos;
+  QString comment;
+};
+
 class IWingPlugin;
 
 struct HexPosition {
@@ -185,6 +190,14 @@ signals:
   QList<HexMetadataAbsoluteItem> getMetadatas(qint64 offset);
   HexLineMetadata getMetaLine(quint64 line) const;
 
+  // bookmark
+  bool lineHasBookMark(quint64 line);
+  QList<qint64> getsBookmarkPos(quint64 line);
+  BookMark bookMark(qint64 pos);
+  QString bookMarkComment(qint64 pos);
+  void getBookMarks(QList<BookMark> &bookmarks);
+  bool existBookMark(qint64 pos);
+
   // extension
   QList<QString> getOpenFiles();
   QStringList getSupportedEncodings();
@@ -238,6 +251,7 @@ signals:
   bool foreground(quint64 line, int start, int length, const QColor &fgcolor);
   bool background(quint64 line, int start, int length, const QColor &bgcolor);
   bool comment(quint64 line, int start, int length, const QString &comment);
+  void applyMetas(QList<HexMetadataAbsoluteItem> metas);
 
   // mainwindow
   void newFile(bool bigfile = false);
@@ -260,6 +274,14 @@ signals:
   void fillnopGUI();
 
   // bookmark
+  void setMetafgVisible(bool b);
+  void setMetabgVisible(bool b);
+  void setMetaCommentVisible(bool b);
+  bool addBookMark(qint64 pos, QString comment);
+  bool modBookMark(qint64 pos, QString comment);
+  void applyBookMarks(QList<BookMark> books);
+  bool removeBookMark(qint64 pos);
+  bool clearBookMark();
 
   // workspace
   bool openWorkSpace(QString filename, bool readonly = false);

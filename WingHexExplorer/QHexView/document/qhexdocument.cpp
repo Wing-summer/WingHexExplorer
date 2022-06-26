@@ -43,66 +43,38 @@ void QHexDocument::addUndoCommand(QUndoCommand *command) {
     m_undostack.push(command);
 }
 
-bool QHexDocument::SetMetaVisible(bool b) {
-  if (!m_keepsize) {
-    return false;
-  }
+void QHexDocument::SetMetaVisible(bool b) {
   m_undostack.push(new MetaShowCommand(this, ShowType::All, b));
-  return true;
 }
 
-bool QHexDocument::SetMetabgVisible(bool b) {
-  if (!m_keepsize) {
-    return false;
-  }
+void QHexDocument::SetMetabgVisible(bool b) {
   m_undostack.push(new MetaShowCommand(this, ShowType::BgColor, b));
-  return true;
 }
 
-bool QHexDocument::SetMetafgVisible(bool b) {
-  if (!m_keepsize) {
-    return false;
-  }
+void QHexDocument::SetMetafgVisible(bool b) {
   m_undostack.push(new MetaShowCommand(this, ShowType::FgColor, b));
-  return true;
 }
 
-bool QHexDocument::SetMetaCommentVisible(bool b) {
-  if (!m_keepsize) {
-    return false;
-  }
+void QHexDocument::SetMetaCommentVisible(bool b) {
   m_undostack.push(new MetaShowCommand(this, ShowType::Comment, b));
-  return true;
 }
 
-bool QHexDocument::setMetabgVisible(bool b) {
-  if (!m_keepsize) {
-    return false;
-  }
+void QHexDocument::setMetabgVisible(bool b) {
   m_metabg = b;
   emit documentChanged();
   emit metabgVisibleChanged(b);
-  return true;
 }
 
-bool QHexDocument::setMetafgVisible(bool b) {
-  if (!m_keepsize) {
-    return false;
-  }
+void QHexDocument::setMetafgVisible(bool b) {
   m_metafg = b;
   emit documentChanged();
   emit metafgVisibleChanged(b);
-  return true;
 }
 
-bool QHexDocument::setMetaCommentVisible(bool b) {
-  if (!m_keepsize) {
-    return false;
-  }
+void QHexDocument::setMetaCommentVisible(bool b) {
   m_metacomment = b;
   emit documentChanged();
   emit metaCommentVisibleChanged(b);
-  return true;
 }
 
 bool QHexDocument::metabgVisible() { return m_metabg; }

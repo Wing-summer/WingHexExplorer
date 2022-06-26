@@ -84,14 +84,14 @@ public:
 
   bool isWorkspace = false;
 
-  bool setMetafgVisible(bool b);
-  bool setMetabgVisible(bool b);
-  bool setMetaCommentVisible(bool b);
+  void setMetafgVisible(bool b);
+  void setMetabgVisible(bool b);
+  void setMetaCommentVisible(bool b);
 
-  bool SetMetafgVisible(bool b);
-  bool SetMetabgVisible(bool b);
-  bool SetMetaCommentVisible(bool b);
-  bool SetMetaVisible(bool b);
+  void SetMetafgVisible(bool b);
+  void SetMetabgVisible(bool b);
+  void SetMetaCommentVisible(bool b);
+  void SetMetaVisible(bool b);
 
   bool metafgVisible();
   bool metabgVisible();
