@@ -3,6 +3,7 @@
 #include <QFileInfoList>
 #include <QMessageBox>
 #include <QPluginLoader>
+#include <QtConcurrent>
 #include <QtCore>
 
 PluginSystem::PluginSystem(QObject *parent)
@@ -107,7 +108,7 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
 
 bool PluginSystem::LoadPlugin() {
 #ifdef QT_DEBUG
-  QDir plugindir("/home/wingsummer/QT Project/build-TestPlugin-unknown-Debug");
+  QDir plugindir("/home/wingsummer/QT Project/");
   //这是我的插件调试目录，如果调试插件，请更换路径
 
   plugindir.setNameFilters(QStringList("*.so"));
@@ -131,14 +132,17 @@ bool PluginSystem::requestControl(IWingPlugin *plugin, int timeout) {
   if (!res)
     return false;
 
-  if (curpluginctl) {
-    if (plugintimeout[curpluginctl]) {
-      plugin->plugin2MessagePipe(
+  auto oldctl = curpluginctl;
+  if (oldctl) {
+    if (plugintimeout[oldctl]) {
+      initControl(plugin);
+      oldctl->plugin2MessagePipe(
           WingPluginMessage::ConnectTimeout,
           QList<QVariant>({plugin->pluginName(), plugin->puid()}));
     }
+  } else {
+    initControl(plugin);
   }
-  initControl(plugin);
   mutex.unlock();
   return true;
 }

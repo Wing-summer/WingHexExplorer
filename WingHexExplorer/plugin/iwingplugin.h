@@ -324,6 +324,7 @@ public slots:
 signals:
   bool requestControl(int timeout = 1500);
   bool requestRelease();
+  QWidget *getParentWindow();
 
 public:
   WingPlugin::Reader reader;
@@ -370,23 +371,20 @@ public:
 class PluginUtils {
 public:
   static QString GetPUID(IWingPlugin *plugin) {
-    auto str = QString("%1%2%3%4%5")
+    auto str = QString("%1%2%3%4")
                    .arg(WINGSUMMER)
                    .arg(plugin->pluginName())
                    .arg(plugin->pluginAuthor())
-                   .arg(plugin->pluginComment())
                    .arg(plugin->pluginVersion());
     return QCryptographicHash::hash(str.toLatin1(), QCryptographicHash::Md5)
         .toHex();
   }
 
-  static QString GetPuid(QString pluginName, QString author, QString comment,
-                         uint version) {
-    auto str = QString("%1%2%3%4%5")
+  static QString GetPUID(QString pluginName, QString author, uint version) {
+    auto str = QString("%1%2%3%4")
                    .arg(WINGSUMMER)
                    .arg(pluginName)
                    .arg(author)
-                   .arg(comment)
                    .arg(version);
     return QCryptographicHash::hash(str.toLatin1(), QCryptographicHash::Md5)
         .toHex();

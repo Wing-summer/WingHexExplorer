@@ -63,6 +63,7 @@ bool WingHexApplication::notify(QObject *obj, QEvent *event) {
         QMessageBox::information(nullptr, tr("Crash"), ex.what());
       }
     }
+  } catch (...) {
   }
   return done;
 }

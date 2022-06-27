@@ -704,6 +704,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   iOver->setToolTip(tr("SetOver"));
 
   connect(iLocked, &DIconButton::clicked, [=]() {
+    CheckEnabled;
     if (!hexeditor->setLockedFile(!hexeditor->isLocked())) {
       auto d = DMessageManager::instance();
       d->sendMessage(this, infoLock, tr("ErrUnLock"));
@@ -711,6 +712,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   });
 
   connect(iOver, &DIconButton::clicked, [=]() {
+    CheckEnabled;
     if (!hexeditor->setKeepSize(!hexeditor->isKeepSize())) {
       DMessageManager::instance()->sendMessage(this, infoCannotOver,
                                                tr("ErrUnOver"));
@@ -874,6 +876,10 @@ MainWindow::MainWindow(DMainWindow *parent) {
   gotobar->setVisible(false);
   connect(gotobar, &GotoBar::jumpToLine, this, &MainWindow::on_gotobar);
 
+#define EnsureSetEnabled(w, b)                                                 \
+  if (w)                                                                       \
+    w->setEnabled(b);
+
   // connect hexeditor status
   connect(hexeditor, &QHexView::canUndoChanged, [=](bool b) {
     toolbartools[ToolBoxIndex::Undo]->setEnabled(b);
@@ -1033,6 +1039,7 @@ MainWindow::~MainWindow() {
     item.doc->deleteLater();
     item.render->deleteLater();
   }
+  hexeditor->disconnect();
 }
 
 void MainWindow::PluginMenuNeedAdd(QMenu *menu) {
@@ -1076,6 +1083,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   // connect neccessary signal-slot
   ConnectBase(IWingPlugin::requestControl, MainWindow::requestControl);
   ConnectBase(IWingPlugin::requestRelease, MainWindow::requestRelease);
+  ConnectBaseLamba(IWingPlugin::getParentWindow, [=] { return this; });
 
 #define PCHECK(T, F)                                                           \
   if (hexfiles.count() > 0 && _pcurfile >= 0)                                  \
@@ -2831,14 +2839,13 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
     enableDirverLimit(isdriver);
     auto dm = hexeditor->document()->isWorkspace;
     iw->setPixmap(dm ? infow : infouw);
+    auto doc = hexeditor->document();
+    doc->canRedoChanged(doc->canRedo());
+    doc->canUndoChanged(doc->canUndo());
   } else {
     iw->setPixmap(infouw);
   }
   status->setEnabled(b);
-
-  auto doc = hexeditor->document();
-  doc->canRedoChanged(doc->canRedo());
-  doc->canUndoChanged(doc->canUndo());
 
   if (!b) {
     iSaved->setPixmap(infoSaveg);
@@ -2856,14 +2863,17 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
 }
 
 void MainWindow::on_metadatabg(bool b) {
+  CheckEnabled;
   hexeditor->document()->SetMetabgVisible(b);
 }
 
 void MainWindow::on_metadatafg(bool b) {
+  CheckEnabled;
   hexeditor->document()->SetMetafgVisible(b);
 }
 
 void MainWindow::on_metadatacomment(bool b) {
+  CheckEnabled;
   hexeditor->document()->SetMetaCommentVisible(b);
 }
 
@@ -2918,8 +2928,14 @@ void MainWindow::on_fillzero() {
 void MainWindow::on_loadplg() {
   if (!_enableplugin)
     return;
+#ifdef QT_DEBUG
+  auto filename = QFileDialog::getOpenFileName(
+      this, tr("ChoosePlugin"), lastusedpath, tr("PluginFile (*.so)"));
+#else
   auto filename = QFileDialog::getOpenFileName(
       this, tr("ChoosePlugin"), lastusedpath, tr("PluginFile (*.wingplg)"));
+#endif
+
   if (!filename.isEmpty()) {
     auto info = QFileInfo(filename);
     lastusedpath = info.absoluteDir().absolutePath();
