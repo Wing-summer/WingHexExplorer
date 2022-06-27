@@ -1339,7 +1339,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
                ? hexeditor->setKeepSize(b)
                : hexfiles[_pcurfile].doc->setKeepSize(b);
   });
-  ConnectControlLamba2(WingPlugin::Controller::setAsciiVisible, [=](bool b) {
+  ConnectControlLamba2(WingPlugin::Controller::setStringVisible, [=](bool b) {
     hexfiles[_pcurfile].render->setAsciiVisible(b);
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
   });
@@ -1347,7 +1347,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     hexfiles[_pcurfile].render->setHeaderVisible(b);
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
   });
-  ConnectControlLamba2(WingPlugin::Controller::setStringVisible, [=](bool b) {
+  ConnectControlLamba2(WingPlugin::Controller::setAddressVisible, [=](bool b) {
     hexfiles[_pcurfile].render->setAddressVisible(b);
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
   });
