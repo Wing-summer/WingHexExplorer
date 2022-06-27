@@ -359,8 +359,10 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm->addSeparator();
   AddToolSubMenuShortcutAction("metashow", tr("MetaShowAll"),
                                MainWindow::on_metashowall, keymetashow);
+  AddMenuDB(ToolBoxIndex::MetaShow);
   AddToolSubMenuShortcutAction("metahide", tr("MetaHideAll"),
                                MainWindow::on_metahideall, keymetahide);
+  AddMenuDB(ToolBoxIndex::MetaHide);
   menu->addMenu(tm);
 
   tm = new DMenu(this);

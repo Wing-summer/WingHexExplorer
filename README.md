@@ -201,9 +201,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## WIKI
 
-> Wiki 正在建设中，部分已经撰写完毕公开……
-
 &emsp;&emsp;如果想学习羽云十六进制编辑器的使用以及如何开发该软件的插件，请到该链接：https://code.gitlink.org.cn/wingsummer/WingHexExplorer/wiki/%E7%AE%80%E4%BB%8B ，同时也欢迎大家指出 Wiki 的错误以及贡献优质内容。
+
+## 以后维护
+
+&emsp;&emsp;以后我维护的就没那么勤快了，打算每月如果有更新发布一次发行版，如果没有就顺延。但修 Bug 肯定早于发行版发布，如果有能力请阅读我的 Wiki 自己编译替换使用。如果提供的捐助比较多的话，我会把精力放多一点。
 
 ## 应用商店
 
