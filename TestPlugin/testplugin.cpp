@@ -7,11 +7,11 @@ TestPlugin::TestPlugin(QObject *parent){Q_UNUSED(parent)}
 
 TestPlugin::~TestPlugin() {}
 
-bool TestPlugin::init(QList<IWingPlugin *> loadedplugins) {
-  if (loadedplugins.length() > 0) {
+bool TestPlugin::init(QList<WingPluginInfo> loadedplugin) {
+  if (loadedplugin.length() > 0) {
     QString ps;
-    for (auto item : loadedplugins) {
-      ps.append(item->pluginName());
+    for (auto item : loadedplugin) {
+      ps.append(item.pluginName);
       ps.append('\n');
     }
     QMessageBox::information(nullptr, "Test", ps);
@@ -63,7 +63,7 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
       controller.setKeepSize(true);
       controller.metadata(0, 2, Qt::red, Qt::transparent, QString());
       requestRelease();
-      controller.newFile();
+      controller.newFile(); //此语句在 requestRelease 释放成功无效
     }
   }
 }

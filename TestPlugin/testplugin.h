@@ -16,7 +16,7 @@ class TestPlugin : public IWingPlugin {
 
 public:
   TestPlugin(QObject *parent = nullptr);
-  bool init(QList<IWingPlugin *> loadedplugins) override;
+  bool init(QList<WingPluginInfo> loadedplugin) override;
   ~TestPlugin() override;
   void unload() override;
   QMenu *registerMenu() override;

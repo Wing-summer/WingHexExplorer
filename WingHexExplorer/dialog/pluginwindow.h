@@ -22,6 +22,7 @@ private:
   PluginSystem *m_pluginsys;
   DListWidget *plglist;
   DTextBrowser *txtb;
+  DTextBrowser *txtc;
 
   void on_list_selchanged();
 };

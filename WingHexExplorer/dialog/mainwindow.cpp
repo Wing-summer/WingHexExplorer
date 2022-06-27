@@ -161,8 +161,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   auto keyGeneral =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::ShiftModifier | Qt::Key_G);
-  auto keyplugin = QKeySequence(Qt::KeyboardModifier::ControlModifier |
-                                Qt::KeyboardModifier::AltModifier | Qt::Key_P);
+  auto keyplugin =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::ShiftModifier | Qt::Key_P);
   auto keymetadata =
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_M);
   auto keymetaedit =

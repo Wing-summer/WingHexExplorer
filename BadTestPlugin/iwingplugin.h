@@ -291,18 +291,10 @@ signals:
 };
 } // namespace WingPlugin
 
-struct WingPluginInfo {
-  QString pluginName;
-  QString pluginAuthor;
-  uint pluginVersion;
-  QString puid;
-  QString pluginComment;
-};
-
 class IWingPlugin : public QObject {
   Q_OBJECT
 public:
-  virtual bool init(QList<WingPluginInfo> loadedplugin) = 0;
+  virtual bool init(QList<IWingPlugin *> loadedplugins) = 0;
   virtual ~IWingPlugin() {}
   virtual void unload() = 0;
   virtual QMenu *registerMenu() = 0;

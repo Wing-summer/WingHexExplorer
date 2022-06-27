@@ -27,9 +27,10 @@ public:
   bool requestRelease(IWingPlugin *plugin);
   bool hasControl();
   void resetTimeout(IWingPlugin *plugin);
-
   void initControl(IWingPlugin *plugin);
   void loadPlugin(QFileInfo filename);
+  IWingPlugin *currentControlPlugin();
+  bool currentControlTimeout();
 
 private:
   const QList<QVariant> emptyparam;

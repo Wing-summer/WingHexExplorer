@@ -44,6 +44,7 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
     QPluginLoader loader(fileinfo.absoluteFilePath());
     logger->logMessage(
         INFOLOG(QString(">> ") + tr("LoadingPlugin") + fileinfo.fileName()));
+    QList<WingPluginInfo> loadedplginfos;
     auto p = qobject_cast<IWingPlugin *>(loader.instance());
     if (p) {
       if (p->signature() != WINGSUMMER) {
@@ -70,8 +71,16 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
 
       emit p->plugin2MessagePipe(WingPluginMessage::PluginLoading, emptyparam);
 
-      p->init(loadedplgs);
+      p->init(loadedplginfos);
 
+      WingPluginInfo info;
+      info.puid = p->puid();
+      info.pluginName = p->pluginName();
+      info.pluginAuthor = p->pluginAuthor();
+      info.pluginComment = p->pluginComment();
+      info.pluginVersion = p->pluginVersion();
+
+      loadedplginfos.push_back(info);
       loadedplgs.push_back(p);
       loadedpuid << puid;
 
@@ -177,3 +186,11 @@ void PluginSystem::initControl(IWingPlugin *plugin) {
 }
 
 bool PluginSystem::hasControl() { return curpluginctl != nullptr; }
+
+IWingPlugin *PluginSystem::currentControlPlugin() { return curpluginctl; }
+
+bool PluginSystem::currentControlTimeout() {
+  if (hasControl())
+    return plugintimeout[curpluginctl];
+  return true;
+}

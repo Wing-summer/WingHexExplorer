@@ -1,5 +1,6 @@
 *.json
 !settings.json
 !TestPlugin.json
+!BadTestPlugin.json
 **/*.pro.user
 push.sh
