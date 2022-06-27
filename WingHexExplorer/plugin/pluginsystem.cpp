@@ -26,6 +26,10 @@ PluginSystem::PluginSystem(QObject *parent)
 
 PluginSystem::~PluginSystem() {
   for (auto item : loadedplgs) {
+    item->plugin2MessagePipe(WingPluginMessage::PluginUnLoading, emptyparam);
+    item->controller.disconnect();
+    item->reader.disconnect();
+    item->plugin2MessagePipe(WingPluginMessage::PluginUnLoaded, emptyparam);
     item->unload();
     item->deleteLater();
   }

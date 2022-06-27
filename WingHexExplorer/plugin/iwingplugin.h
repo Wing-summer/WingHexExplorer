@@ -210,11 +210,11 @@ class Controller : public QObject {
   Q_OBJECT
 signals:
   // document
-  void switchDocument(int index, bool gui = false);
+  bool switchDocument(int index, bool gui = false);
   bool setLockedFile(bool b);
   bool setKeepSize(bool b);
   void setAsciiVisible(bool b);
-  void setAddressVisible(bool b);
+  void setStringVisible(bool b);
   void setHeaderVisible(bool b);
   void setAddressBase(quint64 base);
   void setAreaIndent(quint8 value);

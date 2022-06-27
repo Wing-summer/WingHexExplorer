@@ -1315,14 +1315,16 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
 
   ConnectControlLamba2(
       WingPlugin::Controller::switchDocument, [=](int index, bool gui) {
-        if (gui) {
-          setFilePage(index);
-          _pcurfile = _currentfile;
-        } else {
-          if (index >= 0 && index < hexfiles.count())
-            _pcurfile = index;
-        }
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        if (gui) {
+          return setFilePage(index);
+        } else {
+          if (index >= 0 && index < hexfiles.count()) {
+            _pcurfile = index;
+            return true;
+          }
+        }
+        return false;
       });
 
   ConnectControlLamba2(WingPlugin::Controller::setLockedFile, [=](bool b) {
@@ -1345,7 +1347,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     hexfiles[_pcurfile].render->setHeaderVisible(b);
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
   });
-  ConnectControlLamba2(WingPlugin::Controller::setAddressVisible, [=](bool b) {
+  ConnectControlLamba2(WingPlugin::Controller::setStringVisible, [=](bool b) {
     hexfiles[_pcurfile].render->setAddressVisible(b);
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
   });
@@ -1748,11 +1750,11 @@ void MainWindow::on_tabs_currentChanged(int index) { setFilePage(index); }
 
 void MainWindow::on_tabMoved(int from, int to) { hexfiles.move(from, to); }
 
-void MainWindow::setFilePage(int index) {
+bool MainWindow::setFilePage(int index) {
   if (index < 0 && hexfiles.count() == 0) {
     _currentfile = -1;
     _pcurfile = -1;
-    return;
+    return false;
   }
   if (index >= 0 && index < hexfiles.count()) {
     if (_currentfile >= 0 && _currentfile < hexfiles.count()) {
@@ -1764,15 +1766,13 @@ void MainWindow::setFilePage(int index) {
       _pcurfile = index;
     auto d = hexfiles.at(index);
     if (d.doc == hexeditor->document())
-      return;
+      return true;
     hexeditor->switchDocument(d.doc, d.render, d.vBarValue);
     enableDirverLimit(d.isdriver);
     tabs->setCurrentIndex(index);
-  }
-
-  // check the plugin file index validation
-  if (_pcurfile >= hexfiles.count()) {
-    _pcurfile = -1;
+    return true;
+  } else {
+    return false;
   }
 }
 

@@ -130,7 +130,7 @@ public:
                    bool *oldworkspace = nullptr);
   ErrFile openWorkSpace(QString filename, bool readonly = false,
                         int *openedindex = nullptr);
-  void setFilePage(int index);
+  bool setFilePage(int index);
 
 private:
   void newFile(bool bigfile = false);
