@@ -396,7 +396,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolSubMenuAction("soft", tr("About"), MainWindow::on_about);
   AddToolSubMenuAction("sponsor", tr("Sponsor"), MainWindow::on_sponsor);
   AddToolSubMenuAction("wiki", tr("Wiki"), MainWindow::on_wiki);
-
+  a = new QAction(ICONRES("qt"), tr("AboutQT"), tm);
+  connect(a, &QAction::triggered, this, [=] { QMessageBox::aboutQt(this); });
+  tm->addAction(a);
   menu->addMenu(tm);
 
   titlebar()->setMenu(menu);
