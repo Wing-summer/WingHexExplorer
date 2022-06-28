@@ -42,6 +42,7 @@ void QHexView::switchDocument(QHexDocument *document, QHexRenderer *renderer,
     m_renderer = renderer;
 
     establishSignal(document);
+    getStatus();
 
     this->adjustScrollBars();
     this->viewport()->update();
@@ -128,6 +129,20 @@ QFont QHexView::getHexeditorFont() {
   return f;
 }
 
+void QHexView::getStatus() {
+  emit canUndoChanged(m_document->canUndo());
+  emit canRedoChanged(m_document->canRedo());
+  emit cursorLocationChanged();
+  emit documentSwitched();
+  emit documentBookMarkChanged(BookMarkModEnum::Apply, -1, -1, QString());
+  emit documentSaved(m_document->isDocSaved());
+  emit documentKeepSize(m_document->isKeepSize());
+  emit documentLockedFile(m_document->isLocked());
+  emit metafgVisibleChanged(m_document->metafgVisible());
+  emit metabgVisibleChanged(m_document->metabgVisible());
+  emit metaCommentVisibleChanged(m_document->metaCommentVisible());
+}
+
 void QHexView::establishSignal(QHexDocument *doc) {
   connect(doc, &QHexDocument::documentChanged, this, [&]() {
     this->adjustScrollBars();
@@ -155,18 +170,6 @@ void QHexView::establishSignal(QHexDocument *doc) {
     QHexView::metaCommentVisibleChanged(b);
     emit this->metaStatusChanged();
   });
-
-  emit canUndoChanged(doc->canUndo());
-  emit canRedoChanged(doc->canRedo());
-  emit cursorLocationChanged();
-  emit documentSwitched();
-  emit documentBookMarkChanged(BookMarkModEnum::Apply, -1, -1, QString());
-  emit documentSaved(doc->isDocSaved());
-  emit documentKeepSize(doc->isKeepSize());
-  emit documentLockedFile(doc->isLocked());
-  emit metafgVisibleChanged(doc->metafgVisible());
-  emit metabgVisibleChanged(doc->metabgVisible());
-  emit metaCommentVisibleChanged(doc->metaCommentVisible());
 }
 
 /*======================*/

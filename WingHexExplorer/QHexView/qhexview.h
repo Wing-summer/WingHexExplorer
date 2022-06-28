@@ -47,9 +47,11 @@ public:
 
   bool isSaved();
   int getWorkSpaceState(QHexDocument *doc, bool b);
-  void establishSignal(QHexDocument *doc);
-
   static QFont getHexeditorFont();
+  void getStatus();
+
+private:
+  void establishSignal(QHexDocument *doc);
 
 signals:
   void cursorLocationChanged();
