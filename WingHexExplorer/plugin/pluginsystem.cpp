@@ -101,6 +101,22 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
       }
 
       emit ConnectBase(p);
+
+      auto sub = p->getHookSubscribe();
+
+#define INSERTSUBSCRIBE(HOOK)                                                  \
+  if (sub & HOOK)                                                              \
+    dispatcher[HOOK].push_back(p);
+
+      INSERTSUBSCRIBE(HookIndex::OpenFileBegin);
+      INSERTSUBSCRIBE(HookIndex::OpenFileEnd);
+      INSERTSUBSCRIBE(HookIndex::OpenDriverBegin);
+      INSERTSUBSCRIBE(HookIndex::OpenDriverEnd);
+      INSERTSUBSCRIBE(HookIndex::CloseFileBegin);
+      INSERTSUBSCRIBE(HookIndex::CloseFileEnd);
+      INSERTSUBSCRIBE(HookIndex::NewFileBegin);
+      INSERTSUBSCRIBE(HookIndex::NewFileEnd);
+
       emit p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
 
     } else {
