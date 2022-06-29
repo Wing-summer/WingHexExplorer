@@ -1,3 +1,18 @@
+- [QHexView](#qhexview)
+  - [Features](#features)
+  - [Buffer Backends](#buffer-backends)
+  - [License](#license)
+    - [有关 QHexEdit2](#有关-qhexedit2)
+  - [效果图](#效果图)
+  - [捐助](#捐助)
+  - [鸣谢](#鸣谢-1)
+  - [有关仓库](#有关仓库)
+  - [WIKI](#wiki)
+  - [以后维护](#以后维护)
+  - [应用商店](#应用商店)
+
+---
+
 <h1 align="center"> WingSummer.WingHexExplorer</h1>
 
 <p align="center">
