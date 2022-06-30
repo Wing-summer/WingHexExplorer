@@ -230,13 +230,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## 应用商店
 
-&emsp;&emsp;目前我已把安装包投递到星火商店，欢迎大家下载安装。
+&emsp;&emsp;该软件可以通过应用商店进行安装，目前支持的有：深度商店、星火商店。
+
+### 深度商店
+
+&emsp;&emsp;如果你是 Deepin 系统，可以直接从应用商店搜索“羽云十六进制编辑器”下载：
 
 <p align="center">
+<img alt="深度商店" src="deepinstore.png">
+<p align="center">深度商店</p>
+</p>
 
+### 星火商店
+
+&emsp;&emsp;如果您安装了星火商店，可以通过它下载安装，会与深度商店的较大或者阶段性更新同步。
+
+<p align="center">
 <img alt="星火商店" src="sparkstore.png">
 <p align="center">星火商店</p>
-
 </p>
 
 &emsp;&emsp;Spk分享链接：spk://store/store/com.wingsummer.winghexexplorer
