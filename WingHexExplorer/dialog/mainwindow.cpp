@@ -1820,6 +1820,13 @@ bool MainWindow::setFilePage(int index) {
     hexeditor->switchDocument(d.doc, d.render, d.vBarValue);
     enableDirverLimit(d.isdriver);
     tabs->setCurrentIndex(index);
+
+    if (_enableplugin) {
+      QList<QVariant> param;
+      param << d.filename << index;
+      plgsys->raiseDispatch(HookIndex::DocumentSwitched, param);
+    }
+
     return true;
   } else {
     return false;
@@ -1833,7 +1840,7 @@ void MainWindow::newFile(bool bigfile) {
   QList<QVariant> params;
   QString title = tr("Untitled") + QString("-%1").arg(defaultindex);
   if (_enableplugin) {
-    params << HookIndex::NewFileBegin << title;
+    params << title;
     plgsys->raiseDispatch(HookIndex::NewFileBegin, params);
   }
 
@@ -1862,7 +1869,6 @@ void MainWindow::newFile(bool bigfile) {
   setEditModeEnabled(true);
 
   if (_enableplugin) {
-    params[0].setValue(HookIndex::NewFileEnd);
     plgsys->raiseDispatch(HookIndex::NewFileEnd, params);
   }
 }
@@ -1871,7 +1877,7 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
                              QString workspace, bool *oldworkspace) {
   QList<QVariant> params;
   if (_enableplugin) {
-    params << HookIndex::OpenFileBegin << filename << readonly;
+    params << filename << readonly;
     plgsys->raiseDispatch(HookIndex::OpenFileBegin, params);
   }
   QFileInfo info(filename);
@@ -1879,7 +1885,6 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
 
     if (!info.permission(QFile::ReadUser)) {
       if (_enableplugin) {
-        params[0].setValue(HookIndex::OpenFileEnd);
         params << ErrFile::Permission;
         plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
       }
@@ -1888,7 +1893,6 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
 
     if (!readonly && !info.permission(QFile::WriteUser)) {
       if (_enableplugin) {
-        params[0].setValue(HookIndex::OpenFileEnd);
         params << ErrFile::Permission;
         plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
       }
@@ -1905,7 +1909,6 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
           *openedindex = i;
         }
         if (_enableplugin) {
-          params[0].setValue(HookIndex::OpenFileEnd);
           params << ErrFile::AlreadyOpened;
           plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
         }
@@ -1924,7 +1927,6 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
 
     if (p == nullptr) {
       if (_enableplugin) {
-        params[0].setValue(HookIndex::OpenFileEnd);
         params << ErrFile::Error;
         plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
       }
@@ -1964,7 +1966,6 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
     setEditModeEnabled(true);
 
     if (_enableplugin) {
-      params[0].setValue(HookIndex::OpenFileEnd);
       params << ErrFile::Success;
       plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
     }
@@ -1972,7 +1973,6 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
   }
 
   if (_enableplugin) {
-    params[0].setValue(HookIndex::OpenFileEnd);
     params << ErrFile::NotExist;
     plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
   }
@@ -1982,7 +1982,7 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
 ErrFile MainWindow::openDriver(QString driver) {
   QList<QVariant> params;
   if (_enableplugin) {
-    params << HookIndex::OpenDriverBegin << driver;
+    params << driver;
     plgsys->raiseDispatch(HookIndex::OpenDriverBegin, params);
   }
 
@@ -1992,7 +1992,6 @@ ErrFile MainWindow::openDriver(QString driver) {
     if (info.exists()) {
       if (!info.permission(QFile::ReadUser)) {
         if (_enableplugin) {
-          params[0].setValue(HookIndex::OpenFileEnd);
           params << ErrFile::Permission;
           plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
         }
@@ -2001,7 +2000,6 @@ ErrFile MainWindow::openDriver(QString driver) {
 
       if (!info.permission(QFile::WriteUser)) {
         if (_enableplugin) {
-          params[0].setValue(HookIndex::OpenFileEnd);
           params << ErrFile::Permission;
           plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
         }
@@ -2011,7 +2009,6 @@ ErrFile MainWindow::openDriver(QString driver) {
       for (auto item : hexfiles) {
         if (item.filename == driver) {
           if (_enableplugin) {
-            params[0].setValue(HookIndex::OpenFileEnd);
             params << ErrFile::AlreadyOpened;
             plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
           }
@@ -2025,7 +2022,6 @@ ErrFile MainWindow::openDriver(QString driver) {
       auto *p = QHexDocument::fromLargeFile(driver, false, this);
       if (p == nullptr) {
         if (_enableplugin) {
-          params[0].setValue(HookIndex::OpenFileEnd);
           params << ErrFile::Error;
           plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
         }
@@ -2053,7 +2049,6 @@ ErrFile MainWindow::openDriver(QString driver) {
       setEditModeEnabled(true);
 
       if (_enableplugin) {
-        params[0].setValue(HookIndex::OpenFileEnd);
         params << ErrFile::Success;
         plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
       }
@@ -2061,7 +2056,6 @@ ErrFile MainWindow::openDriver(QString driver) {
       hexeditor->setLockedFile(true);
       setEditModeEnabled(true, true);
       if (_enableplugin) {
-        params[0].setValue(HookIndex::OpenDriverEnd);
         params << ErrFile::Success;
         plgsys->raiseDispatch(HookIndex::OpenDriverEnd, params);
       }
@@ -2069,7 +2063,6 @@ ErrFile MainWindow::openDriver(QString driver) {
     }
 
     if (_enableplugin) {
-      params[0].setValue(HookIndex::OpenFileEnd);
       params << ErrFile::NotExist;
       plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
     }
@@ -2077,7 +2070,6 @@ ErrFile MainWindow::openDriver(QString driver) {
   } else {
     QMessageBox::critical(this, tr("Error"), tr("NoRoot"));
     if (_enableplugin) {
-      params[0].setValue(HookIndex::OpenDriverEnd);
       params << ErrFile::Permission;
       plgsys->raiseDispatch(HookIndex::OpenDriverEnd, params);
     }
@@ -2099,7 +2091,7 @@ ErrFile MainWindow::closeCurrentFile(bool force) {
 ErrFile MainWindow::closeFile(int index, bool force) {
   QList<QVariant> params;
   if (_enableplugin) {
-    params << HookIndex::CloseFileBegin << index << force;
+    params << index << force;
     plgsys->raiseDispatch(HookIndex::CloseFileBegin, params);
   }
 
@@ -2108,7 +2100,6 @@ ErrFile MainWindow::closeFile(int index, bool force) {
     if (!force) {
       if (!isSavedFile(index)) {
         if (_enableplugin) {
-          params[0].setValue(HookIndex::CloseFileEnd);
           params << ErrFile::UnSaved;
           plgsys->raiseDispatch(HookIndex::CloseFileEnd, params);
         }
@@ -2133,7 +2124,6 @@ ErrFile MainWindow::closeFile(int index, bool force) {
     setEditModeEnabled(false);
 
   if (_enableplugin) {
-    params[0].setValue(HookIndex::CloseFileEnd);
     params << ErrFile::Success;
     plgsys->raiseDispatch(HookIndex::CloseFileEnd, params);
   }

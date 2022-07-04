@@ -22,6 +22,7 @@ PluginSystem::PluginSystem(QObject *parent)
   InitDispathcer(HookIndex::CloseFileEnd);
   InitDispathcer(HookIndex::NewFileBegin);
   InitDispathcer(HookIndex::NewFileEnd);
+  InitDispathcer(HookIndex::DocumentSwitched);
 }
 
 PluginSystem::~PluginSystem() {
@@ -39,6 +40,7 @@ QList<IWingPlugin *> PluginSystem::plugins() { return loadedplgs; }
 
 void PluginSystem::raiseDispatch(HookIndex hookindex, QList<QVariant> params) {
   auto dispatch = dispatcher[hookindex];
+  params << hookindex;
   for (auto item : dispatch) {
     item->plugin2MessagePipe(WingPluginMessage::HookMessage, params);
   }

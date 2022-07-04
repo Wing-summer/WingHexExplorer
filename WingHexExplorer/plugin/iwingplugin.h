@@ -131,7 +131,8 @@ enum HookIndex {
   CloseFileBegin = 16,
   CloseFileEnd = 32,
   NewFileBegin = 64,
-  NewFileEnd = 128
+  NewFileEnd = 128,
+  DocumentSwitched = 256
 };
 
 Q_DECLARE_METATYPE(WingPluginMessage)
@@ -254,6 +255,10 @@ signals:
   bool background(quint64 line, int start, int length, const QColor &bgcolor);
   bool comment(quint64 line, int start, int length, const QString &comment);
   void applyMetas(QList<HexMetadataAbsoluteItem> metas);
+  bool setMetaVisible(bool b);
+  void setMetafgVisible(bool b);
+  void setMetabgVisible(bool b);
+  void setMetaCommentVisible(bool b);
 
   // mainwindow
   void newFile(bool bigfile = false);
@@ -276,9 +281,6 @@ signals:
   void fillnopGUI();
 
   // bookmark
-  void setMetafgVisible(bool b);
-  void setMetabgVisible(bool b);
-  void setMetaCommentVisible(bool b);
   bool addBookMark(qint64 pos, QString comment);
   bool modBookMark(qint64 pos, QString comment);
   void applyBookMarks(QList<BookMark> books);
