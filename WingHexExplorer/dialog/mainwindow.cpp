@@ -1093,158 +1093,199 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   ConnectBase(IWingPlugin::requestRelease, MainWindow::requestRelease);
   ConnectBaseLamba(IWingPlugin::getParentWindow, [=] { return this; });
 
-#define PCHECK(T, F)                                                           \
-  if (hexfiles.count() > 0 && _pcurfile >= 0)                                  \
-    T;                                                                         \
-  F;
+#define PCHECK(T, TF, F)                                                       \
+  if (hexfiles.count() > 0) {                                                  \
+    if (plgsys->hasControl() && _pcurfile >= 0) {                              \
+      T;                                                                       \
+    } else {                                                                   \
+      TF;                                                                      \
+    }                                                                          \
+  } else {                                                                     \
+    F;                                                                         \
+  }
 
-#define PCHECKRETURN(T, F)                                                     \
-  if (hexfiles.count() > 0 && _pcurfile >= 0)                                  \
-    return T;                                                                  \
+#define PCHECKRETURN(T, TF, F)                                                 \
+  if (hexfiles.count() > 0) {                                                  \
+    if (plgsys->hasControl() && _pcurfile >= 0)                                \
+      return T;                                                                \
+    else                                                                       \
+      return TF;                                                               \
+  }                                                                            \
   return F;
 
   ConnectBaseLamba2(WingPlugin::Reader::currentDoc, [=] { return _pcurfile; });
   ConnectBaseLamba2(WingPlugin::Reader::isLocked, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->isLocked(), true);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->isLocked(),
+                 hexeditor->document()->isLocked(), true);
   });
 
   ConnectBaseLamba2(WingPlugin::Reader::isLocked, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->isLocked(), true);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->isLocked(),
+                 hexeditor->document()->isLocked(), true);
   });
   ConnectBaseLamba2(WingPlugin::Reader::isEmpty, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->isEmpty(), true);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->isEmpty(),
+                 hexeditor->document()->isEmpty(), true);
   });
   ConnectBaseLamba2(WingPlugin::Reader::isKeepSize, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->isKeepSize(), true);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->isKeepSize(),
+                 hexeditor->document()->isKeepSize(), true);
   });
   ConnectBaseLamba2(WingPlugin::Reader::isModified, [=] {
-    PCHECKRETURN(!hexfiles[_pcurfile].doc->isDocSaved(), false);
+    PCHECKRETURN(!hexfiles[_pcurfile].doc->isDocSaved(),
+                 hexeditor->document()->isDocSaved(), false);
   });
   ConnectBaseLamba2(WingPlugin::Reader::isReadOnly, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->isReadOnly(), true);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->isReadOnly(),
+                 hexeditor->document()->isReadOnly(), true);
   });
   ConnectBaseLamba2(WingPlugin::Reader::documentLines, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->documentLines(), quint64(0));
+    PCHECKRETURN(hexfiles[_pcurfile].render->documentLines(),
+                 hexeditor->documentLines(), quint64(0));
   });
   ConnectBaseLamba2(WingPlugin::Reader::documentBytes, [=] {
     PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->length()),
-                 quint64(hexeditor->documentBytes()));
+                 quint64(hexeditor->documentBytes()), quint64(0));
   });
   ConnectBaseLamba2(WingPlugin::Reader::currentPos, [=] {
     HexPosition pos;
     memset(&pos, 0, sizeof(HexPosition));
-    PCHECK(
-        {
-          auto qpos = hexfiles[_pcurfile].doc->cursor()->position();
-          pos.line = qpos.line;
-          pos.column = qpos.column;
-          pos.lineWidth = qpos.lineWidth;
-          pos.nibbleindex = qpos.nibbleindex;
-        },
-        return pos);
+    QHexPosition qpos;
+    PCHECK(qpos = hexfiles[_pcurfile].doc->cursor()->position(),
+           qpos = hexeditor->document()->cursor()->position(),
+           memset(&qpos, 0, sizeof(HexPosition)));
+    pos.line = qpos.line;
+    pos.column = qpos.column;
+    pos.lineWidth = qpos.lineWidth;
+    pos.nibbleindex = qpos.nibbleindex;
+    return pos;
   });
   ConnectBaseLamba2(WingPlugin::Reader::selectionPos, [=] {
     HexPosition pos;
     memset(&pos, 0, sizeof(HexPosition));
-    PCHECK(
-        {
-          auto cur = hexfiles[_pcurfile].doc->cursor();
-          pos.line = cur->selectionLine();
-          pos.column = cur->selectionColumn();
-          pos.nibbleindex = cur->selectionNibble();
-          pos.lineWidth = cur->position().lineWidth;
-        },
-        return pos);
+    QHexCursor *cur;
+    PCHECK(cur = hexfiles[_pcurfile].doc->cursor(),
+           cur = hexeditor->document()->cursor(), {
+             memset(&pos, 0, sizeof(HexPosition));
+             return pos;
+           });
+    pos.line = cur->selectionLine();
+    pos.column = cur->selectionColumn();
+    pos.nibbleindex = cur->selectionNibble();
+    pos.lineWidth = cur->position().lineWidth;
+    return pos;
   });
   ConnectBaseLamba2(WingPlugin::Reader::currentRow, [=] {
     PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->cursor()->currentLine()),
-                 quint64(0));
+                 quint64(hexeditor->currentRow()), quint64(0));
   });
   ConnectBaseLamba2(WingPlugin::Reader::currentColumn, [=] {
     PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->cursor()->currentColumn()),
-                 quint64(0));
+                 quint64(hexeditor->currentColumn()), quint64(0));
   });
   ConnectBaseLamba2(WingPlugin::Reader::currentOffset, [=] {
     PCHECKRETURN(
         quint64(hexfiles[_pcurfile].doc->cursor()->position().offset()),
-        quint64(0));
+        quint64(hexeditor->currentOffset()), quint64(0));
   });
   ConnectBaseLamba2(WingPlugin::Reader::selectlength, [=] {
     PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->cursor()->selectionLength()),
-                 quint64(0));
+                 quint64(hexeditor->selectlength()), quint64(0));
   });
   ConnectBaseLamba2(WingPlugin::Reader::stringVisible, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->stringVisible(), true);
+    PCHECKRETURN(hexfiles[_pcurfile].render->stringVisible(),
+                 hexeditor->renderer()->stringVisible(), true);
   });
   ConnectBaseLamba2(WingPlugin::Reader::headerVisible, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->headerVisible(), true);
+    PCHECKRETURN(hexfiles[_pcurfile].render->headerVisible(),
+                 hexeditor->renderer()->headerVisible(), true);
   });
   ConnectBaseLamba2(WingPlugin::Reader::addressVisible, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->addressVisible(), true);
+    PCHECKRETURN(hexfiles[_pcurfile].render->addressVisible(),
+                 hexeditor->renderer()->addressVisible(), true);
   });
   ConnectBaseLamba2(WingPlugin::Reader::addressBase, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->baseAddress(), quint64(0));
+    PCHECKRETURN(hexfiles[_pcurfile].doc->baseAddress(),
+                 hexeditor->document()->baseAddress(), quint64(0));
   });
   ConnectBaseLamba2(WingPlugin::Reader::atEnd, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->atEnd(), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->atEnd(),
+                 hexeditor->document()->atEnd(), false);
   });
   ConnectBaseLamba2(WingPlugin::Reader::canUndo, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->canUndo(), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->canUndo(),
+                 hexeditor->document()->canUndo(), false);
   });
   ConnectBaseLamba2(WingPlugin::Reader::canRedo, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->canRedo(), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->canRedo(),
+                 hexeditor->document()->canRedo(), false);
   });
   ConnectBaseLamba2(WingPlugin::Reader::areaIndent, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->areaIndent(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->areaIndent(),
+                 hexeditor->document()->areaIndent(), 0);
   });
   ConnectBaseLamba2(WingPlugin::Reader::hexLineWidth, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->hexLineWidth(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->hexLineWidth(),
+                 hexeditor->document()->hexLineWidth(), 0);
   });
   ConnectBaseLamba2(WingPlugin::Reader::editableArea, [=](int area) {
-    PCHECKRETURN(hexfiles[_pcurfile].render->editableArea(area), false);
+    PCHECKRETURN(hexfiles[_pcurfile].render->editableArea(area),
+                 hexeditor->renderer()->editableArea(area), false);
   });
   ConnectBaseLamba2(WingPlugin::Reader::documentLastLine, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->documentLastLine(), quint64(0));
+    PCHECKRETURN(hexfiles[_pcurfile].render->documentLastLine(),
+                 hexeditor->renderer()->documentLastLine(), quint64(0));
   });
   ConnectBaseLamba2(WingPlugin::Reader::documentLastColumn, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->documentLastColumn(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].render->documentLastColumn(),
+                 hexeditor->renderer()->documentLastColumn(), 0);
   });
   ConnectBaseLamba2(WingPlugin::Reader::documentWidth, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->documentWidth(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].render->documentWidth(),
+                 hexeditor->renderer()->documentWidth(), 0);
   });
   ConnectBaseLamba2(WingPlugin::Reader::lineHeight, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->lineHeight(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].render->lineHeight(),
+                 hexeditor->renderer()->lineHeight(), 0);
   });
-  ConnectBaseLamba2(
-      WingPlugin::Reader::getLineRect, [=](quint64 line, quint64 firstline) {
-        PCHECKRETURN(hexfiles[_pcurfile].render->getLineRect(line, firstline),
-                     QRect());
-      });
+  ConnectBaseLamba2(WingPlugin::Reader::getLineRect, [=](quint64 line,
+                                                         quint64 firstline) {
+    PCHECKRETURN(hexfiles[_pcurfile].render->getLineRect(line, firstline),
+                 hexeditor->renderer()->getLineRect(line, firstline), QRect());
+  });
   ConnectBaseLamba2(WingPlugin::Reader::headerLineCount, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->headerLineCount(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].render->headerLineCount(),
+                 hexeditor->renderer()->headerLineCount(), 0);
   });
   ConnectBaseLamba2(WingPlugin::Reader::borderSize, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->borderSize(), 0);
+    PCHECKRETURN(hexfiles[_pcurfile].render->borderSize(),
+                 hexeditor->renderer()->borderSize(), 0);
   });
   ConnectBaseLamba2(WingPlugin::Reader::copy, [=](bool hex) {
-    PCHECK(hexfiles[_pcurfile].doc->copy(hex), );
+    PCHECK(hexfiles[_pcurfile].doc->copy(hex),
+           hexeditor->document()->copy(hex), );
   });
   ConnectBaseLamba2(WingPlugin::Reader::read, [=](qint64 offset, int len) {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->read(offset, len), QByteArray());
+    PCHECKRETURN(hexfiles[_pcurfile].doc->read(offset, len),
+                 hexeditor->document()->read(offset, len), QByteArray());
   });
   ConnectBaseLamba2(WingPlugin::Reader::findAllBytes,
                     [=](qlonglong begin, qlonglong end, QByteArray b,
                         QList<quint64> &results, int maxCount) {
                       PCHECK(hexfiles[_pcurfile].doc->findAllBytes(
+                                 begin, end, b, results, maxCount),
+                             hexeditor->document()->findAllBytes(
                                  begin, end, b, results, maxCount), );
                     });
   ConnectBaseLamba2(
       WingPlugin::Reader::searchForward, [=](const QByteArray &ba) {
-        PCHECKRETURN(hexfiles[_pcurfile].doc->searchForward(ba), qint64(-1));
+        PCHECKRETURN(hexfiles[_pcurfile].doc->searchForward(ba),
+                     hexeditor->document()->searchForward(ba), qint64(-1));
       });
   ConnectBaseLamba2(
       WingPlugin::Reader::searchBackward, [=](const QByteArray &ba) {
-        PCHECKRETURN(hexfiles[_pcurfile].doc->searchBackward(ba), qint64(-1));
+        PCHECKRETURN(hexfiles[_pcurfile].doc->searchBackward(ba),
+                     hexeditor->document()->searchBackward(ba), qint64(-1));
       });
   ConnectBaseLamba2(WingPlugin::Reader::getMetaLine, [=](quint64 line) {
     auto ometas = hexfiles[_pcurfile].doc->metadata()->get(line);
@@ -1271,11 +1312,12 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   });
 
   ConnectBaseLamba2(WingPlugin::Reader::lineHasBookMark, [=](quint64 line) {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->lineHasBookMark(line), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->lineHasBookMark(line),
+                 hexeditor->document()->lineHasBookMark(line), false);
   });
   ConnectBaseLamba2(WingPlugin::Reader::getsBookmarkPos, [=](quint64 line) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->getsBookmarkPos(line),
-                 QList<qint64>());
+                 hexeditor->document()->getsBookmarkPos(line), QList<qint64>());
   });
   ConnectBaseLamba2(WingPlugin::Reader::bookMark, [=](qint64 pos) {
     auto b = hexfiles[_pcurfile].doc->bookMark(pos);
@@ -1285,22 +1327,34 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
     return book;
   });
   ConnectBaseLamba2(WingPlugin::Reader::bookMarkComment, [=](qint64 pos) {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->bookMarkComment(pos), QString());
+    PCHECKRETURN(hexfiles[_pcurfile].doc->bookMarkComment(pos),
+                 hexeditor->document()->bookMarkComment(pos), QString());
   });
-  ConnectBaseLamba2(WingPlugin::Reader::getBookMarks,
-                    [=](QList<BookMark> &bookmarks) {
-                      PCHECK({
-                        auto bs = hexfiles[_pcurfile].doc->getAllBookMarks();
-                        for (auto item : bs) {
-                          BookMark i;
-                          i.pos = item.pos;
-                          i.comment = item.comment;
-                          bookmarks.push_back(i);
-                        }
-                      }, );
-                    });
+  ConnectBaseLamba2(
+      WingPlugin::Reader::getBookMarks, [=](QList<BookMark> &bookmarks) {
+        PCHECK(
+            {
+              auto bs = hexfiles[_pcurfile].doc->getAllBookMarks();
+              for (auto item : bs) {
+                BookMark i;
+                i.pos = item.pos;
+                i.comment = item.comment;
+                bookmarks.push_back(i);
+              }
+            },
+            {
+              auto bs = hexeditor->document()->getAllBookMarks();
+              for (auto item : bs) {
+                BookMark i;
+                i.pos = item.pos;
+                i.comment = item.comment;
+                bookmarks.push_back(i);
+              }
+            }, );
+      });
   ConnectBaseLamba2(WingPlugin::Reader::existBookMark, [=](qint64 pos) {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->existBookMark(pos), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->existBookMark(pos),
+                 hexeditor->document()->existBookMark(pos), false);
   });
 
   ConnectBaseLamba2(WingPlugin::Reader::getOpenFiles, [=] {
@@ -1312,8 +1366,10 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   });
   ConnectBase2(WingPlugin::Reader::getSupportedEncodings,
                Utilities::GetEncodings);
-  ConnectBaseLamba2(WingPlugin::Reader::currentEncoding,
-                    [=] { return hexfiles[_pcurfile].render->encoding(); });
+  ConnectBaseLamba2(WingPlugin::Reader::currentEncoding, [=] {
+    PCHECKRETURN(hexfiles[_pcurfile].render->encoding(),
+                 hexeditor->renderer()->encoding(), QString());
+  });
 }
 
 void MainWindow::connectControl(IWingPlugin *plugin) {
@@ -1338,54 +1394,64 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
 
   ConnectControlLamba2(WingPlugin::Controller::setLockedFile, [=](bool b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECKRETURN(hexeditor->setLockedFile(b), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->setLockedFile(b),
+                 hexeditor->setLockedFile(b), false);
   });
   ConnectControlLamba2(WingPlugin::Controller::setKeepSize, [=](bool b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECKRETURN(hexeditor->setKeepSize(b), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->setKeepSize(b),
+                 hexeditor->setKeepSize(b), false);
   });
   ConnectControlLamba2(WingPlugin::Controller::setStringVisible, [=](bool b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].render->setAsciiVisible(b), );
+    PCHECK(hexfiles[_pcurfile].render->setStringVisible(b),
+           hexfiles[_pcurfile].render->setStringVisible(b), );
   });
   ConnectControlLamba2(WingPlugin::Controller::setHeaderVisible, [=](bool b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].render->setHeaderVisible(b), );
+    PCHECK(hexfiles[_pcurfile].render->setHeaderVisible(b),
+           hexfiles[_pcurfile].render->setHeaderVisible(b), );
   });
   ConnectControlLamba2(WingPlugin::Controller::setAddressVisible, [=](bool b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].render->setAddressVisible(b), );
+    PCHECK(hexfiles[_pcurfile].render->setAddressVisible(b),
+           hexeditor->setAddressVisible(b), );
   });
   ConnectControlLamba2(
       WingPlugin::Controller::setAddressBase, [=](quint64 base) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECK(hexfiles[_pcurfile].doc->setBaseAddress(base), );
+        PCHECK(hexfiles[_pcurfile].doc->setBaseAddress(base),
+               hexeditor->setAddressBase(base), );
       });
   ConnectControlLamba2(
       WingPlugin::Controller::setAreaIndent, [=](quint8 value) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECK(hexfiles[_pcurfile].doc->setAreaIndent(value), );
+        PCHECK(hexfiles[_pcurfile].doc->setAreaIndent(value),
+               hexeditor->document()->setAreaIndent(value), );
       });
   ConnectControlLamba2(
       WingPlugin::Controller::setHexLineWidth, [=](quint8 value) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECK(hexfiles[_pcurfile].doc->setHexLineWidth(value), );
+        PCHECK(hexfiles[_pcurfile].doc->setHexLineWidth(value),
+               hexeditor->document()->setHexLineWidth(value), );
       });
   ConnectControlLamba2(WingPlugin::Controller::undo, [=] {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->undo(), );
+    PCHECK(hexfiles[_pcurfile].doc->undo(), hexeditor->document()->undo(), );
   });
   ConnectControlLamba2(WingPlugin::Controller::redo, [=] {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->redo(), );
+    PCHECK(hexfiles[_pcurfile].doc->redo(), hexeditor->document()->redo(), );
   });
   ConnectControlLamba2(WingPlugin::Controller::cut, [=](bool hex) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECKRETURN(hexfiles[_pcurfile].doc->cut(hex), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->cut(hex),
+                 hexeditor->document()->cut(hex), false);
   });
   ConnectControlLamba2(WingPlugin::Controller::paste, [=](bool hex) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->paste(hex), )
+    PCHECK(hexfiles[_pcurfile].doc->paste(hex),
+           hexeditor->document()->paste(hex), )
   });
 
 #define ConnectControlLamba3(Signal, Function)                                 \
@@ -1398,11 +1464,13 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
 
   ConnectControlLamba3(insertchar, [=](qint64 offset, uchar b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECKRETURN(hexfiles[_pcurfile].doc->insert(offset, b), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->insert(offset, b),
+                 hexeditor->document()->insert(offset, b), false);
   });
   ConnectControlLamba3(insertarr, [=](qint64 offset, const QByteArray &data) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECKRETURN(hexfiles[_pcurfile].doc->insert(offset, data), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->insert(offset, data),
+                 hexeditor->document()->insert(offset, data), false);
   });
 
   bool (WingPlugin::Controller::*replacechar)(qint64 offset, uchar b) =
@@ -1411,16 +1479,19 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
       qint64 offset, const QByteArray &data) = &WingPlugin::Controller::replace;
   ConnectControlLamba3(replacechar, [=](qint64 offset, uchar b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECKRETURN(hexfiles[_pcurfile].doc->replace(offset, b), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->replace(offset, b),
+                 hexeditor->document()->replace(offset, b), false);
   });
   ConnectControlLamba3(replacearr, [=](qint64 offset, const QByteArray &data) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECKRETURN(hexfiles[_pcurfile].doc->replace(offset, data), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->replace(offset, data),
+                 hexeditor->document()->replace(offset, data), false);
   });
   ConnectControlLamba2(
       WingPlugin::Controller::remove, [=](qint64 offset, int len) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECKRETURN(hexfiles[_pcurfile].doc->remove(offset, len), false);
+        PCHECKRETURN(hexfiles[_pcurfile].doc->remove(offset, len),
+                     hexeditor->document()->remove(offset, len), false);
       });
 
   void (WingPlugin::Controller::*moveToHP)(const HexPosition &pos) =
@@ -1432,23 +1503,34 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   void (WingPlugin::Controller::*moveToOff)(qint64 offset);
   ConnectControlLamba3(moveToHP, [=](const HexPosition &pos) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK({
-      QHexPosition p;
-      p.line = pos.line;
-      p.column = pos.column;
-      p.lineWidth = pos.lineWidth;
-      p.nibbleindex = pos.nibbleindex;
-      hexfiles[_pcurfile].doc->cursor()->moveTo(p);
-    }, );
+    PCHECK(
+        {
+          QHexPosition p;
+          p.line = pos.line;
+          p.column = pos.column;
+          p.lineWidth = pos.lineWidth;
+          p.nibbleindex = pos.nibbleindex;
+          hexfiles[_pcurfile].doc->cursor()->moveTo(p);
+        },
+        {
+          QHexPosition p;
+          p.line = pos.line;
+          p.column = pos.column;
+          p.lineWidth = pos.lineWidth;
+          p.nibbleindex = pos.nibbleindex;
+          hexeditor->document()->cursor()->moveTo(p);
+        }, );
   });
   ConnectControlLamba3(moveTo, [=](quint64 line, int column, int nibbleindex) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->cursor()->moveTo(line, column, nibbleindex);
-           , );
+    PCHECK(
+        hexfiles[_pcurfile].doc->cursor()->moveTo(line, column, nibbleindex),
+        hexeditor->document()->cursor()->moveTo(line, column, nibbleindex), );
   });
   ConnectControlLamba3(moveToOff, [=](qint64 offset) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->cursor()->moveTo(offset), );
+    PCHECK(hexfiles[_pcurfile].doc->cursor()->moveTo(offset),
+           hexeditor->document()->cursor()->moveTo(offset), );
   });
 
   void (WingPlugin::Controller::*selectHP)(const HexPosition &pos) =
@@ -1460,45 +1542,62 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   void (WingPlugin::Controller::*selectL)(int length);
   ConnectControlLamba3(selectHP, [=](const HexPosition &pos) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK({
-      QHexPosition p;
-      p.line = pos.line;
-      p.column = pos.column;
-      p.lineWidth = pos.lineWidth;
-      p.nibbleindex = pos.nibbleindex;
-      hexfiles[_pcurfile].doc->cursor()->select(p);
-    }, );
+    PCHECK(
+        {
+          QHexPosition p;
+          p.line = pos.line;
+          p.column = pos.column;
+          p.lineWidth = pos.lineWidth;
+          p.nibbleindex = pos.nibbleindex;
+          hexfiles[_pcurfile].doc->cursor()->select(p);
+        },
+        {
+          QHexPosition p;
+          p.line = pos.line;
+          p.column = pos.column;
+          p.lineWidth = pos.lineWidth;
+          p.nibbleindex = pos.nibbleindex;
+          hexeditor->document()->cursor()->select(p);
+        }, );
   });
   ConnectControlLamba3(select, [=](quint64 line, int column, int nibbleindex) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->cursor()->select(line, column, nibbleindex);
-           , );
+    PCHECK(
+        hexfiles[_pcurfile].doc->cursor()->select(line, column, nibbleindex),
+        hexeditor->document()->cursor()->select(line, column, nibbleindex), );
   });
   ConnectControlLamba3(selectL, [=](int length) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->cursor()->select(length), );
+    PCHECK(hexfiles[_pcurfile].doc->cursor()->select(length),
+           hexeditor->document()->cursor()->select(length), );
   });
 
   ConnectControlLamba2(WingPlugin::Controller::enabledCursor, [=](bool b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].render->enableCursor(b), )
+    PCHECK(hexfiles[_pcurfile].render->enableCursor(b),
+           hexfiles[_pcurfile].render->enableCursor(b), );
   });
 
-  ConnectControlLamba2(WingPlugin::Controller::selectOffset, [=](qint64 offset,
-                                                                 int length) {
-    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->cursor()->selectOffset(offset, length), );
-  });
+  ConnectControlLamba2(
+      WingPlugin::Controller::selectOffset, [=](qint64 offset, int length) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        PCHECK(hexfiles[_pcurfile].doc->cursor()->selectOffset(offset, length),
+               hexeditor->document()->cursor()->selectOffset(offset, length), );
+      });
   ConnectControlLamba2(
       WingPlugin::Controller::setInsertionMode, [=](bool isinsert) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECK(hexfiles[_pcurfile].doc->cursor()->setInsertionMode(
-                   isinsert ? QHexCursor::InsertMode
-                            : QHexCursor::OverwriteMode), );
+        PCHECK(
+            hexfiles[_pcurfile].doc->cursor()->setInsertionMode(
+                isinsert ? QHexCursor::InsertMode : QHexCursor::OverwriteMode),
+            hexfiles[_pcurfile].doc->cursor()->setInsertionMode(
+                isinsert ? QHexCursor::InsertMode
+                         : QHexCursor::OverwriteMode), );
       });
   ConnectControlLamba2(WingPlugin::Controller::setLineWidth, [=](quint8 width) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->cursor()->setLineWidth(width), );
+    PCHECK(hexfiles[_pcurfile].doc->cursor()->setLineWidth(width),
+           hexfiles[_pcurfile].doc->cursor()->setLineWidth(width), );
   });
 
   bool (WingPlugin::Controller::*metadata)(
@@ -1523,6 +1622,14 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
               doc->setDocSaved(false);
               return true;
             },
+            {
+              auto doc = hexeditor->document();
+              if (!doc->isKeepSize())
+                return false;
+              doc->metadata()->metadata(begin, end, fgcolor, bgcolor, comment);
+              doc->setDocSaved(false);
+              return true;
+            },
             return false);
       });
   ConnectControlLamba3(
@@ -1539,17 +1646,32 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
 
               return true;
             },
+            {
+              auto doc = hexeditor->document();
+              if (!doc->isKeepSize())
+                return false;
+              doc->metadata()->metadata(line, start, length, fgcolor, bgcolor,
+                                        comment);
+
+              return true;
+            },
             return false);
       });
 
   ConnectControlLamba2(
       WingPlugin::Controller::removeMetadata, [=](qint64 offset) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECK({
-          auto doc = hexfiles[_pcurfile].doc;
-          doc->metadata()->removeMetadata(offset);
-          doc->setDocSaved(false);
-        }, );
+        PCHECK(
+            {
+              auto doc = hexfiles[_pcurfile].doc;
+              doc->metadata()->removeMetadata(offset);
+              doc->setDocSaved(false);
+            },
+            {
+              auto doc = hexeditor->document();
+              doc->metadata()->removeMetadata(offset);
+              doc->setDocSaved(false);
+            }, );
       });
 
   bool (WingPlugin::Controller::*clear)() = &WingPlugin::Controller::clearMeta;
@@ -1558,6 +1680,13 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     PCHECK(
         {
           auto doc = hexfiles[_pcurfile].doc;
+          if (!doc->isKeepSize())
+            return false;
+          doc->metadata()->clear();
+          return true;
+        },
+        {
+          auto doc = hexeditor->document();
           if (!doc->isKeepSize())
             return false;
           doc->metadata()->clear();
@@ -1579,6 +1708,13 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
               doc->metadata()->color(line, start, length, fgcolor, bgcolor);
               return true;
             },
+            {
+              auto doc = hexeditor->document();
+              if (!doc->isKeepSize())
+                return false;
+              doc->metadata()->color(line, start, length, fgcolor, bgcolor);
+              return true;
+            },
             return false);
       });
 
@@ -1589,6 +1725,13 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         PCHECK(
             {
               auto doc = hexfiles[_pcurfile].doc;
+              if (!doc->isKeepSize())
+                return false;
+              doc->metadata()->comment(line, start, length, comment);
+              return true;
+            },
+            {
+              auto doc = hexeditor->document();
               if (!doc->isKeepSize())
                 return false;
               doc->metadata()->comment(line, start, length, comment);
@@ -1609,6 +1752,13 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
               doc->metadata()->foreground(line, start, length, fgcolor);
               return true;
             },
+            {
+              auto doc = hexeditor->document();
+              if (!doc->isKeepSize())
+                return false;
+              doc->metadata()->foreground(line, start, length, fgcolor);
+              return true;
+            },
             return false);
       });
   ConnectControlLamba2(
@@ -1623,76 +1773,116 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
               doc->metadata()->background(line, start, length, bgcolor);
               return true;
             },
+            {
+              auto doc = hexeditor->document();
+              if (!doc->isKeepSize())
+                return false;
+              doc->metadata()->background(line, start, length, bgcolor);
+              return true;
+            },
             return false);
       });
-  ConnectControlLamba2(WingPlugin::Controller::applyMetas,
-                       [=](QList<HexMetadataAbsoluteItem> metas) {
-                         plgsys->resetTimeout(
-                             qobject_cast<IWingPlugin *>(sender()));
-                         PCHECK({
-                           QList<QHexMetadataAbsoluteItem> ms;
-                           for (auto item : metas) {
-                             QHexMetadataAbsoluteItem i;
-                             i.begin = item.begin;
-                             i.end = item.end;
-                             i.comment = item.comment;
-                             i.background = item.background;
-                             i.foreground = item.foreground;
-                             ms.append(i);
-                           }
-                           hexfiles[_pcurfile].doc->metadata()->applyMetas(ms);
-                         }, );
-                       });
+  ConnectControlLamba2(
+      WingPlugin::Controller::applyMetas,
+      [=](QList<HexMetadataAbsoluteItem> metas) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        PCHECK(
+            {
+              QList<QHexMetadataAbsoluteItem> ms;
+              for (auto item : metas) {
+                QHexMetadataAbsoluteItem i;
+                i.begin = item.begin;
+                i.end = item.end;
+                i.comment = item.comment;
+                i.background = item.background;
+                i.foreground = item.foreground;
+                ms.append(i);
+              }
+              hexfiles[_pcurfile].doc->metadata()->applyMetas(ms);
+            },
+            {
+              QList<QHexMetadataAbsoluteItem> ms;
+              for (auto item : metas) {
+                QHexMetadataAbsoluteItem i;
+                i.begin = item.begin;
+                i.end = item.end;
+                i.comment = item.comment;
+                i.background = item.background;
+                i.foreground = item.foreground;
+                ms.append(i);
+              }
+              hexeditor->document()->metadata()->applyMetas(ms);
+            }, );
+      });
   ConnectControlLamba2(WingPlugin::Controller::setMetafgVisible, [=](bool b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->setMetafgVisible(b), );
+    PCHECK(hexfiles[_pcurfile].doc->setMetafgVisible(b),
+           hexeditor->document()->SetMetafgVisible(b), );
   });
   ConnectControlLamba2(WingPlugin::Controller::setMetabgVisible, [=](bool b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->setMetabgVisible(b), );
+    PCHECK(hexfiles[_pcurfile].doc->setMetabgVisible(b),
+           hexeditor->document()->SetMetabgVisible(b), );
   });
   ConnectControlLamba2(
       WingPlugin::Controller::setMetaCommentVisible, [=](bool b) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECK(hexfiles[_pcurfile].doc->setMetaCommentVisible(b), );
+        PCHECK(hexfiles[_pcurfile].doc->setMetaCommentVisible(b),
+               hexeditor->document()->SetMetaCommentVisible(b), );
       });
 
   ConnectControlLamba2(
       WingPlugin::Controller::setCurrentEncoding, [=](QString encoding) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECKRETURN(hexfiles[_pcurfile].render->setEncoding(encoding), false);
+        PCHECKRETURN(hexfiles[_pcurfile].render->setEncoding(encoding),
+                     hexeditor->renderer()->setEncoding(encoding), false);
       });
   ConnectControlLamba2(
       WingPlugin::Controller::addBookMark, [=](qint64 pos, QString comment) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECKRETURN(hexfiles[_pcurfile].doc->addBookMark(pos, comment), false);
+        PCHECKRETURN(hexfiles[_pcurfile].doc->addBookMark(pos, comment),
+                     hexeditor->document()->addBookMark(pos, comment), false);
       });
   ConnectControlLamba2(
       WingPlugin::Controller::modBookMark, [=](qint64 pos, QString comment) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECKRETURN(hexfiles[_pcurfile].doc->modBookMark(pos, comment), false);
+        PCHECKRETURN(hexfiles[_pcurfile].doc->modBookMark(pos, comment),
+                     hexeditor->document()->modBookMark(pos, comment), false);
       });
   ConnectControlLamba2(WingPlugin::Controller::removeBookMark, [=](qint64 pos) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECKRETURN(hexfiles[_pcurfile].doc->removeBookMark(pos), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->removeBookMark(pos),
+                 hexeditor->document()->removeBookMark(pos), false);
   });
   ConnectControlLamba2(WingPlugin::Controller::clearBookMark, [=] {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECKRETURN(hexfiles[_pcurfile].doc->clearBookMark(), false);
+    PCHECKRETURN(hexfiles[_pcurfile].doc->clearBookMark(),
+                 hexeditor->document()->clearBookMark(), false);
   });
   ConnectControlLamba2(
       WingPlugin::Controller::applyBookMarks, [=](QList<BookMark> books) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECK({
-          QList<BookMarkStruct> bs;
-          for (auto item : books) {
-            BookMarkStruct b;
-            b.pos = item.pos;
-            b.comment = item.comment;
-            bs.append(b);
-          }
-          hexfiles[_pcurfile].doc->applyBookMarks(bs);
-        }, );
+        PCHECK(
+            {
+              QList<BookMarkStruct> bs;
+              for (auto item : books) {
+                BookMarkStruct b;
+                b.pos = item.pos;
+                b.comment = item.comment;
+                bs.append(b);
+              }
+              hexfiles[_pcurfile].doc->applyBookMarks(bs);
+            },
+            {
+              QList<BookMarkStruct> bs;
+              for (auto item : books) {
+                BookMarkStruct b;
+                b.pos = item.pos;
+                b.comment = item.comment;
+                bs.append(b);
+              }
+              hexeditor->document()->applyBookMarks(bs);
+            }, );
       });
 
   ConnectControlLamba2(WingPlugin::Controller::openWorkSpace,
@@ -1818,8 +2008,6 @@ bool MainWindow::setFilePage(int index) {
       hexfiles[_currentfile].vBarValue = s;
     }
     _currentfile = index;
-    if (!plgsys->hasControl())
-      _pcurfile = index;
     auto d = hexfiles.at(index);
     if (d.doc == hexeditor->document())
       return true;
@@ -3079,7 +3267,7 @@ ErrFile MainWindow::openWorkSpace(QString filename, bool readonly,
     doc->setMetabgVisible(infos.showmetabg);
     doc->setMetafgVisible(infos.showmetafg);
     doc->setMetaCommentVisible(infos.showmetacomment);
-    render->setAsciiVisible(infos.showstr);
+    render->setStringVisible(infos.showstr);
     render->setHeaderVisible(infos.showheader);
     render->setAddressVisible(infos.showaddr);
     render->setEncoding(infos.encoding);

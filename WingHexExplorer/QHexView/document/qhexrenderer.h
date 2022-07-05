@@ -31,7 +31,7 @@ public:
   /*==============================*/
   // added by wingsummer
 
-  void setAsciiVisible(bool b);
+  void setStringVisible(bool b);
   bool stringVisible();
   void setAddressVisible(bool b);
   bool addressVisible();

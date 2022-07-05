@@ -95,7 +95,7 @@ bool QHexView::headerVisible() { return m_renderer->headerVisible(); }
 bool QHexView::addressVisible() { return m_renderer->addressVisible(); }
 
 void QHexView::setAsciiVisible(bool b) {
-  m_renderer->setAsciiVisible(b);
+  m_renderer->setStringVisible(b);
   this->adjustScrollBars();
   this->viewport()->update();
 }

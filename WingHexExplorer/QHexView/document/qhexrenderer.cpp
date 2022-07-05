@@ -14,7 +14,7 @@
 
 bool QHexRenderer::stringVisible() { return m_asciiVisible; }
 
-void QHexRenderer::setAsciiVisible(bool b) {
+void QHexRenderer::setStringVisible(bool b) {
   m_asciiVisible = b;
   m_document->setDocSaved(false);
 }
