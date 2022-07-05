@@ -1127,7 +1127,8 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
     PCHECKRETURN(hexfiles[_pcurfile].render->documentLines(), quint64(0));
   });
   ConnectBaseLamba2(WingPlugin::Reader::documentBytes, [=] {
-    PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->length()), quint64(0));
+    PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->length()),
+                 quint64(hexeditor->documentBytes()));
   });
   ConnectBaseLamba2(WingPlugin::Reader::currentPos, [=] {
     HexPosition pos;
@@ -1476,6 +1477,11 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   ConnectControlLamba3(selectL, [=](int length) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     PCHECK(hexfiles[_pcurfile].doc->cursor()->select(length), );
+  });
+
+  ConnectControlLamba2(WingPlugin::Controller::enabledCursor, [=](bool b) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    PCHECK(hexfiles[_pcurfile].render->enableCursor(b), )
   });
 
   ConnectControlLamba2(WingPlugin::Controller::selectOffset, [=](qint64 offset,
@@ -1964,6 +1970,7 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
     tabs->setCurrentIndex(index);
     tabs->setTabToolTip(index, filename);
     setEditModeEnabled(true);
+    _currentfile = index;
 
     if (_enableplugin) {
       params << ErrFile::Success;

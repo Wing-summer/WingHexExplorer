@@ -138,6 +138,7 @@ enum HookIndex {
 Q_DECLARE_METATYPE(WingPluginMessage)
 Q_DECLARE_METATYPE(ResponseMsg)
 Q_DECLARE_METATYPE(HookIndex)
+Q_DECLARE_METATYPE(ErrFile)
 
 namespace WingPlugin {
 class Reader : public QObject {
@@ -241,6 +242,7 @@ signals:
   void selectOffset(qint64 offset, int length);
   void setInsertionMode(bool isinsert);
   void setLineWidth(quint8 width);
+  void enabledCursor(bool b);
 
   // metadata
   bool metadata(qint64 begin, qint64 end, const QColor &fgcolor,
@@ -369,6 +371,12 @@ public:
   menu->addAction(a);
 
 #define PluginMenuInitEnd() }
+
+#define USINGCONTROL(Segment)                                                  \
+  if (this->requestControl()) {                                                \
+    Segment;                                                                   \
+    this->requestRelease();                                                    \
+  }
 
 class PluginUtils {
 public:

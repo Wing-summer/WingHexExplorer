@@ -40,7 +40,7 @@ QList<IWingPlugin *> PluginSystem::plugins() { return loadedplgs; }
 
 void PluginSystem::raiseDispatch(HookIndex hookindex, QList<QVariant> params) {
   auto dispatch = dispatcher[hookindex];
-  params << hookindex;
+  params.push_front(hookindex);
   for (auto item : dispatch) {
     item->plugin2MessagePipe(WingPluginMessage::HookMessage, params);
   }
@@ -118,6 +118,7 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
       INSERTSUBSCRIBE(HookIndex::CloseFileEnd);
       INSERTSUBSCRIBE(HookIndex::NewFileBegin);
       INSERTSUBSCRIBE(HookIndex::NewFileEnd);
+      INSERTSUBSCRIBE(HookIndex::DocumentSwitched);
 
       emit p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
 
@@ -177,6 +178,7 @@ bool PluginSystem::requestRelease(IWingPlugin *plugin) {
     plugintimer[plugin]->stop();
     plugintimeout[plugin] = false;
     curpluginctl = nullptr;
+    mutex.unlock();
     return true;
   }
   return false;
