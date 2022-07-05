@@ -1533,32 +1533,19 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
            hexeditor->document()->cursor()->moveTo(offset), );
   });
 
-  void (WingPlugin::Controller::*selectHP)(const HexPosition &pos) =
-      &WingPlugin::Controller::select;
   void (WingPlugin::Controller::*select)(quint64 line, int column,
                                          int nibbleindex) =
       &WingPlugin::Controller::select;
 
-  void (WingPlugin::Controller::*selectL)(int length);
-  ConnectControlLamba3(selectHP, [=](const HexPosition &pos) {
-    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+  void (WingPlugin::Controller::*selectN)(qint64 offset, int length) =
+      &WingPlugin::Controller::select;
+
+  ConnectControlLamba3(selectN, [=](qint64 offset, int length) {
     PCHECK(
-        {
-          QHexPosition p;
-          p.line = pos.line;
-          p.column = pos.column;
-          p.lineWidth = pos.lineWidth;
-          p.nibbleindex = pos.nibbleindex;
-          hexfiles[_pcurfile].doc->cursor()->select(p);
-        },
-        {
-          QHexPosition p;
-          p.line = pos.line;
-          p.column = pos.column;
-          p.lineWidth = pos.lineWidth;
-          p.nibbleindex = pos.nibbleindex;
-          hexeditor->document()->cursor()->select(p);
-        }, );
+        hexfiles[_pcurfile].doc->cursor()->setSelection(offset, length), {
+          hexeditor->document()->cursor()->setSelection(offset, length);
+          hexeditor->viewport()->update();
+        }, )
   });
   ConnectControlLamba3(select, [=](quint64 line, int column, int nibbleindex) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
@@ -1566,16 +1553,10 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         hexfiles[_pcurfile].doc->cursor()->select(line, column, nibbleindex),
         hexeditor->document()->cursor()->select(line, column, nibbleindex), );
   });
-  ConnectControlLamba3(selectL, [=](int length) {
-    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->cursor()->select(length),
-           hexeditor->document()->cursor()->select(length), );
-  });
-
   ConnectControlLamba2(WingPlugin::Controller::enabledCursor, [=](bool b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     PCHECK(hexfiles[_pcurfile].render->enableCursor(b),
-           hexfiles[_pcurfile].render->enableCursor(b), );
+           hexeditor->renderer()->enableCursor(b), );
   });
 
   ConnectControlLamba2(
@@ -1590,14 +1571,14 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         PCHECK(
             hexfiles[_pcurfile].doc->cursor()->setInsertionMode(
                 isinsert ? QHexCursor::InsertMode : QHexCursor::OverwriteMode),
-            hexfiles[_pcurfile].doc->cursor()->setInsertionMode(
+            hexeditor->document()->cursor()->setInsertionMode(
                 isinsert ? QHexCursor::InsertMode
                          : QHexCursor::OverwriteMode), );
       });
   ConnectControlLamba2(WingPlugin::Controller::setLineWidth, [=](quint8 width) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     PCHECK(hexfiles[_pcurfile].doc->cursor()->setLineWidth(width),
-           hexfiles[_pcurfile].doc->cursor()->setLineWidth(width), );
+           hexeditor->document()->cursor()->setLineWidth(width), );
   });
 
   bool (WingPlugin::Controller::*metadata)(
@@ -2630,12 +2611,10 @@ void MainWindow::on_locChanged() {
   // number analyse
   auto off = qint64(hexeditor->currentOffset());
   auto d = hexeditor->document();
+
   auto tmp = d->read(off, sizeof(quint64));
+  auto n = *reinterpret_cast<quint64 *>(tmp.data());
   auto len = tmp.length();
-  quint64 n = 0;
-  for (int i = 0; i < len; i++) {
-    n |= (quint64(tmp.at(i)) << (8 * i));
-  }
 
   if (len == sizeof(quint64)) {
     auto s = n;

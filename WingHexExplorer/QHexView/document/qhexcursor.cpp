@@ -1,6 +1,16 @@
 #include "qhexcursor.h"
 #include <QWidget>
 
+void QHexCursor::setSelection(qint64 offset, int length) {
+  auto lld = lldiv(offset, m_position.lineWidth);
+  m_position.line = quint64(lld.quot);
+  m_position.column = int(lld.rem);
+  moveTo(m_position);
+  lld = lldiv(offset + length - 1, m_position.lineWidth);
+  m_selection.line = quint64(lld.quot);
+  m_selection.column = int(lld.rem);
+}
+
 QHexCursor::QHexCursor(QObject *parent)
     : QObject(parent), m_insertionmode(QHexCursor::OverwriteMode) {
   m_position.line = m_position.column = 0;

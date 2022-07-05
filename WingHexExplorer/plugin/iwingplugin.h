@@ -236,13 +236,12 @@ signals:
   void moveTo(const HexPosition &pos);
   void moveTo(quint64 line, int column, int nibbleindex = 1);
   void moveTo(qint64 offset);
-  void select(const HexPosition &pos);
   void select(quint64 line, int column, int nibbleindex = 1);
-  void select(int length);
   void selectOffset(qint64 offset, int length);
   void setInsertionMode(bool isinsert);
   void setLineWidth(quint8 width);
   void enabledCursor(bool b);
+  void select(qint64 offset, int length);
 
   // metadata
   bool metadata(qint64 begin, qint64 end, const QColor &fgcolor,

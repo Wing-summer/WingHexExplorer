@@ -42,6 +42,7 @@ public:
   const QHexPosition &selectionStart() const;
   const QHexPosition &selectionEnd() const;
   const QHexPosition &position() const;
+  void setSelection(qint64 offset, int length); // added by wingsummer
   InsertionMode insertionMode() const;
   int selectionLength() const;
   quint64 currentLine() const;
