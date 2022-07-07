@@ -170,6 +170,8 @@ void QHexView::establishSignal(QHexDocument *doc) {
     QHexView::metaCommentVisibleChanged(b);
     emit this->metaStatusChanged();
   });
+  connect(doc, &QHexDocument::metaLineChanged, this,
+          [=] { this->viewport()->update(); });
 }
 
 /*======================*/

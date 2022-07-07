@@ -608,29 +608,27 @@ bool QHexDocument::saveTo(QIODevice *device, bool cleanUndo) {
   return true;
 }
 
-qint64 QHexDocument::searchForward(const QByteArray &ba) {
-  qint64 startPos = m_cursor->position().offset();
-  qint64 findPos = m_buffer->indexOf(ba, startPos);
-  if (findPos > -1) {
-    m_cursor->clearSelection();
-    m_cursor->moveTo(findPos);
-    m_cursor->select(ba.length());
+qint64 QHexDocument::searchForward(qint64 begin, const QByteArray &ba) {
+  qint64 startPos;
+  if (begin < 0) {
+    startPos = m_cursor->position().offset();
+  } else {
+    startPos = begin;
   }
-  return findPos;
+  return m_buffer->indexOf(ba, startPos);
 }
 
-qint64 QHexDocument::searchBackward(const QByteArray &ba) {
-  qint64 startPos = m_cursor->position().offset() - 1;
-  if (m_cursor->hasSelection()) {
-    startPos = m_cursor->selectionStart().offset() - 1;
+qint64 QHexDocument::searchBackward(qint64 begin, const QByteArray &ba) {
+  qint64 startPos;
+  if (begin < 0) {
+    startPos = m_cursor->position().offset() - 1;
+    if (m_cursor->hasSelection()) {
+      startPos = m_cursor->selectionStart().offset() - 1;
+    }
+  } else {
+    startPos = begin;
   }
-  qint64 findPos = m_buffer->lastIndexOf(ba, startPos);
-  if (findPos > -1) {
-    m_cursor->clearSelection();
-    m_cursor->moveTo(findPos);
-    m_cursor->select(ba.length());
-  }
-  return findPos;
+  return m_buffer->lastIndexOf(ba, startPos);
 }
 
 QHexDocument *QHexDocument::fromLargeFile(QString filename, bool readonly,

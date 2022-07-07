@@ -6,6 +6,7 @@
 #include <QList>
 #include <QMenu>
 #include <QObject>
+#include <QToolButton>
 #include <QWidget>
 #include <QtCore>
 
@@ -145,6 +146,7 @@ class Reader : public QObject {
   Q_OBJECT
 signals:
   int currentDoc();
+  QString currentDocFilename();
 
   // document
   bool isReadOnly();
@@ -174,8 +176,8 @@ signals:
 
   void copy(bool hex = false);
   QByteArray read(qint64 offset, int len);
-  qint64 searchForward(const QByteArray &ba);
-  qint64 searchBackward(const QByteArray &ba);
+  qint64 searchForward(qint64 begin, const QByteArray &ba);
+  qint64 searchBackward(qint64 begin, const QByteArray &ba);
   void findAllBytes(qlonglong begin, qlonglong end, QByteArray b,
                     QList<quint64> &results, int maxCount = -1);
 
@@ -291,6 +293,7 @@ signals:
   // workspace
   bool openWorkSpace(QString filename, bool readonly = false);
   bool setCurrentEncoding(QString encoding);
+  void toast(QIcon icon, QString message);
 };
 } // namespace WingPlugin
 
@@ -309,6 +312,7 @@ public:
   virtual ~IWingPlugin() {}
   virtual void unload() = 0;
   virtual QMenu *registerMenu() = 0;
+  virtual QToolButton *registerToolButton() = 0;
   virtual QDockWidget *registerDockWidget() = 0;
   virtual Qt::DockWidgetArea registerDockWidgetDockArea() = 0;
   virtual QString pluginName() = 0;
@@ -335,13 +339,20 @@ public:
 };
 
 #define WINGSUMMER "wingsummer"
+
+#define PluginToolButtonInit(tbtn, menu, icon)                                 \
+  tbtn = new QToolButton;                                                      \
+  tbtn->setMenu(menu);                                                         \
+  tbtn->setIcon(icon);                                                         \
+  tbtn->setPopupMode(QToolButton::ToolButtonPopupMode::InstantPopup);
+
 #define PluginDockWidgetInit(dw, widget, title, objname)                       \
   dw = new QDockWidget;                                                        \
   dw->setWidget(widget);                                                       \
   dw->setWindowTitle(title);                                                   \
   dw->setObjectName(objname);
 
-#define PluginWidgetFree(w) w->deleteLater();
+#define PluginWidgetFree(w) w->deleteLater()
 
 #define PluginMenuInitBegin(menu, title)                                       \
   menu = new QMenu;                                                            \
@@ -366,6 +377,20 @@ public:
 
 #define PluginMenuAddItemIconLamba(menu, title, icon, lamba)                   \
   a = new QAction(icon, title, this);                                          \
+  connect(a, &QAction::triggered, this, lamba);                                \
+  menu->addAction(a);
+
+#define PluginMenuAddItemCheckAction(menu, title, checked, slot)               \
+  a = new QAction(icon, title, this);                                          \
+  a->setCheckable(true);                                                       \
+  a->setChecked(checked);                                                      \
+  connect(a, &QAction::triggered, this, &slot);                                \
+  menu->addAction(a);
+
+#define PluginMenuAddItemCheckLamba(menu, title, checked, lamba)               \
+  a = new QAction(title, this);                                                \
+  a->setCheckable(true);                                                       \
+  a->setChecked(checked);                                                      \
   connect(a, &QAction::triggered, this, lamba);                                \
   menu->addAction(a);
 

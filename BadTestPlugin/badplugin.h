@@ -20,6 +20,7 @@ public:
   ~BadPlugin() override;
   void unload() override;
   QMenu *registerMenu() override;
+  QToolButton *registerToolButton() override;
   QDockWidget *registerDockWidget() override;
   QString pluginName() override;
   QString pluginAuthor() override;

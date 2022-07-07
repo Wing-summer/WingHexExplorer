@@ -123,12 +123,14 @@ public slots:
   QByteArray read(qint64 offset, int len) const;
   bool saveTo(QIODevice *device, bool cleanUndo);
 
-  qint64 searchForward(const QByteArray &ba);
-  qint64 searchBackward(const QByteArray &ba);
+  // qint64 searchForward(const QByteArray &ba);
+  // qint64 searchBackward(const QByteArray &ba);
 
   /*================================*/
   // added by wingsummer
 
+  qint64 searchForward(qint64 begin, const QByteArray &ba);
+  qint64 searchBackward(qint64 begin, const QByteArray &ba);
   bool cut(bool hex = false);
   void paste(bool hex = false);
   bool insert(qint64 offset, uchar b);

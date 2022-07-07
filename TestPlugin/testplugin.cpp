@@ -3,7 +3,7 @@
 #include <QMessageBox>
 #include <QStringList>
 
-TestPlugin::TestPlugin(QObject *parent){Q_UNUSED(parent)}
+TestPlugin::TestPlugin(QObject *parent) { Q_UNUSED(parent) }
 
 TestPlugin::~TestPlugin() {}
 
@@ -71,6 +71,8 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
 QMenu *TestPlugin::registerMenu() { return testmenu; }
 
 QDockWidget *TestPlugin::registerDockWidget() { return dw; }
+
+QToolButton *TestPlugin::registerToolButton() { return nullptr; }
 
 Qt::DockWidgetArea TestPlugin::registerDockWidgetDockArea() {
   return Qt::DockWidgetArea::LeftDockWidgetArea;

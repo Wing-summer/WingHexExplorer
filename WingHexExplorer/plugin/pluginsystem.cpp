@@ -97,6 +97,11 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         emit this->PluginMenuNeedAdd(menu);
       }
 
+      auto tbtn = p->registerToolButton();
+      if (tbtn) {
+        emit this->PluginToolButtonAdd(tbtn);
+      }
+
       auto dockw = p->registerDockWidget();
       if (dockw) {
         emit this->PluginDockWidgetAdd(dockw, p->registerDockWidgetDockArea());

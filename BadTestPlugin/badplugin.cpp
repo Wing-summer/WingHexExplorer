@@ -20,6 +20,8 @@ QMenu *BadPlugin::registerMenu() { return nullptr; }
 
 QDockWidget *BadPlugin::registerDockWidget() { return nullptr; }
 
+QToolButton *BadPlugin::registerToolButton() { return nullptr; }
+
 QString BadPlugin::pluginName() { return "BadPlugin"; }
 
 QString BadPlugin::pluginAuthor() { return "wingsummer"; }

@@ -593,6 +593,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   toolbar->addSeparator();
   AddToolBarTool("general", MainWindow::on_setting_general, tr("General"));
   AddToolBarTool("soft", MainWindow::on_about, tr("About"));
+  toolbar->addSeparator();
   this->addToolBar(toolbar);
 
   status = new DStatusBar(this);
@@ -1027,6 +1028,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
             &MainWindow::PluginMenuNeedAdd);
     connect(plgsys, &PluginSystem::PluginDockWidgetAdd, this,
             &MainWindow::PluginDockWidgetAdd);
+    connect(plgsys, &PluginSystem::PluginToolButtonAdd, this,
+            &MainWindow::PluginToolButtonAdd);
     plgsys->LoadPlugin();
   } else {
     plgmenu->setEnabled(false);
@@ -1077,6 +1080,11 @@ void MainWindow::PluginDockWidgetAdd(QDockWidget *dockw,
   }
 }
 
+void MainWindow::PluginToolButtonAdd(QToolButton *btn) {
+  if (btn)
+    toolbar->addWidget(btn);
+}
+
 void MainWindow::connectBase(IWingPlugin *plugin) {
   if (plugin == nullptr)
     return;
@@ -1113,7 +1121,13 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   }                                                                            \
   return F;
 
-  ConnectBaseLamba2(WingPlugin::Reader::currentDoc, [=] { return _pcurfile; });
+  ConnectBaseLamba2(WingPlugin::Reader::currentDoc,
+                    [=] { PCHECKRETURN(_pcurfile, _currentfile, -1) });
+  ConnectBaseLamba2(WingPlugin::Reader::currentDocFilename, [=] {
+    PCHECKRETURN(hexfiles[_pcurfile].filename, hexfiles[_currentfile].filename,
+                 QString());
+  });
+
   ConnectBaseLamba2(WingPlugin::Reader::isLocked, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].doc->isLocked(),
                  hexeditor->document()->isLocked(), true);
@@ -1277,16 +1291,20 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
                              hexeditor->document()->findAllBytes(
                                  begin, end, b, results, maxCount), );
                     });
-  ConnectBaseLamba2(
-      WingPlugin::Reader::searchForward, [=](const QByteArray &ba) {
-        PCHECKRETURN(hexfiles[_pcurfile].doc->searchForward(ba),
-                     hexeditor->document()->searchForward(ba), qint64(-1));
-      });
-  ConnectBaseLamba2(
-      WingPlugin::Reader::searchBackward, [=](const QByteArray &ba) {
-        PCHECKRETURN(hexfiles[_pcurfile].doc->searchBackward(ba),
-                     hexeditor->document()->searchBackward(ba), qint64(-1));
-      });
+  ConnectBaseLamba2(WingPlugin::Reader::searchForward,
+                    [=](qint64 begin, const QByteArray &ba) {
+                      PCHECKRETURN(
+                          hexfiles[_pcurfile].doc->searchForward(begin, ba),
+                          hexeditor->document()->searchForward(begin, ba),
+                          qint64(-1));
+                    });
+  ConnectBaseLamba2(WingPlugin::Reader::searchBackward,
+                    [=](qint64 begin, const QByteArray &ba) {
+                      PCHECKRETURN(
+                          hexfiles[_pcurfile].doc->searchBackward(begin, ba),
+                          hexeditor->document()->searchBackward(begin, ba),
+                          qint64(-1));
+                    });
   ConnectBaseLamba2(WingPlugin::Reader::getMetaLine, [=](quint64 line) {
     auto ometas = hexfiles[_pcurfile].doc->metadata()->get(line);
     HexLineMetadata metas;
@@ -1949,11 +1967,18 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     on_fillnop();
   });
+  ConnectControlLamba2(
+      WingPlugin::Controller::toast, [=](QIcon icon, QString message) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        DMessageManager::instance()->sendMessage(this, icon, message);
+      });
 }
 
 bool MainWindow::requestControl(int timeout) {
   auto s = qobject_cast<IWingPlugin *>(sender());
-  return plgsys->requestControl(s, timeout);
+  auto res = plgsys->requestControl(s, timeout);
+  _pcurfile = _currentfile;
+  return res;
 }
 
 bool MainWindow::requestRelease() {

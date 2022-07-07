@@ -232,6 +232,7 @@ private:
 private:
   void PluginMenuNeedAdd(QMenu *menu);
   void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
+  void PluginToolButtonAdd(QToolButton *btn);
   void connectBase(IWingPlugin *plugin);
   void connectControl(IWingPlugin *plugin);
   // shadow

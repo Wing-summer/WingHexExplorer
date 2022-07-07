@@ -11,6 +11,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QTimerEvent>
+#include <QToolButton>
 #include <QVariant>
 
 class PluginSystem : public QObject {
@@ -38,6 +39,7 @@ private:
 signals:
   void PluginMenuNeedAdd(QMenu *menu);
   void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
+  void PluginToolButtonAdd(QToolButton *btn);
   void ConnectBase(IWingPlugin *plugin);
   void ConnectControl(IWingPlugin *plugin);
   void DisconnectControl(IWingPlugin *plugin);
