@@ -36,6 +36,10 @@
 #include <QStorageInfo>
 #include <QThread>
 
+#ifndef WITHOUTLICENSEINFO
+#include "mlicense/lincensedialog.h"
+#endif
+
 #define FILEMAXBUFFER 0x6400000 // 100MB
 
 #define CheckEnabled                                                           \
@@ -397,6 +401,11 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm->setIcon(ICONRES("author"));
   AddToolSubMenuAction("soft", tr("About"), MainWindow::on_about);
   AddToolSubMenuAction("sponsor", tr("Sponsor"), MainWindow::on_sponsor);
+
+#ifndef WITHOUTLICENSEINFO
+  AddToolSubMenuAction("license", tr("License"), MainWindow::on_license);
+#endif
+
   AddToolSubMenuAction("wiki", tr("Wiki"), MainWindow::on_wiki);
   a = new QAction(ICONRES("qt"), tr("AboutQT"), tm);
   connect(a, &QAction::triggered, this, [=] { QMessageBox::aboutQt(this); });
@@ -592,6 +601,11 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolsDB(ToolBoxIndex::Encoding);
   toolbar->addSeparator();
   AddToolBarTool("general", MainWindow::on_setting_general, tr("General"));
+
+#ifndef WITHOUTLICENSEINFO
+  AddToolBarTool("license", MainWindow::on_license, tr("License"));
+#endif
+
   AddToolBarTool("soft", MainWindow::on_about, tr("About"));
   toolbar->addSeparator();
   this->addToolBar(toolbar);
@@ -3234,6 +3248,13 @@ void MainWindow::on_sponsor() {
   SponsorDialog d;
   d.exec();
 }
+
+#ifndef WITHOUTLICENSEINFO
+void MainWindow::on_license() {
+  LincenseDialog d;
+  d.exec();
+}
+#endif
 
 void MainWindow::on_about() {
   AboutSoftwareDialog d;

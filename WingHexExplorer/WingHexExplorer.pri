@@ -1,7 +1,6 @@
 SOURCES += \
         $$PWD/main.cpp \
     $$PWD/dialog/mainwindow.cpp \
-    $$PWD/class/appmanager.cpp \
     $$PWD/control/gotobar.cpp \
     $$PWD/settings.cpp \
     $$PWD/dialog/finddialog.cpp \
@@ -11,12 +10,16 @@ SOURCES += \
     $$PWD/dialog/driverselectordialog.cpp \
     $$PWD/dialog/aboutsoftwaredialog.cpp \
     $$PWD/dialog/sponsordialog.cpp \
-    $$PWD/class/logger.cpp \
     $$PWD/winghexapplication.cpp \
     $$PWD/settingdialog.cpp \
     $$PWD/dialog/encodingdialog.cpp \
     $$PWD/class/workspacemanager.cpp \
-    $$PWD/class/recentfilemanager.cpp
+    $$PWD/class/recentfilemanager.cpp \
+    $$PWD/class/appmanager.cpp \
+    $$PWD/class/logger.cpp \
+    $$PWD/dialog/settingwindow.cpp \
+    $$PWD/mlicense/licensemanager.cpp \
+    $$PWD/mlicense/lincensedialog.cpp \
 
 
 RESOURCES +=         resources.qrc
@@ -25,9 +28,8 @@ DISTFILES += \
     README.md
 
 HEADERS += \
-    $$PWD/dialog/mainwindow.h \
+  $$PWD/dialog/mainwindow.h \
     $$PWD/utilities.h \
-    $$PWD/class/appmanager.h \
     $$PWD/control/gotobar.h \
     $$PWD/settings.h \
     $$PWD/dialog/finddialog.h \
@@ -38,12 +40,20 @@ HEADERS += \
     $$PWD/dialog/driverselectordialog.h \
     $$PWD/dialog/aboutsoftwaredialog.h \
     $$PWD/dialog/sponsordialog.h \
-    $$PWD/class/logger.h \
     $$PWD/winghexapplication.h \
     $$PWD/dialog/encodingdialog.h \
     $$PWD/class/workspacemanager.h \
-    $$PWD/class/recentfilemanager.h
+    $$PWD/class/recentfilemanager.h \
+    $$PWD/class/appmanager.h \
+    $$PWD/class/logger.h \
+    $$PWD/dialog/settingwindow.h \
+    $$PWD/mlicense/licensemanager.h \
+    $$PWD/mlicense/lincensedialog.h \
+    $$PWD/mlicense/qaesencryption.h \
 
+LIBS += $$PWD/mlicense/libQtAES.a
 
 TRANSLATIONS += \
     $$PWD/lang/zh.ts
+
+DEFINES += USE_INTEL_AES_IF_AVAILABLE

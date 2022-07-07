@@ -76,6 +76,9 @@
         <file>images/metashow.png</file>
         <file>images/metadatah.png</file>
         <file>images/qt.png</file>
+        <file>images/license.png</file>
+        <file>images/thanks.png</file>
+        <file>images/usr.jpg</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

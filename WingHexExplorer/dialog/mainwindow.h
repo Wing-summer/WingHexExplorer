@@ -200,6 +200,11 @@ private:
   void on_restoreLayout();
   void on_about();
   void on_sponsor();
+
+#ifndef WITHOUTLICENSEINFO
+  void on_license();
+#endif
+
   void on_wiki();
   void on_fillnop();
   void on_fillzero();
