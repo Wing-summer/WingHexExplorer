@@ -967,7 +967,7 @@
 <context>
     <name>PluginSystem</name>
     <message>
-        <location filename="../plugin/pluginsystem.cpp" line="154"/>
+        <location filename="../plugin/pluginsystem.cpp" line="158"/>
         <source>FoundPluginCount</source>
         <translation>总计发现插件数目：</translation>
     </message>
@@ -1002,7 +1002,12 @@
         <translation>插件加载失败：重复加载插件！</translation>
     </message>
     <message>
-        <location filename="../plugin/pluginsystem.cpp" line="99"/>
+        <location filename="../plugin/pluginsystem.cpp" line="87"/>
+        <source>ErrLoadInitPlugin</source>
+        <translation>插件加载失败：初始化插件失败！</translation>
+    </message>
+    <message>
+        <location filename="../plugin/pluginsystem.cpp" line="103"/>
         <source>PluginWidgetRegister</source>
         <translation>注册插件对象中……</translation>
     </message>
