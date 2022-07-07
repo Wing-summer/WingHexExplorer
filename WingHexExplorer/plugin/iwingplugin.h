@@ -11,6 +11,8 @@
 #include <QtCore>
 
 #define SDKVERSION 3
+#define GETPLUGINQM(name)                                                      \
+  (QCoreApplication::applicationDirPath() + "/plglang/" + name)
 
 enum ErrFile {
   Success,

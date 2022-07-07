@@ -83,7 +83,11 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
 
       emit p->plugin2MessagePipe(WingPluginMessage::PluginLoading, emptyparam);
 
-      p->init(loadedplginfos);
+      if (!p->init(loadedplginfos)) {
+        logger->logMessage(ERRLOG(tr("ErrLoadInitPlugin")));
+        loader.unload();
+        return;
+      }
 
       WingPluginInfo info;
       info.puid = p->puid();
