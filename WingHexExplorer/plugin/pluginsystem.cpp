@@ -59,6 +59,11 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         loader.unload();
         return;
       }
+      if (p->sdkVersion() != SDKVERSION) {
+        logger->logMessage(ERRLOG(tr("ErrLoadPluginSDKVersion")));
+        loader.unload();
+        return;
+      }
       if (!p->pluginName().trimmed().length()) {
         logger->logMessage(ERRLOG(tr("ErrLoadPluginNoName")));
         loader.unload();

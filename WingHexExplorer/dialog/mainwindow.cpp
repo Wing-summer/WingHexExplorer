@@ -1248,14 +1248,6 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->canRedo(),
                  hexeditor->document()->canRedo(), false);
   });
-  ConnectBaseLamba2(WingPlugin::Reader::areaIndent, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->areaIndent(),
-                 hexeditor->document()->areaIndent(), 0);
-  });
-  ConnectBaseLamba2(WingPlugin::Reader::hexLineWidth, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].doc->hexLineWidth(),
-                 hexeditor->document()->hexLineWidth(), 0);
-  });
   ConnectBaseLamba2(WingPlugin::Reader::editableArea, [=](int area) {
     PCHECKRETURN(hexfiles[_pcurfile].render->editableArea(area),
                  hexeditor->renderer()->editableArea(area), false);
@@ -1454,18 +1446,6 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         PCHECK(hexfiles[_pcurfile].doc->setBaseAddress(base),
                hexeditor->setAddressBase(base), );
-      });
-  ConnectControlLamba2(
-      WingPlugin::Controller::setAreaIndent, [=](quint8 value) {
-        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECK(hexfiles[_pcurfile].doc->setAreaIndent(value),
-               hexeditor->document()->setAreaIndent(value), );
-      });
-  ConnectControlLamba2(
-      WingPlugin::Controller::setHexLineWidth, [=](quint8 value) {
-        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECK(hexfiles[_pcurfile].doc->setHexLineWidth(value),
-               hexeditor->document()->setHexLineWidth(value), );
       });
   ConnectControlLamba2(WingPlugin::Controller::undo, [=] {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));

@@ -45,7 +45,7 @@ void RecentFileManager::apply() {
   int i = 0;
   for (auto item : s) {
     if (QFile::exists(item)) {
-      if (m_recents.count() > 20)
+      if (m_recents.count() > 10)
         break;
       m_recents << item;
       a = new QAction(m_menu);
@@ -63,7 +63,7 @@ RecentFileManager::~RecentFileManager() {
 }
 
 void RecentFileManager::addRecentFile(QString filename) {
-  if (m_recents.count() > 20)
+  if (m_recents.count() > 10)
     return;
   if (QFile::exists(filename) && m_recents.indexOf(filename) < 0) {
     auto a = new QAction(m_menu);

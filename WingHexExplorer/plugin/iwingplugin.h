@@ -10,6 +10,8 @@
 #include <QWidget>
 #include <QtCore>
 
+#define SDKVERSION 3
+
 enum ErrFile {
   Success,
   Error,
@@ -171,8 +173,6 @@ signals:
   bool atEnd();
   bool canUndo();
   bool canRedo();
-  int areaIndent();
-  int hexLineWidth();
 
   void copy(bool hex = false);
   QByteArray read(qint64 offset, int len);
@@ -221,8 +221,6 @@ signals:
   void setAddressVisible(bool b);
   void setHeaderVisible(bool b);
   void setAddressBase(quint64 base);
-  void setAreaIndent(quint8 value);
-  void setHexLineWidth(quint8 value);
 
   void undo();
   void redo();
@@ -293,6 +291,8 @@ signals:
   // workspace
   bool openWorkSpace(QString filename, bool readonly = false);
   bool setCurrentEncoding(QString encoding);
+
+  // extension
   void toast(QIcon icon, QString message);
 };
 } // namespace WingPlugin
@@ -308,6 +308,7 @@ struct WingPluginInfo {
 class IWingPlugin : public QObject {
   Q_OBJECT
 public:
+  int sdkVersion() { return SDKVERSION; }
   virtual bool init(QList<WingPluginInfo> loadedplugin) = 0;
   virtual ~IWingPlugin() {}
   virtual void unload() = 0;

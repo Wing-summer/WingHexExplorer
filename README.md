@@ -10,6 +10,8 @@
   - [WIKI](#wiki)
   - [以后维护](#以后维护)
   - [应用商店](#应用商店)
+    - [深度商店](#深度商店)
+    - [星火商店](#星火商店)
 
 ---
 
@@ -26,7 +28,7 @@
 <img alt="商用协议" src="clband.svg">
 </p>
 
-* 开源不易，给个 [Star](https://gitee.com/wingsummer/be.-windows.-forms.-hex-box/star) 或者 [捐助](#捐助) 吧
+- 开源不易，给个 Star 或者 [捐助](#捐助) 吧
 
 ## 鸣谢
 
@@ -55,11 +57,11 @@
 
 ### 软件架构
 
-* BadTestPlugin : 测试插件系统抢占机制的插件。
-* TestPlugin : 虽然名字表面意思是测试插件，但它是编写该软件支持的插件一个非常重要的教程，重要性不可忽略。
-* WingHexExplorer : 主程序，具有最基本的编辑十六进制编辑的能力，支持强大的插件系统，提供 GUI 交互。
-* QHexView : 本软件十六进制编辑器的基础组件，仓库维护者`Dax89`，具体详情将在后面介绍。
-* QHexEdit2 : 本软件打开超大文件模块相关代码，原打算使用该组件作为基础组件，但 Bug 多的我改不过来了，故弃用，保留了我所需关键代码，仓库维护者`Simsys`，具体详情将在后面介绍。
+- BadTestPlugin : 测试插件系统抢占机制的插件。
+- TestPlugin : 虽然名字表面意思是测试插件，但它是编写该软件支持的插件一个非常重要的教程，重要性不可忽略。
+- WingHexExplorer : 主程序，具有最基本的编辑十六进制编辑的能力，支持强大的插件系统，提供 GUI 交互。
+- QHexView : 本软件十六进制编辑器的基础组件，仓库维护者`Dax89`，具体详情将在后面介绍。
+- QHexEdit2 : 本软件打开超大文件模块相关代码，原打算使用该组件作为基础组件，但 Bug 多的我改不过来了，故弃用，保留了我所需关键代码，仓库维护者`Simsys`，具体详情将在后面介绍。
 
 ### 使用声明
 
@@ -75,9 +77,7 @@
 3. 如果您想提交修复或者增进程序的代码，请在 pull request 递交。
 4. 任何成功参与代码 Bug 修复以及增进程序功能的同志和 Sponsor ，都会在本仓库 ReadMe 和附属说明文件中体现，您如果是其中之一，本人可以按照您合理的意愿来进行说明。
   
-
 **加入我们并不意味着就是代码的维护，你可以选择下列一项或多项进行参与：**
-
 
 1. 代码维护：实现新功能或修复 BUG ，对代码进行维护和升级。
 2. 文档编辑：主要是接口文档和教程需要撰写编辑，这很重要。
@@ -114,10 +114,12 @@
 
 QHexView
 ========
+
 QHexView is a hexadecimal widget for Qt5
-    
+
 Features
 -----
+
 - Customizable data backend (see more below).
 - Document/View based.
 - Unlimited Undo/Redo.
@@ -127,7 +129,9 @@ Features
 
 Buffer Backends
 -----
+
 These are the available buffer backends:
+
 - QMemoryBuffer: A simple, flat memory array.
 - QMemoryRefBuffer: QHexView just display the referenced data, editing is disabled.
 
@@ -135,6 +139,7 @@ It's also possible to create new data backends from scratch.
 
 License
 -----
+
 QHexEdit is released under MIT license
 
 ---
@@ -153,17 +158,16 @@ QHexEdit is released under MIT license
 10. 增加一些接口适应工作区支持需要
 11. 修复标记背景色第一行有超出部分的 Bug
 
-
 ### 有关 QHexEdit2
 
 &emsp;&emsp;起初我打算使用`QHexEdit2`作为十六进制编辑器为基础进行开发，该组件虽然轻松打开超大文件，但是它的编辑功能能用是能用，但有很多大大小小的 Bug ，我还逐一修了修，但发现仅仅我的力量和时间是杯水车薪。然后我找到了`QHexView`，也就是上面所属的组件，但它有一个致命的缺陷，无法打开超大文件，被我 Pass 掉了，后来我尝试用了它，发现开发者在开发改组件是下了足够大的功夫的，编辑十分流畅。最近看到`QHexView`贡献者们想搞一个`QHexView 5.0`，对代码进行了重构，但并没有实现任何功能，差不多是个空空的框架，不过从接口看出更强大的易用性，这个是原组件所不具有的，这花费我比较多的时间来阅读源代码，并向外扩展接口以适应我的开发需求。
 
-&emsp;&emsp;然后我想，既然`QHexEdit2`具有强大的打开文件的能力，而`QHexView`不具备，但它具有强大的编辑界面，于是乎，我移植`QHexEdit2`的打开超大文件的代码到`QHexView`当中，并做好了适配和功能增强。原仓库的链接： https://github.com/Simsys/qhexedit2 ，它的协议如下：
+&emsp;&emsp;然后我想，既然`QHexEdit2`具有强大的打开文件的能力，而`QHexView`不具备，但它具有强大的编辑界面，于是乎，我移植`QHexEdit2`的打开超大文件的代码到`QHexView`当中，并做好了适配和功能增强。原仓库的链接： <https://github.com/Simsys/qhexedit2> ，它的协议如下：
 
 Copyright (C) 2015-2016 Winfried Simon
 
-This software may be used under the terms of the GNU Lesser General 
-Public License version 2.1 as published by the Free Software Foundation 
+This software may be used under the terms of the GNU Lesser General
+Public License version 2.1 as published by the Free Software Foundation
 and appearing in the file license.txt included in the packaging of this file.
 
 This program is distributed in the hope that it will be useful,
@@ -173,7 +177,6 @@ GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 
 ## 效果图
 
