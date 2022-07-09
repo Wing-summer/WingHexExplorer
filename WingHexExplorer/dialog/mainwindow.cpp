@@ -1248,10 +1248,6 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->canRedo(),
                  hexeditor->document()->canRedo(), false);
   });
-  ConnectBaseLamba2(WingPlugin::Reader::editableArea, [=](int area) {
-    PCHECKRETURN(hexfiles[_pcurfile].render->editableArea(area),
-                 hexeditor->renderer()->editableArea(area), false);
-  });
   ConnectBaseLamba2(WingPlugin::Reader::documentLastLine, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->documentLastLine(),
                  hexeditor->renderer()->documentLastLine(), quint64(0));
@@ -1259,27 +1255,6 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   ConnectBaseLamba2(WingPlugin::Reader::documentLastColumn, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->documentLastColumn(),
                  hexeditor->renderer()->documentLastColumn(), 0);
-  });
-  ConnectBaseLamba2(WingPlugin::Reader::documentWidth, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->documentWidth(),
-                 hexeditor->renderer()->documentWidth(), 0);
-  });
-  ConnectBaseLamba2(WingPlugin::Reader::lineHeight, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->lineHeight(),
-                 hexeditor->renderer()->lineHeight(), 0);
-  });
-  ConnectBaseLamba2(WingPlugin::Reader::getLineRect, [=](quint64 line,
-                                                         quint64 firstline) {
-    PCHECKRETURN(hexfiles[_pcurfile].render->getLineRect(line, firstline),
-                 hexeditor->renderer()->getLineRect(line, firstline), QRect());
-  });
-  ConnectBaseLamba2(WingPlugin::Reader::headerLineCount, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->headerLineCount(),
-                 hexeditor->renderer()->headerLineCount(), 0);
-  });
-  ConnectBaseLamba2(WingPlugin::Reader::borderSize, [=] {
-    PCHECKRETURN(hexfiles[_pcurfile].render->borderSize(),
-                 hexeditor->renderer()->borderSize(), 0);
   });
   ConnectBaseLamba2(WingPlugin::Reader::copy, [=](bool hex) {
     PCHECK(hexfiles[_pcurfile].doc->copy(hex),
@@ -1587,11 +1562,6 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
                 isinsert ? QHexCursor::InsertMode
                          : QHexCursor::OverwriteMode), );
       });
-  ConnectControlLamba2(WingPlugin::Controller::setLineWidth, [=](quint8 width) {
-    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(hexfiles[_pcurfile].doc->cursor()->setLineWidth(width),
-           hexeditor->document()->cursor()->setLineWidth(width), );
-  });
 
   bool (WingPlugin::Controller::*metadata)(
       qint64 begin, qint64 end, const QColor &fgcolor, const QColor &bgcolor,

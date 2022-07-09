@@ -184,14 +184,8 @@ signals:
                     QList<quint64> &results, int maxCount = -1);
 
   // render
-  bool editableArea(int area);
   quint64 documentLastLine();
   int documentLastColumn();
-  int documentWidth();
-  int lineHeight();
-  QRect getLineRect(quint64 line, quint64 firstline);
-  int headerLineCount();
-  int borderSize();
 
   // metadata
   bool lineHasMetadata(quint64 line) const;
@@ -241,7 +235,6 @@ signals:
   void select(quint64 line, int column, int nibbleindex = 1);
   void selectOffset(qint64 offset, int length);
   void setInsertionMode(bool isinsert);
-  void setLineWidth(quint8 width);
   void enabledCursor(bool b);
   void select(qint64 offset, int length);
 
