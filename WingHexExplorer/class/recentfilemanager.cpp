@@ -63,8 +63,9 @@ RecentFileManager::~RecentFileManager() {
 }
 
 void RecentFileManager::addRecentFile(QString filename) {
-  if (m_recents.count() > 10)
-    return;
+  if (m_recents.count() > 10) {
+    m_recents.pop_back();
+  }
   if (QFile::exists(filename) && m_recents.indexOf(filename) < 0) {
     auto a = new QAction(m_menu);
     a = new QAction(m_menu);
@@ -111,6 +112,7 @@ void RecentFileManager::clearFile() {
   }
   m_recents.clear();
   hitems.clear();
+  Settings::instance()->saveRecent(m_recents);
   DMessageManager::instance()->sendMessage(m_parent, ICONRES("clearhis"),
                                            tr("HistoryClearFinished"));
 }
