@@ -348,8 +348,6 @@ public:
   dw->setWindowTitle(title);                                                   \
   dw->setObjectName(objname);
 
-#define PluginWidgetFree(w) w->deleteLater()
-
 #define PluginMenuInitBegin(menu, title)                                       \
   menu = new QMenu;                                                            \
   menu->setTitle(title);                                                       \

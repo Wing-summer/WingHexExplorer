@@ -1068,7 +1068,7 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::PluginMenuNeedAdd(QMenu *menu) {
-  if (menu != nullptr) {
+  if (menu) {
     logger->logMessage(WARNLOG(tr("MenuName :") + menu->title()));
     plgmenu->addMenu(menu);
   }
@@ -1076,7 +1076,7 @@ void MainWindow::PluginMenuNeedAdd(QMenu *menu) {
 
 void MainWindow::PluginDockWidgetAdd(QDockWidget *dockw,
                                      Qt::DockWidgetArea align) {
-  if (dockw != nullptr) {
+  if (dockw) {
     auto t = dockw->windowTitle();
     if (!t.trimmed().length()) {
       logger->logMessage(ERRLOG(tr("ErrDockWidgetAddNoName")));
@@ -1095,8 +1095,10 @@ void MainWindow::PluginDockWidgetAdd(QDockWidget *dockw,
 }
 
 void MainWindow::PluginToolButtonAdd(QToolButton *btn) {
-  if (btn)
+  if (btn) {
+    btn->setParent(toolbar);
     toolbar->addWidget(btn);
+  }
 }
 
 void MainWindow::connectBase(IWingPlugin *plugin) {

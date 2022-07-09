@@ -145,7 +145,7 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
 
 bool PluginSystem::LoadPlugin() {
 #ifdef QT_DEBUG
-  QDir plugindir("/home/wingsummer/QT Project/");
+  QDir plugindir(QCoreApplication::applicationDirPath() + "/plugin");
   //这是我的插件调试目录，如果调试插件，请更换路径
 
   plugindir.setNameFilters(QStringList("*.so"));
