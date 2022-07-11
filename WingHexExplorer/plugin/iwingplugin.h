@@ -6,11 +6,12 @@
 #include <QList>
 #include <QMenu>
 #include <QObject>
+#include <QToolBar>
 #include <QToolButton>
 #include <QWidget>
 #include <QtCore>
 
-#define SDKVERSION 3
+#define SDKVERSION 4
 #define GETPLUGINQM(name)                                                      \
   (QCoreApplication::applicationDirPath() + "/plglang/" + name)
 
@@ -300,25 +301,42 @@ struct WingPluginInfo {
   QString pluginComment;
 };
 
+#define WINGSUMMER "wingsummer"
+
 class IWingPlugin : public QObject {
   Q_OBJECT
 public:
-  int sdkVersion() { return SDKVERSION; }
-  virtual bool init(QList<WingPluginInfo> loadedplugin) = 0;
+  virtual int sdkVersion() = 0;
+  virtual QString signature() = 0;
+  QString puid() { return GetPUID(this); }
   virtual ~IWingPlugin() {}
+  virtual QMenu *registerMenu() { return nullptr; }
+  virtual QToolButton *registerToolButton() { return nullptr; }
+  virtual QDockWidget *registerDockWidget() { return nullptr; }
+  virtual QToolBar *registerToolBar() { return nullptr; }
+  virtual Qt::ToolBarArea registerToolBarArea() {
+    return Qt::ToolBarArea::TopToolBarArea;
+  }
+  virtual Qt::DockWidgetArea registerDockWidgetDockArea() {
+    return Qt::DockWidgetArea::NoDockWidgetArea;
+  }
+  virtual bool init(QList<WingPluginInfo> loadedplugin) = 0;
   virtual void unload() = 0;
-  virtual QMenu *registerMenu() = 0;
-  virtual QToolButton *registerToolButton() = 0;
-  virtual QDockWidget *registerDockWidget() = 0;
-  virtual Qt::DockWidgetArea registerDockWidgetDockArea() = 0;
   virtual QString pluginName() = 0;
   virtual QString pluginAuthor() = 0;
   virtual uint pluginVersion() = 0;
-  virtual QString puid() = 0;
-  virtual QString signature() = 0;
   virtual QString pluginComment() = 0;
-  virtual QList<QVariant> optionalInfos() = 0;
-  virtual HookIndex getHookSubscribe() = 0;
+  virtual HookIndex getHookSubscribe() { return HookIndex::None; }
+
+  static QString GetPUID(IWingPlugin *plugin) {
+    auto str = QString("%1%2%3%4")
+                   .arg(WINGSUMMER)
+                   .arg(plugin->pluginName())
+                   .arg(plugin->pluginAuthor())
+                   .arg(plugin->pluginVersion());
+    return QCryptographicHash::hash(str.toLatin1(), QCryptographicHash::Md5)
+        .toHex();
+  }
 
 public slots:
   virtual void plugin2MessagePipe(WingPluginMessage type,
@@ -333,8 +351,6 @@ public:
   WingPlugin::Reader reader;
   WingPlugin::Controller controller;
 };
-
-#define WINGSUMMER "wingsummer"
 
 #define PluginToolButtonInit(tbtn, menu, icon)                                 \
   tbtn = new QToolButton;                                                      \
@@ -395,29 +411,6 @@ public:
     Segment;                                                                   \
     this->requestRelease();                                                    \
   }
-
-class PluginUtils {
-public:
-  static QString GetPUID(IWingPlugin *plugin) {
-    auto str = QString("%1%2%3%4")
-                   .arg(WINGSUMMER)
-                   .arg(plugin->pluginName())
-                   .arg(plugin->pluginAuthor())
-                   .arg(plugin->pluginVersion());
-    return QCryptographicHash::hash(str.toLatin1(), QCryptographicHash::Md5)
-        .toHex();
-  }
-
-  static QString GetPUID(QString pluginName, QString author, uint version) {
-    auto str = QString("%1%2%3%4")
-                   .arg(WINGSUMMER)
-                   .arg(pluginName)
-                   .arg(author)
-                   .arg(version);
-    return QCryptographicHash::hash(str.toLatin1(), QCryptographicHash::Md5)
-        .toHex();
-  }
-};
 
 #define IWINGPLUGIN_INTERFACE_IID "com.wingsummer.iwingplugin"
 Q_DECLARE_INTERFACE(IWingPlugin, IWINGPLUGIN_INTERFACE_IID)

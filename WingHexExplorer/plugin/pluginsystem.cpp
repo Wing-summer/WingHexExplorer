@@ -47,97 +47,122 @@ void PluginSystem::raiseDispatch(HookIndex hookindex, QList<QVariant> params) {
 }
 
 void PluginSystem::loadPlugin(QFileInfo fileinfo) {
+  LP lp(LP::begin);
+
   if (fileinfo.exists()) {
     QPluginLoader loader(fileinfo.absoluteFilePath());
     logger->logMessage(
         INFOLOG(QString(">> ") + tr("LoadingPlugin") + fileinfo.fileName()));
     QList<WingPluginInfo> loadedplginfos;
-    auto p = qobject_cast<IWingPlugin *>(loader.instance());
-    if (p) {
-      if (p->signature() != WINGSUMMER) {
-        logger->logMessage(ERRLOG(tr("ErrLoadPluginSign")));
-        loader.unload();
-        return;
-      }
-      if (p->sdkVersion() != SDKVERSION) {
-        logger->logMessage(ERRLOG(tr("ErrLoadPluginSDKVersion")));
-        loader.unload();
-        return;
-      }
-      if (!p->pluginName().trimmed().length()) {
-        logger->logMessage(ERRLOG(tr("ErrLoadPluginNoName")));
-        loader.unload();
-        return;
-      }
-      auto puid = PluginUtils::GetPUID(p);
-      if (puid != p->puid()) {
-        logger->logMessage(ERRLOG(tr("ErrLoadPluginPUID")));
-        loader.unload();
-        return;
-      }
-      if (loadedpuid.contains(puid)) {
-        logger->logMessage(ERRLOG(tr("ErrLoadLoadedPlugin")));
-        loader.unload();
-        return;
-      }
+    try {
+      auto p = qobject_cast<IWingPlugin *>(loader.instance());
+      if (p) {
+        lp = LP::signature;
+        if (p->signature() != WINGSUMMER) {
+          logger->logMessage(ERRLOG(tr("ErrLoadPluginSign")));
+          loader.unload();
+          return;
+        }
+        lp = LP::sdkVersion;
+        if (p->sdkVersion() != SDKVERSION) {
+          logger->logMessage(ERRLOG(tr("ErrLoadPluginSDKVersion")));
+          loader.unload();
+          return;
+        }
+        lp = LP::pluginName;
+        if (!p->pluginName().trimmed().length()) {
+          logger->logMessage(ERRLOG(tr("ErrLoadPluginNoName")));
+          loader.unload();
+          return;
+        }
+        lp = LP::puid;
+        auto puid = IWingPlugin::GetPUID(p);
+        if (puid != p->puid()) {
+          logger->logMessage(ERRLOG(tr("ErrLoadPluginPUID")));
+          loader.unload();
+          return;
+        }
 
-      emit p->plugin2MessagePipe(WingPluginMessage::PluginLoading, emptyparam);
+        if (loadedpuid.contains(puid)) {
+          logger->logMessage(ERRLOG(tr("ErrLoadLoadedPlugin")));
+          loader.unload();
+          return;
+        }
 
-      if (!p->init(loadedplginfos)) {
-        logger->logMessage(ERRLOG(tr("ErrLoadInitPlugin")));
-        loader.unload();
-        return;
-      }
+        lp = LP::plugin2MessagePipe;
+        emit p->plugin2MessagePipe(WingPluginMessage::PluginLoading,
+                                   emptyparam);
 
-      WingPluginInfo info;
-      info.puid = p->puid();
-      info.pluginName = p->pluginName();
-      info.pluginAuthor = p->pluginAuthor();
-      info.pluginComment = p->pluginComment();
-      info.pluginVersion = p->pluginVersion();
+        if (!p->init(loadedplginfos)) {
+          logger->logMessage(ERRLOG(tr("ErrLoadInitPlugin")));
+          loader.unload();
+          return;
+        }
 
-      loadedplginfos.push_back(info);
-      loadedplgs.push_back(p);
-      loadedpuid << puid;
+        WingPluginInfo info;
+        info.puid = p->puid();
+        info.pluginName = p->pluginName();
+        info.pluginAuthor = p->pluginAuthor();
+        info.pluginComment = p->pluginComment();
+        info.pluginVersion = p->pluginVersion();
 
-      logger->logMessage(WARNLOG(tr("PluginWidgetRegister")));
-      auto menu = p->registerMenu();
-      if (menu) {
-        emit this->PluginMenuNeedAdd(menu);
-      }
+        loadedplginfos.push_back(info);
+        loadedplgs.push_back(p);
+        loadedpuid << puid;
 
-      auto tbtn = p->registerToolButton();
-      if (tbtn) {
-        emit this->PluginToolButtonAdd(tbtn);
-      }
+        logger->logMessage(WARNLOG(tr("PluginWidgetRegister")));
+        lp = LP::registerMenu;
+        auto menu = p->registerMenu();
+        if (menu) {
+          emit this->PluginMenuNeedAdd(menu);
+        }
+        lp = LP::registerTool;
+        auto tb = p->registerToolBar();
+        if (tb) {
+          emit this->PluginToolBarAdd(tb, p->registerToolBarArea());
+        } else {
+          auto tbtn = p->registerToolButton();
+          if (tbtn) {
+            emit this->PluginToolButtonAdd(tbtn);
+          }
+        }
 
-      auto dockw = p->registerDockWidget();
-      if (dockw) {
-        emit this->PluginDockWidgetAdd(dockw, p->registerDockWidgetDockArea());
-      }
+        lp = LP::registerDockWidget;
+        auto dockw = p->registerDockWidget();
+        if (dockw) {
+          emit this->PluginDockWidgetAdd(dockw,
+                                         p->registerDockWidgetDockArea());
+        }
 
-      emit ConnectBase(p);
+        emit ConnectBase(p);
 
-      auto sub = p->getHookSubscribe();
+        lp = LP::getHookSubscribe;
+        auto sub = p->getHookSubscribe();
 
 #define INSERTSUBSCRIBE(HOOK)                                                  \
   if (sub & HOOK)                                                              \
     dispatcher[HOOK].push_back(p);
 
-      INSERTSUBSCRIBE(HookIndex::OpenFileBegin);
-      INSERTSUBSCRIBE(HookIndex::OpenFileEnd);
-      INSERTSUBSCRIBE(HookIndex::OpenDriverBegin);
-      INSERTSUBSCRIBE(HookIndex::OpenDriverEnd);
-      INSERTSUBSCRIBE(HookIndex::CloseFileBegin);
-      INSERTSUBSCRIBE(HookIndex::CloseFileEnd);
-      INSERTSUBSCRIBE(HookIndex::NewFileBegin);
-      INSERTSUBSCRIBE(HookIndex::NewFileEnd);
-      INSERTSUBSCRIBE(HookIndex::DocumentSwitched);
+        INSERTSUBSCRIBE(HookIndex::OpenFileBegin);
+        INSERTSUBSCRIBE(HookIndex::OpenFileEnd);
+        INSERTSUBSCRIBE(HookIndex::OpenDriverBegin);
+        INSERTSUBSCRIBE(HookIndex::OpenDriverEnd);
+        INSERTSUBSCRIBE(HookIndex::CloseFileBegin);
+        INSERTSUBSCRIBE(HookIndex::CloseFileEnd);
+        INSERTSUBSCRIBE(HookIndex::NewFileBegin);
+        INSERTSUBSCRIBE(HookIndex::NewFileEnd);
+        INSERTSUBSCRIBE(HookIndex::DocumentSwitched);
 
-      emit p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
+        emit p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
 
-    } else {
-      logger->logMessage(ERRLOG(loader.errorString()));
+      } else {
+        logger->logMessage(ERRLOG(loader.errorString()));
+        loader.unload();
+      }
+    } catch (...) {
+      auto m = QMetaEnum::fromType<LP>();
+      logger->logMessage(
+          ERRLOG(QString(tr("ErrLoadPluginLoc") + m.valueToKey(int(lp)))));
       loader.unload();
     }
   }

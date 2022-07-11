@@ -62,11 +62,6 @@ void PluginWindow::on_list_selchanged() {
   Info(tr("pluginVersion"), QString::number(plg->pluginVersion()));
   Info(tr("pluginComment"), plg->pluginComment());
   Info(tr("PUID"), plg->puid());
-  int i = 0;
-  Info(tr("optionalInfos"), "");
-  for (auto item : plg->optionalInfos()) {
-    Info(QString::number(i), item.toString());
-  }
   txtb->append(QString(10, '-'));
   bool hc = plg == m_pluginsys->currentControlPlugin();
   Info(tr("HasControl"), Bool2String(hc));

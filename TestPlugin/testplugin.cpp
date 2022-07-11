@@ -7,6 +7,8 @@ TestPlugin::TestPlugin(QObject *parent) { Q_UNUSED(parent) }
 
 TestPlugin::~TestPlugin() {}
 
+int TestPlugin::sdkVersion() { return SDKVERSION; }
+
 bool TestPlugin::init(QList<WingPluginInfo> loadedplugin) {
   if (loadedplugin.length() > 0) {
     QString ps;
@@ -30,12 +32,7 @@ bool TestPlugin::init(QList<WingPluginInfo> loadedplugin) {
   return true;
 }
 
-void TestPlugin::unload() {
-  PluginWidgetFree(dw);
-  PluginWidgetFree(testmenu);
-}
-
-QString TestPlugin::puid() { return PluginUtils::GetPUID(this); }
+void TestPlugin::unload() {}
 
 QString TestPlugin::pluginName() { return "TestPlugin"; }
 
@@ -48,8 +45,6 @@ QString TestPlugin::pluginComment() {
 uint TestPlugin::pluginVersion() { return 1; }
 
 QString TestPlugin::signature() { return WINGSUMMER; }
-
-QList<QVariant> TestPlugin::optionalInfos() { return QList<QVariant>(); }
 
 void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
                                     QList<QVariant> msg) {
@@ -72,10 +67,6 @@ QMenu *TestPlugin::registerMenu() { return testmenu; }
 
 QDockWidget *TestPlugin::registerDockWidget() { return dw; }
 
-QToolButton *TestPlugin::registerToolButton() { return nullptr; }
-
 Qt::DockWidgetArea TestPlugin::registerDockWidgetDockArea() {
   return Qt::DockWidgetArea::LeftDockWidgetArea;
 }
-
-HookIndex TestPlugin::getHookSubscribe() { return HookIndex::None; }

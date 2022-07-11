@@ -21,7 +21,7 @@ private:
 signals:
 
 public slots:
-  Q_SCRIPTABLE void openFiles(QStringList files);
+  Q_SCRIPTABLE static void openFiles(QStringList files);
 };
 
 #endif // APPMANAGER_H

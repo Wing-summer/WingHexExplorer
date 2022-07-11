@@ -17,6 +17,23 @@
 class PluginSystem : public QObject {
   Q_OBJECT
 public:
+  enum class LP {
+    begin,
+    signature,
+    sdkVersion,
+    pluginName,
+    puid,
+    plugin2MessagePipe,
+    init,
+    registerMenu,
+    registerTool,
+    registerDockWidget,
+    getHookSubscribe,
+  };
+
+  Q_ENUM(LP)
+
+public:
   PluginSystem(QObject *parent = nullptr);
   ~PluginSystem();
   bool LoadPlugin();
@@ -40,6 +57,7 @@ signals:
   void PluginMenuNeedAdd(QMenu *menu);
   void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
   void PluginToolButtonAdd(QToolButton *btn);
+  void PluginToolBarAdd(QToolBar *tb, Qt::ToolBarArea align);
   void ConnectBase(IWingPlugin *plugin);
   void ConnectControl(IWingPlugin *plugin);
   void DisconnectControl(IWingPlugin *plugin);

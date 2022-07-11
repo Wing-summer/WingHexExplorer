@@ -19,19 +19,16 @@ public:
   bool init(QList<WingPluginInfo> loadedplugin) override;
   ~TestPlugin() override;
   void unload() override;
+  int sdkVersion() override;
   QMenu *registerMenu() override;
-  QToolButton *registerToolButton() override;
   QDockWidget *registerDockWidget() override;
   QString pluginName() override;
   QString pluginAuthor() override;
   uint pluginVersion() override;
-  QString puid() override;
   QString signature() override;
   QString pluginComment() override;
-  QList<QVariant> optionalInfos() override;
   void plugin2MessagePipe(WingPluginMessage type, QList<QVariant> msg) override;
   Qt::DockWidgetArea registerDockWidgetDockArea() override;
-  HookIndex getHookSubscribe() override;
 
 private:
   QMenu *testmenu;

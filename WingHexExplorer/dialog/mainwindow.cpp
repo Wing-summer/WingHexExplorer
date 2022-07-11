@@ -4,6 +4,7 @@
 #include "QHexView/document/qhexcursor.h"
 #include "QHexView/document/qhexmetadata.h"
 #include "aboutsoftwaredialog.h"
+#include "class/appmanager.h"
 #include "class/recentfilemanager.h"
 #include "driverselectordialog.h"
 #include "encodingdialog.h"
@@ -64,6 +65,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   // init mainwindow
   setMinimumSize(QSize(1200, 800));
+  setAcceptDrops(true);
 
   auto _title = titlebar();
   auto picon = Utilities::isRoot() ? ICONRES("iconroot") : ICONRES("icon");
@@ -1098,6 +1100,12 @@ void MainWindow::PluginToolButtonAdd(QToolButton *btn) {
   if (btn) {
     btn->setParent(toolbar);
     toolbar->addWidget(btn);
+  }
+}
+
+void MainWindow::PluginToolBarAdd(QToolBar *tb, Qt::ToolBarArea align) {
+  if (tb) {
+    addToolBar(align, tb);
   }
 }
 
@@ -2427,6 +2435,26 @@ void MainWindow::on_exportfile() {
 }
 
 void MainWindow::on_exit() { close(); }
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event) {
+  if (event->mimeData()->hasUrls())
+    event->acceptProposedAction();
+  else
+    event->ignore();
+}
+
+void MainWindow::dropEvent(QDropEvent *event) {
+  const QMimeData *mimeData = event->mimeData();
+  if (mimeData->hasUrls()) {
+    QList<QUrl> urlList = mimeData->urls();
+    QStringList files;
+    for (auto item : mimeData->urls()) {
+      if (!item.isEmpty())
+        files << item.toLocalFile();
+    }
+    AppManager::openFiles(files);
+  }
+}
 
 void MainWindow::showEvent(QShowEvent *event) { Q_UNUSED(event); }
 
