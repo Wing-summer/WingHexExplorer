@@ -246,6 +246,7 @@ private:
   // shadow
   bool requestControl(int timeout);
   bool requestRelease();
+  bool hasControl();
 
   void enableDirverLimit(bool b);
 

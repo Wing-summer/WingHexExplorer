@@ -345,6 +345,7 @@ public slots:
 signals:
   bool requestControl(int timeout = 1500);
   bool requestRelease();
+  bool hasControl();
   QWidget *getParentWindow();
 
 public:

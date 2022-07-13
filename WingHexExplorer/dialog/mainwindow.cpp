@@ -1123,6 +1123,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   // connect neccessary signal-slot
   ConnectBase(IWingPlugin::requestControl, MainWindow::requestControl);
   ConnectBase(IWingPlugin::requestRelease, MainWindow::requestRelease);
+  ConnectBase(IWingPlugin::hasControl, MainWindow::hasControl);
   ConnectBaseLamba(IWingPlugin::getParentWindow, [=] { return this; });
 
 #define PCHECK(T, TF, F)                                                       \
@@ -1953,6 +1954,11 @@ bool MainWindow::requestControl(int timeout) {
   auto res = plgsys->requestControl(s, timeout);
   _pcurfile = _currentfile;
   return res;
+}
+
+bool MainWindow::hasControl() {
+  auto s = qobject_cast<IWingPlugin *>(sender());
+  return plgsys->currentControlPlugin() == s;
 }
 
 bool MainWindow::requestRelease() {
