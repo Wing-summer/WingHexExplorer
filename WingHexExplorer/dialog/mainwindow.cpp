@@ -2049,7 +2049,8 @@ void MainWindow::newFile(bool bigfile) {
   tabs->setCurrentIndex(curindex);
   tabs->setTabToolTip(curindex, title);
   setEditModeEnabled(true);
-
+  p->setDocSaved();
+  hexeditor->getStatus();
   if (_enableplugin) {
     plgsys->raiseDispatch(HookIndex::NewFileEnd, params);
   }
