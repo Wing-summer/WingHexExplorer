@@ -84,16 +84,9 @@ int main(int argc, char *argv[]) {
     Q_UNUSED(as)
 
     auto manager = AppManager::instance();
-
     MainWindow w;
-
-    for (auto item : urls) {
-      if (w.openWorkSpace(item) != ErrFile::Success)
-        w.openFile(item);
-    }
-
     manager->mWindow = &w;
-
+    manager->openFiles(urls);
     w.show();
 
     dbus.registerObject(com, manager, QDBusConnection::ExportScriptableSlots);

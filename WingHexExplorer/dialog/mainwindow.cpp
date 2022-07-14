@@ -414,7 +414,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   tm->addAction(a);
   menu->addMenu(tm);
 
-  titlebar()->setMenu(menu);
+  _title->setMenu(menu);
 
   hexeditorMenu = new DMenu(this);
   hexeditorMenu->setEnabled(false);
@@ -1046,6 +1046,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
             &MainWindow::PluginDockWidgetAdd);
     connect(plgsys, &PluginSystem::PluginToolButtonAdd, this,
             &MainWindow::PluginToolButtonAdd);
+    connect(plgsys, &PluginSystem::PluginToolBarAdd, this,
+            &MainWindow::PluginToolBarAdd);
     plgsys->LoadPlugin();
   } else {
     plgmenu->setEnabled(false);

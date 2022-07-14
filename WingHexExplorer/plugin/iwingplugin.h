@@ -365,6 +365,50 @@ public:
   dw->setWindowTitle(title);                                                   \
   dw->setObjectName(objname);
 
+#define PluginToolBarInitBegin(toolbar, objname)                               \
+  toolbar = new QToolBar;                                                      \
+  toolbar->setObjectName(objname);                                             \
+  {                                                                            \
+    QAction *a;
+
+#define PluginToolBarAddAction(toolbar, Icon, Slot, ToolTip)                   \
+  a = new QAction(toolbar);                                                    \
+  a->setIcon(Icon);                                                            \
+  connect(a, &QAction::triggered, this, &Slot);                                \
+  a->setToolTip(ToolTip);                                                      \
+  toolbar->addAction(a);
+
+#define PluginToolBarAddLamba(toolbar, Icon, Lamba, ToolTip)                   \
+  a = new QAction(toolbar);                                                    \
+  a->setIcon(Icon);                                                            \
+  connect(a, &QAction::triggered, this, Lamba);                                \
+  a->setToolTip(ToolTip);                                                      \
+  toolbar->addAction(a);
+
+#define PluginToolBarAddToolBtnBegin(DIcon)                                    \
+  {                                                                            \
+    auto tbtn = new QToolButton(this);                                         \
+    tbtn->setIcon(DIcon);                                                      \
+    auto tmenu = new QMenu(this);
+
+#define PluginToolBarAddToolBtnAction(Icon, Title, Slot)                       \
+  a = new QAction(Icon, Title, this);                                          \
+  connect(a, &QAction::triggered, this, &Slot);                                \
+  tmenu->addAction(a);
+
+#define PluginToolBarAddToolBtnLamba(Icon, Title, Lamba)                       \
+  a = new QAction(Icon, Title, this);                                          \
+  connect(a, &QAction::triggered, this, Lamba);                                \
+  tmenu->addAction(a);
+
+#define PluginToolBarAddToolBtnEnd(toolbar)                                    \
+  tbtn->setMenu(tmenu);                                                        \
+  tbtn->setPopupMode(DToolButton::ToolButtonPopupMode::InstantPopup);          \
+  toolbar->addWidget(tbtn);                                                    \
+  }
+
+#define PluginToolBarInitEnd() }
+
 #define PluginMenuInitBegin(menu, title)                                       \
   menu = new QMenu;                                                            \
   menu->setTitle(title);                                                       \
