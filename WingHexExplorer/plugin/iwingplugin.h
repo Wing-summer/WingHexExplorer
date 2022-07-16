@@ -75,6 +75,8 @@ struct HexMetadataAbsoluteItem {
            comment == item.comment;
   }
 
+  HexMetadataAbsoluteItem() = default;
+
   HexMetadataAbsoluteItem(qint64 begin, qint64 end, QColor foreground,
                           QColor background, QString comment) {
     this->begin = begin;
@@ -90,6 +92,8 @@ struct HexMetadataItem {
   int start, length;
   QColor foreground, background;
   QString comment;
+
+  HexMetadataItem() = default;
 
   // added by wingsummer
   bool operator==(const HexMetadataItem &item) {

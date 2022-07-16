@@ -2486,6 +2486,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
   m_settings->saveWindowState(this);
   m_settings->saveFileDialogCurrent(lastusedpath);
   event->accept();
+  QApplication::exit();
 }
 
 void MainWindow::on_save() {

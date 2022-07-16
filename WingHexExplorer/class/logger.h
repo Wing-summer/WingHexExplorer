@@ -5,7 +5,7 @@
 
 #define INFOLOG(msg) "<font color=\"green\">" + msg + "</font><br />"
 #define ERRLOG(msg) "<font color=\"red\">" + msg + "</font><br />"
-#define WARNLOG(msg) "<font color=\"yellow\">" + msg + "</font><br />"
+#define WARNLOG(msg) "<font color=\"gold\">" + msg + "</font><br />"
 
 class Logger : public QObject {
   Q_OBJECT
