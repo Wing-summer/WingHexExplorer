@@ -191,16 +191,27 @@ bool PluginSystem::requestControl(IWingPlugin *plugin, int timeout) {
   if (plugin == nullptr)
     return false;
   auto res = mutex.tryLock(timeout);
-  if (!res)
+  if (!res) {
+    mutex.unlock();
     return false;
+  }
 
   auto oldctl = curpluginctl;
   if (oldctl) {
-    if (plugintimeout[oldctl]) {
-      initControl(plugin);
-      oldctl->plugin2MessagePipe(
-          WingPluginMessage::ConnectTimeout,
-          QList<QVariant>({plugin->pluginName(), plugin->puid()}));
+    if (oldctl == plugin) {
+      resetTimeout(plugin);
+      mutex.unlock();
+      return true;
+    } else {
+      if (plugintimeout[oldctl]) {
+        initControl(plugin);
+        oldctl->plugin2MessagePipe(
+            WingPluginMessage::ConnectTimeout,
+            QList<QVariant>({plugin->pluginName(), plugin->puid()}));
+      } else {
+        mutex.unlock();
+        return false;
+      }
     }
   } else {
     initControl(plugin);
