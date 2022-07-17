@@ -211,7 +211,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## 有关仓库
 
-&emsp;&emsp;最近发现了一个仓库，十分简洁，还允许免登录下载发行版。对于仅仅我来维护该软件仓库足够了。以后 Gitee 仅作为备份使用，故关闭了它的 issue 、PR 、Wiki 功能，如果想贡献想法或者代码建议到 GitLink ： https://www.gitlink.org.cn/wingsummer/WingHexExplorer 。
+&emsp;&emsp;最近发现了一个仓库，十分简洁，还允许免登录下载发行版。对于仅仅我来维护该软件仓库足够了。以后 Gitee 仅作为备份使用，但也可提交 issue 或者 PR 。如果想贡献想法或者代码建议到 GitLink ： https://www.gitlink.org.cn/wingsummer/WingHexExplorer 。
 
 &emsp;&emsp;如果想到 Gitea 看，请到： https://code.gitlink.org.cn/wingsummer/WingHexExplorer 。其实它就是 GitLink ，不过貌似 GitLink 显示仓库图片会有点 Bug ， **推荐到这里来！**
 
