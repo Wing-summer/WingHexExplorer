@@ -128,10 +128,10 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         }
 
         lp = LP::registerDockWidget;
-        auto dockw = p->registerDockWidget();
-        if (dockw) {
-          emit this->PluginDockWidgetAdd(dockw,
-                                         p->registerDockWidgetDockArea());
+        QMap<QDockWidget *, Qt::DockWidgetArea> dws;
+        p->registerDockWidget(dws);
+        if (dws.count()) {
+          emit this->PluginDockWidgetAdd(p->pluginName(), dws);
         }
 
         emit ConnectBase(p);

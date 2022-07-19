@@ -11,7 +11,7 @@
 #include <QWidget>
 #include <QtCore>
 
-#define SDKVERSION 4
+#define SDKVERSION 5
 #define GETPLUGINQM(name)                                                      \
   (QCoreApplication::applicationDirPath() + "/plglang/" + name)
 
@@ -30,6 +30,8 @@ enum ErrFile {
 struct FindResult {
   int fid;
   QList<int> indices;
+
+  FindResult() {}
 };
 
 struct BookMark {
@@ -316,13 +318,13 @@ public:
   virtual ~IWingPlugin() {}
   virtual QMenu *registerMenu() { return nullptr; }
   virtual QToolButton *registerToolButton() { return nullptr; }
-  virtual QDockWidget *registerDockWidget() { return nullptr; }
+  virtual void
+  registerDockWidget(QMap<QDockWidget *, Qt::DockWidgetArea> &rdw) {
+    Q_UNUSED(rdw);
+  }
   virtual QToolBar *registerToolBar() { return nullptr; }
   virtual Qt::ToolBarArea registerToolBarArea() {
     return Qt::ToolBarArea::TopToolBarArea;
-  }
-  virtual Qt::DockWidgetArea registerDockWidgetDockArea() {
-    return Qt::DockWidgetArea::NoDockWidgetArea;
   }
   virtual bool init(QList<WingPluginInfo> loadedplugin) = 0;
   virtual void unload() = 0;

@@ -55,7 +55,8 @@ private:
 
 signals:
   void PluginMenuNeedAdd(QMenu *menu);
-  void PluginDockWidgetAdd(QDockWidget *dockw, Qt::DockWidgetArea align);
+  void PluginDockWidgetAdd(QString pluginname,
+                           QMap<QDockWidget *, Qt::DockWidgetArea> &rdw);
   void PluginToolButtonAdd(QToolButton *btn);
   void PluginToolBarAdd(QToolBar *tb, Qt::ToolBarArea align);
   void ConnectBase(IWingPlugin *plugin);

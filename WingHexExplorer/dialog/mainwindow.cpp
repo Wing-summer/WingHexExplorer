@@ -30,6 +30,7 @@
 #include <QIcon>
 #include <QKeySequence>
 #include <QList>
+#include <QMap>
 #include <QMessageBox>
 #include <QMimeDatabase>
 #include <QScrollBar>
@@ -1078,9 +1079,11 @@ void MainWindow::PluginMenuNeedAdd(QMenu *menu) {
   }
 }
 
-void MainWindow::PluginDockWidgetAdd(QDockWidget *dockw,
-                                     Qt::DockWidgetArea align) {
-  if (dockw) {
+void MainWindow::PluginDockWidgetAdd(
+    QString pluginname, QMap<QDockWidget *, Qt::DockWidgetArea> &rdw) {
+  if (rdw.count() == 1) {
+    auto dockw = rdw.firstKey();
+    auto align = rdw.first();
     auto t = dockw->windowTitle();
     if (!t.trimmed().length()) {
       logger->logMessage(ERRLOG(tr("ErrDockWidgetAddNoName")));
@@ -1095,6 +1098,31 @@ void MainWindow::PluginDockWidgetAdd(QDockWidget *dockw,
       dockw->raise();
     });
     winmenu->addAction(a);
+  } else {
+    DMenu *d = new DMenu(pluginname, winmenu);
+    QDockWidget *dw = nullptr;
+    for (auto p = rdw.constBegin(); p != rdw.constEnd(); p++) {
+      auto dockw = p.key();
+      auto align = p.value();
+      auto t = dockw->windowTitle();
+      if (!t.trimmed().length()) {
+        logger->logMessage(ERRLOG(tr("ErrDockWidgetAddNoName")));
+        return;
+      }
+      logger->logMessage(WARNLOG(tr("DockWidgetName :") + t));
+      dockw->setParent(this);
+      addDockWidget(align, dockw);
+      if (dw)
+        tabifyDockWidget(dw, dockw);
+      dw = dockw;
+      auto a = new QAction(t, winmenu);
+      connect(a, &QAction::triggered, this, [dockw] {
+        dockw->show();
+        dockw->raise();
+      });
+      d->addAction(a);
+    }
+    winmenu->addMenu(d);
   }
 }
 
