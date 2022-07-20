@@ -9,6 +9,7 @@
   - [有关仓库](#有关仓库)
   - [WIKI](#wiki)
   - [以后维护](#以后维护)
+  - [插件库](#插件库)
   - [应用商店](#应用商店)
     - [深度商店](#深度商店)
     - [星火商店](#星火商店)
@@ -79,7 +80,6 @@
 3. 如果您想提交修复或者增进程序的代码，请在 pull request 递交。
 4. 任何成功参与代码 Bug 修复以及增进程序功能的同志和 Sponsor ，都会在本仓库 ReadMe 和附属说明文件中体现，您如果是其中之一，本人可以按照您合理的意愿来进行说明。
   
-
 **加入我们并不意味着就是代码的维护，你可以选择下列一项或多项进行参与：**
 
 1. 代码维护：实现新功能或修复 BUG ，对代码进行维护和升级。
@@ -89,7 +89,7 @@
 
 ### 协议
 
-&emsp;&emsp;本软件如果用于非商业用途，采用`WingSummer OpenSource Lincense`协议，对应的协议内容在仓库`OpenSource-LICENSE`文件。 **没有我的任何授权，不得将该软件用于任何形式的商业用途，包括我改良的部分，除非你直接使用原组件，不限于商业二次开发、换 UI 套壳、二手转卖等，我不允许任何人随意把我当作免费劳动力作为赚钱的工具！** 我的初衷是让 Linux 的生态更加完整，早日让祖国推动操作系统国产化。我不希望“吸血鬼”们利益归自己，脏活累活给开源，都那么理所当然，开源就是这么被败坏的。我不希望因为版权的事情牵扯了大量的精力。本人初次深入接触开源协议，不太会根据自己真正的需要来选择合适的协议，感谢前辈`BLumia`给我提供相关的建议和指导。由于本人一直在`README`一直强调商业用途相关事宜，本开源协议和我强调的内容相一致，故适用于目前所有本仓库的代码及其`fork`分支以及所有发行版。
+&emsp;&emsp;本软件如果用于非商业用途，采用`WingSummer OpenSource Lincense`协议，对应的协议内容在仓库`OpenSource-LICENSE`文件。 **没有我的任何授权，不得将该软件用于任何形式的商业用途，包括我改良的部分，除非你直接使用原组件，不限于商业二次开发、换 UI 套壳、二手转卖等，我不允许任何人随意把我当作免费劳动力作为赚钱的工具！** 我的初衷是让 Linux 的生态更加完整，早日让祖国推动操作系统国产化。我不希望“吸血鬼”们利益归自己，脏活累活给开源，都那么理所当然，开源就是这么被败坏的。我不希望因为版权的事情牵扯了大量的精力。本人初次深入接触开源协议，不太会根据自己真正的需要来选择合适的协议，感谢`Deepin`前辈`BLumia`给我提供相关的建议和指导。由于本人一直在`README`一直强调商业用途相关事宜，本开源协议和我强调的内容相一致，故适用于目前所有本仓库的代码及其`fork`分支以及所有发行版。
 
 &emsp;&emsp;如果你想将本软件或者本软件的部分代码用于商业用途，必须亲自咨询我，商讨商业授权相关事宜。如果得到授权则采用`WingSummer Commerical License`协议，也就是本仓库的`Commerical-LICENSE`文件的内容。
 
@@ -211,7 +211,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## 有关仓库
 
-&emsp;&emsp;最近发现了一个仓库，十分简洁，还允许免登录下载发行版。对于仅仅我来维护该软件仓库足够了。以后 Gitee 仅作为备份使用，但也可提交 issue 或者 PR 。如果想贡献想法或者代码建议到 GitLink ： https://www.gitlink.org.cn/wingsummer/WingHexExplorer 。
+&emsp;&emsp;最近发现了一个仓库，十分简洁，还允许免登录下载发行版。对于仅仅我来维护该软件仓库足够了。以后 Gitee 仅作为备份使用，故关闭了它的 issue 、PR 、Wiki 功能，如果想贡献想法或者代码建议到 GitLink ： https://www.gitlink.org.cn/wingsummer/WingHexExplorer 。
 
 &emsp;&emsp;如果想到 Gitea 看，请到： https://code.gitlink.org.cn/wingsummer/WingHexExplorer 。其实它就是 GitLink ，不过貌似 GitLink 显示仓库图片会有点 Bug ， **推荐到这里来！**
 
@@ -228,6 +228,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ## 以后维护
 
 &emsp;&emsp;以后我维护的就没那么勤快了，打算每月如果有更新发布一次发行版，如果没有就顺延。但修 Bug 肯定早于发行版发布，如果有能力请阅读我的 Wiki 自己编译替换使用。如果提供的捐助比较多的话，我会把精力放多一点。
+
+## 插件库
+
+- WingElfParser：一个强大的用于 ELF 文件分析的羽云十六进制编辑器插件。[Gitea](https://code.gitlink.org.cn/wingsummer/WingElfParser) | [Gitee](https://gitee.com/wingsummer/wing-elf-parser)
+- WingHexPy：一个强大的插件，以提供羽云十六进制编辑器的 Python 脚本分析支持。[Gitea](https://code.gitlink.org.cn/wingsummer/WingHexPy) | [Gitee](https://gitee.com/wingsummer/wing-hex-py)
 
 ## 应用商店
 
