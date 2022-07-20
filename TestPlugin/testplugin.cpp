@@ -65,8 +65,7 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
 
 QMenu *TestPlugin::registerMenu() { return testmenu; }
 
-QDockWidget *TestPlugin::registerDockWidget() { return dw; }
-
-Qt::DockWidgetArea TestPlugin::registerDockWidgetDockArea() {
-  return Qt::DockWidgetArea::LeftDockWidgetArea;
+void TestPlugin::registerDockWidget(
+    QMap<QDockWidget *, Qt::DockWidgetArea> &rdw) {
+  rdw.insert(dw, Qt::DockWidgetArea::BottomDockWidgetArea);
 }

@@ -21,14 +21,14 @@ public:
   void unload() override;
   int sdkVersion() override;
   QMenu *registerMenu() override;
-  QDockWidget *registerDockWidget() override;
+  void
+  registerDockWidget(QMap<QDockWidget *, Qt::DockWidgetArea> &rdw) override;
   QString pluginName() override;
   QString pluginAuthor() override;
   uint pluginVersion() override;
   QString signature() override;
   QString pluginComment() override;
   void plugin2MessagePipe(WingPluginMessage type, QList<QVariant> msg) override;
-  Qt::DockWidgetArea registerDockWidgetDockArea() override;
 
 private:
   QMenu *testmenu;
