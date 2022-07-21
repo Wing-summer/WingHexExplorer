@@ -14,6 +14,7 @@
 #define SDKVERSION 5
 #define GETPLUGINQM(name)                                                      \
   (QCoreApplication::applicationDirPath() + "/plglang/" + name)
+#define PLUGINDIR (QCoreApplication::applicationDirPath() + "/plugin")
 
 enum ErrFile {
   Success,
@@ -393,23 +394,23 @@ public:
 
 #define PluginToolBarAddToolBtnBegin(DIcon)                                    \
   {                                                                            \
-    auto tbtn = new QToolButton(this);                                         \
+    auto tbtn = new QToolButton;                                               \
     tbtn->setIcon(DIcon);                                                      \
-    auto tmenu = new QMenu(this);
+    auto tmenu = new QMenu;
 
 #define PluginToolBarAddToolBtnAction(Icon, Title, Slot)                       \
-  a = new QAction(Icon, Title, this);                                          \
+  a = new QAction(Icon, Title);                                                \
   connect(a, &QAction::triggered, this, &Slot);                                \
   tmenu->addAction(a);
 
 #define PluginToolBarAddToolBtnLamba(Icon, Title, Lamba)                       \
-  a = new QAction(Icon, Title, this);                                          \
+  a = new QAction(Icon, Title);                                                \
   connect(a, &QAction::triggered, this, Lamba);                                \
   tmenu->addAction(a);
 
 #define PluginToolBarAddToolBtnEnd(toolbar)                                    \
   tbtn->setMenu(tmenu);                                                        \
-  tbtn->setPopupMode(DToolButton::ToolButtonPopupMode::InstantPopup);          \
+  tbtn->setPopupMode(QToolButton::ToolButtonPopupMode::InstantPopup);          \
   toolbar->addWidget(tbtn);                                                    \
   }
 
