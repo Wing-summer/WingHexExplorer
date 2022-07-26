@@ -529,12 +529,18 @@ void QHexDocument::copy(bool hex) {
 
   if (hex)
     bytes = bytes.toHex(' ').toUpper();
+  else
+    bytes = bytes.toHex();
+
+  // fix the bug by wingsummer
 
   c->setText(bytes);
 }
 
 // modified by wingsummer
 void QHexDocument::Paste(bool hex) {
+  Q_UNUSED(hex)
+
   QClipboard *c = qApp->clipboard();
   QByteArray data = c->text().toUtf8();
 
@@ -543,8 +549,8 @@ void QHexDocument::Paste(bool hex) {
 
   this->RemoveSelection();
 
-  if (hex)
-    data = QByteArray::fromHex(data);
+  // if (hex)
+  data = QByteArray::fromHex(data);
 
   auto pos = m_cursor->position().offset();
   if (!m_keepsize) {

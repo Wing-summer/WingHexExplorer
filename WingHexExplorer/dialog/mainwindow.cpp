@@ -74,7 +74,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   _title->setIcon(picon);
   _title->setTitle("WingHexExplorer");
 
-  tabs = new DTabBar;
+  tabs = new DTabBar(this);
   tabs->setTabsClosable(true);
   tabs->setMovable(true);
   tabs->setStartDragDistance(3);

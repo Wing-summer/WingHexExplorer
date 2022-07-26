@@ -5,6 +5,7 @@
 
 AboutSoftwareDialog::AboutSoftwareDialog(DMainWindow *parent)
     : DDialog(parent) {
+  setWindowTitle(tr("About"));
   QPixmap pic;
   pic.load(":/images/author.jpg");
   auto l = new DLabel(this);
