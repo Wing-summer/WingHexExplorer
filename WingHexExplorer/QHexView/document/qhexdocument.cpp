@@ -549,8 +549,8 @@ void QHexDocument::Paste(bool hex) {
 
   this->RemoveSelection();
 
-  // if (hex)
-  data = QByteArray::fromHex(data);
+  if (hex || (!hex && data.indexOf(' ') < 0))
+    data = QByteArray::fromHex(data);
 
   auto pos = m_cursor->position().offset();
   if (!m_keepsize) {

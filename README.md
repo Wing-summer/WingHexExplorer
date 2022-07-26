@@ -161,6 +161,7 @@ QHexEdit is released under MIT license
 9. 修复粘贴指针闪动位置保持不变问题，修改粘贴限制策略
 10. 增加一些接口适应工作区支持需要
 11. 修复标记背景色第一行有超出部分的 Bug
+12. 修复复制中字节含有零字节会截断的 Bug
 
 ### 有关 QHexEdit2
 
