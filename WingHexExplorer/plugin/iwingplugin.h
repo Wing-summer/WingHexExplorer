@@ -11,7 +11,7 @@
 #include <QWidget>
 #include <QtCore>
 
-#define SDKVERSION 5
+#define SDKVERSION 6
 #define GETPLUGINQM(name)                                                      \
   (QCoreApplication::applicationDirPath() + "/plglang/" + name)
 #define PLUGINDIR (QCoreApplication::applicationDirPath() + "/plugin")
