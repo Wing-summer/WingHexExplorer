@@ -171,7 +171,7 @@ signals:
   quint64 currentRow();
   quint64 currentColumn();
   quint64 currentOffset();
-  quint64 selectlength();
+  quint64 selectLength();
 
   bool stringVisible();
   bool addressVisible();
@@ -294,9 +294,6 @@ signals:
   // workspace
   bool openWorkSpace(QString filename, bool readonly = false);
   bool setCurrentEncoding(QString encoding);
-
-  // extension
-  void toast(QIcon icon, QString message);
 };
 } // namespace WingPlugin
 
@@ -354,6 +351,9 @@ signals:
   bool requestRelease();
   bool hasControl();
   QWidget *getParentWindow();
+
+  // extension
+  void toast(QIcon icon, QString message);
 
 public:
   WingPlugin::Reader reader;

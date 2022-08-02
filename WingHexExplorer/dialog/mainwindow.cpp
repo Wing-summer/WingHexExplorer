@@ -1155,6 +1155,10 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   ConnectBase(IWingPlugin::requestRelease, MainWindow::requestRelease);
   ConnectBase(IWingPlugin::hasControl, MainWindow::hasControl);
   ConnectBaseLamba(IWingPlugin::getParentWindow, [=] { return this; });
+  ConnectBaseLamba(IWingPlugin::toast, [=](QIcon icon, QString message) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    DMessageManager::instance()->sendMessage(this, icon, message);
+  });
 
 #define PCHECK(T, TF, F)                                                       \
   if (hexfiles.count() > 0) {                                                  \
@@ -1257,7 +1261,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
         quint64(hexfiles[_pcurfile].doc->cursor()->position().offset()),
         quint64(hexeditor->currentOffset()), quint64(0));
   });
-  ConnectBaseLamba2(WingPlugin::Reader::selectlength, [=] {
+  ConnectBaseLamba2(WingPlugin::Reader::selectLength, [=] {
     PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->cursor()->selectionLength()),
                  quint64(hexeditor->selectlength()), quint64(0));
   });
@@ -1972,11 +1976,6 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     on_fillnop();
   });
-  ConnectControlLamba2(
-      WingPlugin::Controller::toast, [=](QIcon icon, QString message) {
-        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        DMessageManager::instance()->sendMessage(this, icon, message);
-      });
 }
 
 bool MainWindow::requestControl(int timeout) {
