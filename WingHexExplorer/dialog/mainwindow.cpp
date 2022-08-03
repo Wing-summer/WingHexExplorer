@@ -454,6 +454,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
                        keyencoding);
   toolbar = new DToolBar(this);
   toolbar->setObjectName("MainToolBar");
+  auto tva = toolbar->toggleViewAction();
+  tva->setVisible(false);
+
 #define AddToolBarAction(Icon, Owner, Slot, ToolTip)                           \
   a = new QAction(Owner);                                                      \
   a->setIcon(ICONRES(Icon));                                                   \
