@@ -372,8 +372,9 @@ public:
   dw->setWindowTitle(title);                                                   \
   dw->setObjectName(objname);
 
-#define PluginToolBarInitBegin(toolbar, objname)                               \
+#define PluginToolBarInitBegin(toolbar, title, objname)                        \
   toolbar = new QToolBar;                                                      \
+  toolbar->setWindowTitle(title);                                              \
   toolbar->setObjectName(objname);                                             \
   {                                                                            \
     QAction *a;
