@@ -249,6 +249,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolSubMenuShortcutAction("export", tr("Export"),
                                MainWindow::on_exportfile, keyexport);
   AddMenuDB(ToolBoxIndex::Export);
+  AddToolSubMenuAction("reload", tr("Reload"), MainWindow::on_reload);
+  AddMenuDB(ToolBoxIndex::Reload);
   AddToolSubMenuAction("savesel", tr("SaveSel"), MainWindow::on_savesel);
   AddMenuDB(ToolBoxIndex::SaveSel);
   tm->addSeparator();
@@ -382,6 +384,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   settingplg = a;
   AddToolSubMenuAction("layout", tr("RestoreLayout"),
                        MainWindow::on_restoreLayout);
+  tm->addSeparator();
+  AddToolSubMenuAction("fullscreen", tr("Fullscreen"),
+                       MainWindow::on_fullScreen);
   menu->addMenu(tm);
 
   tm = new DMenu(this);
@@ -518,6 +523,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolsDB(ToolBoxIndex::SaveAs);
   AddToolBarTool("export", MainWindow::on_exportfile, tr("Export"));
   AddToolsDB(ToolBoxIndex::Export);
+  AddToolBarTool("reload", MainWindow::on_reload, tr("Reload"));
+  AddToolsDB(ToolBoxIndex::Reload);
   toolbar->addSeparator();
   AddToolBarTool("undo", MainWindow::on_undofile, tr("Undo"));
   AddToolsDB(ToolBoxIndex::Undo);
@@ -2730,6 +2737,77 @@ void MainWindow::on_setting_general() {
   m_settings->settings->sync();
 }
 
+void MainWindow::on_reload() {
+  CheckEnabled;
+  auto doc = hexeditor->document();
+  QList<QVariant> params;
+  auto &hf = hexfiles[_currentfile];
+  auto filename = hf.filename;
+  auto readonly = doc->isReadOnly();
+  if (_enableplugin) {
+    params << filename << readonly;
+    plgsys->raiseDispatch(HookIndex::OpenFileBegin, params);
+  }
+
+  QFileInfo info(filename);
+  if (info.exists()) {
+    if (!info.permission(QFile::ReadUser)) {
+      if (_enableplugin) {
+        params << ErrFile::Permission;
+        plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+      }
+      return;
+    }
+
+    if (!readonly && !info.permission(QFile::WriteUser)) {
+      if (_enableplugin) {
+        params << ErrFile::Permission;
+        plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+      }
+      return;
+    }
+
+    auto *p =
+        info.size() > FILEMAXBUFFER
+            ? QHexDocument::fromLargeFile(filename, readonly, this)
+            : QHexDocument::fromFile<QMemoryBuffer>(filename, readonly, this);
+
+    if (p == nullptr) {
+      if (_enableplugin) {
+        params << ErrFile::Error;
+        plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+      }
+      DMessageManager::instance()->sendMessage(this, ICONRES("reload"),
+                                               tr("ReloadFileDocError"));
+      return;
+    }
+
+    hf.doc->deleteLater();
+    hf.doc = p;
+    hf.render->switchDoc(p);
+    hexeditor->switchDocument(p, hf.render, hf.vBarValue);
+
+    p->setDocSaved();
+    hexeditor->getStatus();
+
+    if (_enableplugin) {
+      params << ErrFile::Success;
+      plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+    }
+    DMessageManager::instance()->sendMessage(this, ICONRES("reload"),
+                                             tr("ReloadSuccess"));
+    return;
+  } else {
+    DMessageManager::instance()->sendMessage(this, ICONRES("reload"),
+                                             tr("ReloadFileNotExist"));
+  }
+
+  if (_enableplugin) {
+    params << ErrFile::NotExist;
+    plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+  }
+}
+
 void MainWindow::on_savesel() {
   CheckEnabled;
   auto filename =
@@ -3033,6 +3111,8 @@ void MainWindow::on_setting_plugin() {
   pw.setPluginSystem(plgsys);
   pw.exec();
 }
+
+void MainWindow::on_fullScreen() { showFullScreen(); }
 
 void MainWindow::on_bookmark() {
   CheckEnabled;

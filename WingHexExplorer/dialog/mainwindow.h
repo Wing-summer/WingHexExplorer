@@ -61,6 +61,7 @@ class MainWindow : public DMainWindow {
     OpenWorkSpace,
     SaveWorkSpace,
     SaveAsWorkSpace,
+    Reload,
     Undo,
     Redo,
     Cut,
@@ -172,6 +173,7 @@ private:
   void on_exportfile();
   void on_cutfile();
   void on_cuthex();
+  void on_reload();
   void on_savesel();
   void on_delete();
   void on_pastefile();
@@ -186,6 +188,7 @@ private:
   void on_exit();
   void on_setting_general();
   void on_setting_plugin();
+  void on_fullScreen();
   void on_gotobar(int pos, bool isline);
   void on_locChanged();
   void on_documentSwitched();

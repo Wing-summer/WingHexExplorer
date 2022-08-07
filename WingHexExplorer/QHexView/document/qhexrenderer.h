@@ -41,6 +41,7 @@ public:
   QString encoding();
   bool setEncoding(QString encoding);
   void SetEncoding(QString encoding);
+  void switchDoc(QHexDocument *doc);
 
   /*==============================*/
 

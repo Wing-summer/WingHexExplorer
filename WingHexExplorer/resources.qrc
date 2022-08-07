@@ -79,6 +79,8 @@
         <file>images/license.png</file>
         <file>images/thanks.png</file>
         <file>images/usr.jpg</file>
+        <file>images/fullscreen.png</file>
+        <file>images/reload.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

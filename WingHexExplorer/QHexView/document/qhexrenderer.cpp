@@ -40,6 +40,11 @@ void QHexRenderer::SetEncoding(QString encoding) {
       new EncodingChangeCommand(this, m_encoding, encoding));
 }
 
+void QHexRenderer::switchDoc(QHexDocument *doc) {
+  if (doc)
+    m_document = doc;
+}
+
 bool QHexRenderer::setEncoding(QString encoding) {
   if (QTextCodec::codecForName(encoding.toUtf8())) {
     m_encoding = encoding;
