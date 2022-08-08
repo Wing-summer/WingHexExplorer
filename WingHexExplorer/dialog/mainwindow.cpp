@@ -2672,7 +2672,9 @@ void MainWindow::on_locChanged() {
                       .arg(hexeditor->currentRow())
                       .arg(hexeditor->currentColumn()));
   auto sellen = hexeditor->selectlength();
-  lblsellen->setText(QString("%1 - 0x%2").arg(sellen).arg(sellen, 0, 16));
+  lblsellen->setText(QString("%1 - 0x%2")
+                         .arg(sellen)
+                         .arg(QString::number(sellen, 16).toUpper()));
 
   // number analyse
   auto off = qint64(hexeditor->currentOffset());
@@ -2685,7 +2687,7 @@ void MainWindow::on_locChanged() {
   if (len == sizeof(quint64)) {
     auto s = n;
     numsitem[NumTableIndex::Uint64].setText(
-        QString("0x%1").arg(QString::number(s, 16)));
+        QString("0x%1").arg(QString::number(s, 16).toUpper()));
     auto s1 = qint64(n);
     numsitem[NumTableIndex::Int64].setText(QString::number(s1));
   } else {
@@ -2696,7 +2698,7 @@ void MainWindow::on_locChanged() {
   if (len > int(sizeof(quint32))) {
     auto s = ulong(n);
     numsitem[NumTableIndex::Uint32].setText(
-        QString("0x%1").arg(QString::number(s, 16)));
+        QString("0x%1").arg(QString::number(s, 16).toUpper()));
     auto s1 = long(n);
     numsitem[NumTableIndex::Int32].setText(QString::number(s1));
   } else {
@@ -2707,7 +2709,7 @@ void MainWindow::on_locChanged() {
   if (len > int(sizeof(ushort))) {
     auto s = ushort(n);
     numsitem[NumTableIndex::Ushort].setText(
-        QString("0x%1").arg(QString::number(s, 16)));
+        QString("0x%1").arg(QString::number(s, 16).toUpper()));
     auto s1 = short(n);
     numsitem[NumTableIndex::Short].setText(QString::number(s1));
   } else {
@@ -2718,7 +2720,7 @@ void MainWindow::on_locChanged() {
     auto s1 = tmp.at(0);
     auto s = uchar(s1);
     numsitem[NumTableIndex::Byte].setText(
-        QString("0x%1").arg(QString::number(s, 16)));
+        QString("0x%1").arg(QString::number(s, 16).toUpper()));
     numsitem[NumTableIndex::Char].setText(QString::number(s1));
   } else {
     numsitem[NumTableIndex::Byte].setText("-");
