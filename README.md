@@ -217,7 +217,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 &emsp;&emsp;如果想到 Gitea 看，请到： https://code.gitlink.org.cn/wingsummer/WingHexExplorer 。其实它就是 GitLink ，不过貌似 GitLink 显示仓库图片会有点 Bug ， **推荐到这里来！**
 
-&emsp;&emsp;如果你还想到 Gitee 逛逛： https://gitee.com/wingsummer/wing-hex-explorer 。欢迎到我的新仓库来 star 或者反馈 Bug 以及贡献代码。
+&emsp;&emsp;如果你还想到 Gitee 逛逛： https://gitee.com/wing-cloud/wing-hex-explorer 。欢迎到我的新仓库来 star 或者反馈 Bug 以及贡献代码。
 
 &emsp;&emsp;如果你还想到 Github 逛逛： https://github.com/Wing-summer/WingHexExplorer ，Github 仅作为备份使用，但考虑到国外的朋友，保留了 issue 、PR 功能，由于本人访问 Github 不太顺畅，所以照看的就相对比较少，敬请谅解。
 
@@ -234,7 +234,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ## 插件库
 
 - WingElfParser：一个强大的用于 ELF 文件分析的羽云十六进制编辑器插件。[Gitea](https://code.gitlink.org.cn/wingsummer/WingElfParser) | [Gitee](https://gitee.com/wingsummer/wing-elf-parser)
-- WingHexPy：一个强大的插件，以提供羽云十六进制编辑器的 Python 脚本分析支持。[Gitea](https://code.gitlink.org.cn/wingsummer/WingHexPy) | [Gitee](https://gitee.com/wingsummer/wing-hex-py)
+- WingHexPy：一个强大的插件，以提供羽云十六进制编辑器的 Python 脚本分析支持。[Gitea](https://code.gitlink.org.cn/wingsummer/WingHexPy) | [Gitee](https://gitee.com/wing-cloud/wing-hex-py)
 
 ## 应用商店
 
