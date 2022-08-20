@@ -1192,6 +1192,8 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
 
   ConnectBaseLamba2(WingPlugin::Reader::currentDoc,
                     [=] { PCHECKRETURN(_pcurfile, _currentfile, -1) });
+  ConnectBaseLamba2(WingPlugin::Reader::currentHostDoc,
+                    [=] { return _currentfile; });
   ConnectBaseLamba2(WingPlugin::Reader::currentDocFilename, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].filename, hexfiles[_currentfile].filename,
                  QString());

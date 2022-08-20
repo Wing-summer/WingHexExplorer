@@ -158,6 +158,7 @@ class Reader : public QObject {
   Q_OBJECT
 signals:
   int currentDoc();
+  int currentHostDoc();
   QString currentDocFilename();
 
   // document
