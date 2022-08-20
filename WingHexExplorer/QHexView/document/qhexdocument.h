@@ -175,6 +175,9 @@ signals:
   void metabgVisibleChanged(bool b);
   void metaCommentVisibleChanged(bool b);
 
+  void documentLockedFile(bool locked);
+  void documentKeepSize(bool keep);
+
   /*================================*/
 
   void canUndoChanged(bool canUndo);

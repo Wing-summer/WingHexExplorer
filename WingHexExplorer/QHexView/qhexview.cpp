@@ -57,20 +57,8 @@ void QHexView::switchDocument(QHexDocument *document, QHexRenderer *renderer,
 bool QHexView::isReadOnly() { return m_document->isReadOnly(); }
 bool QHexView::isKeepSize() { return m_document->isKeepSize(); }
 bool QHexView::isLocked() { return m_document->isLocked(); }
-
-bool QHexView::setLockedFile(bool b) {
-  bool res = m_document->setLockedFile(b);
-  if (res)
-    emit documentLockedFile(b);
-  return res;
-}
-
-bool QHexView::setKeepSize(bool b) {
-  bool res = m_document->setKeepSize(b);
-  if (res)
-    emit documentKeepSize(b);
-  return res;
-}
+bool QHexView::setLockedFile(bool b) { return m_document->setLockedFile(b); }
+bool QHexView::setKeepSize(bool b) { return m_document->setKeepSize(b); }
 
 quint64 QHexView::documentLines() { return m_renderer->documentLines(); }
 quint64 QHexView::documentBytes() { return quint64(m_document->length()); }
@@ -172,6 +160,10 @@ void QHexView::establishSignal(QHexDocument *doc) {
   });
   connect(doc, &QHexDocument::metaLineChanged, this,
           [=] { this->viewport()->update(); });
+  connect(doc, &QHexDocument::documentKeepSize, this,
+          &QHexView::documentKeepSize);
+  connect(doc, &QHexDocument::documentLockedFile, this,
+          &QHexView::documentLockedFile);
 }
 
 /*======================*/

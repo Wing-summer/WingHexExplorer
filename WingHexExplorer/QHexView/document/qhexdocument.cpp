@@ -102,6 +102,7 @@ bool QHexDocument::setLockedFile(bool b) {
   m_islocked = b;
   m_cursor->setInsertionMode(QHexCursor::OverwriteMode);
   setDocSaved(false);
+  emit documentLockedFile(b);
   return true;
 }
 bool QHexDocument::setKeepSize(bool b) {
@@ -111,6 +112,7 @@ bool QHexDocument::setKeepSize(bool b) {
   if (b)
     m_cursor->setInsertionMode(QHexCursor::OverwriteMode);
   setDocSaved(false);
+  emit documentKeepSize(b);
   return true;
 }
 
