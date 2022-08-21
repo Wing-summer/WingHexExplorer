@@ -16,6 +16,7 @@ bool QHexRenderer::stringVisible() { return m_asciiVisible; }
 
 void QHexRenderer::setStringVisible(bool b) {
   m_asciiVisible = b;
+  m_document->documentChanged();
   m_document->setDocSaved(false);
 }
 
@@ -23,6 +24,7 @@ bool QHexRenderer::headerVisible() { return m_headerVisible; }
 
 void QHexRenderer::setHeaderVisible(bool b) {
   m_headerVisible = b;
+  m_document->documentChanged();
   m_document->setDocSaved(false);
 }
 
@@ -30,6 +32,7 @@ bool QHexRenderer::addressVisible() { return m_addressVisible; }
 
 void QHexRenderer::setAddressVisible(bool b) {
   m_addressVisible = b;
+  m_document->documentChanged();
   m_document->setDocSaved(false);
 }
 
@@ -48,6 +51,7 @@ void QHexRenderer::switchDoc(QHexDocument *doc) {
 bool QHexRenderer::setEncoding(QString encoding) {
   if (QTextCodec::codecForName(encoding.toUtf8())) {
     m_encoding = encoding;
+    m_document->documentChanged();
     return true;
   }
   return false;

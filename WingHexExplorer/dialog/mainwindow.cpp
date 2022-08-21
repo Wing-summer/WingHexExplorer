@@ -1461,7 +1461,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   ConnectControlLamba2(WingPlugin::Controller::setStringVisible, [=](bool b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     PCHECK(hexfiles[_pcurfile].render->setStringVisible(b),
-           hexfiles[_pcurfile].render->setStringVisible(b), );
+           hexeditor->renderer()->setStringVisible(b), );
   });
   ConnectControlLamba2(WingPlugin::Controller::setHeaderVisible, [=](bool b) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
