@@ -11,7 +11,7 @@
 #include <QWidget>
 #include <QtCore>
 
-#define SDKVERSION 6
+#define SDKVERSION 7
 #define GETPLUGINQM(name)                                                      \
   (QCoreApplication::applicationDirPath() + "/plglang/" + name)
 #define PLUGINDIR (QCoreApplication::applicationDirPath() + "/plugin")
@@ -186,7 +186,16 @@ signals:
   bool canRedo();
 
   void copy(bool hex = false);
+
   QByteArray read(qint64 offset, int len);
+
+  // extension
+  qint8 readInt8(qint64 offset);
+  qint16 readInt16(qint64 offset);
+  qint32 readInt32(qint64 offset);
+  qint64 readInt64(qint64 offset);
+  QString readString(qint64 offset, QString encoding = QString());
+
   qint64 searchForward(qint64 begin, const QByteArray &ba);
   qint64 searchBackward(qint64 begin, const QByteArray &ba);
   void findAllBytes(qlonglong begin, qlonglong end, QByteArray b,
@@ -231,11 +240,39 @@ signals:
   void redo();
   bool cut(bool hex = false);
   void paste(bool hex = false);
+
+  bool write(qint64 offset, uchar b);
+  bool write(qint64 offset, const QByteArray &data);
+
+  // extesion
+  bool writeInt8(qint64 offset, qint8 value);
+  bool writeInt16(qint64 offset, qint16 value);
+  bool writeInt32(qint64 offset, qint32 value);
+  bool writeInt64(qint64 offset, qint64 value);
+  bool writeString(qint64 offset, QString value, QString encoding = QString());
+
   bool insert(qint64 offset, uchar b);
-  bool replace(qint64 offset, uchar b);
   bool insert(qint64 offset, const QByteArray &data);
-  bool replace(qint64 offset, const QByteArray &data);
+
+  // extesion
+  bool insertInt8(qint64 offset, qint8 value);
+  bool insertInt16(qint64 offset, qint16 value);
+  bool insertInt32(qint64 offset, qint32 value);
+  bool insertInt64(qint64 offset, qint64 value);
+  bool insertString(qint64 offset, QString value, QString encoding = QString());
+
+  bool append(uchar b);
+  bool append(const QByteArray &data);
+
+  // extension
+  bool appendInt8(qint8 value);
+  bool appendInt16(qint16 value);
+  bool appendInt32(qint32 value);
+  bool appendInt64(qint64 value);
+  bool appendString(QString value, QString encoding = QString());
+
   bool remove(qint64 offset, int len);
+  bool removeAll(qint64 offset); // extension
 
   // cursor
   void moveTo(const HexPosition &pos);
