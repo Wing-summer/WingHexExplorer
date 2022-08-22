@@ -173,6 +173,7 @@ signals:
   quint64 currentColumn();
   quint64 currentOffset();
   quint64 selectLength();
+  QByteArray selectedBytes();
 
   bool stringVisible();
   bool addressVisible();

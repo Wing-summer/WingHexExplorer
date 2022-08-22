@@ -899,20 +899,18 @@ MainWindow::MainWindow(DMainWindow *parent) {
   this->addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, dw);
   this->tabifyDockWidget(dw2, dw);
 
-  dw = dw2;
-
-  dw2 = new DDockWidget(this);
-  AddDockWin2(tr("DecodeText"));
+  dw = new DDockWidget(this);
+  AddDockWin(tr("DecodeText"));
   txtDecode = new QTextBrowser(this);
   txtDecode->setUndoRedoEnabled(false);
-  dw2->setWindowTitle(tr("DecodeText"));
-  dw2->setObjectName("DecodeText");
-  dw2->setMinimumSize(450, 300);
-  dw2->setWidget(txtDecode);
-  this->addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, dw2);
-  this->tabifyDockWidget(dw, dw2);
+  dw->setWindowTitle(tr("DecodeText"));
+  dw->setObjectName("DecodeText");
+  dw->setMinimumSize(450, 300);
+  dw->setWidget(txtDecode);
+  this->addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, dw);
+  this->tabifyDockWidget(dw2, dw);
 
-  dw->raise();
+  dw2->raise();
 
   connect(DGuiApplicationHelper::instance(),
           &DGuiApplicationHelper::themeTypeChanged, this,
@@ -1292,6 +1290,10 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   ConnectBaseLamba2(WingPlugin::Reader::selectLength, [=] {
     PCHECKRETURN(quint64(hexfiles[_pcurfile].doc->cursor()->selectionLength()),
                  quint64(hexeditor->selectlength()), quint64(0));
+  });
+  ConnectBaseLamba2(WingPlugin::Reader::selectedBytes, [=] {
+    PCHECKRETURN(hexfiles[_pcurfile].doc->selectedBytes(),
+                 hexeditor->document()->selectedBytes(), QByteArray());
   });
   ConnectBaseLamba2(WingPlugin::Reader::stringVisible, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->stringVisible(),
