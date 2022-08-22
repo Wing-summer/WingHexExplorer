@@ -230,8 +230,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## 插件库
 
-- WingElfParser：一个强大的用于 ELF 文件分析的羽云十六进制编辑器插件。[Gitea](https://code.gitlink.org.cn/wingsummer/WingElfParser) | [Gitee](https://gitee.com/wingsummer/wing-elf-parser)
+- WingElfParser：一个强大的用于 ELF 文件分析的羽云十六进制编辑器插件。[Gitea](https://code.gitlink.org.cn/wingsummer/WingElfParser) | [Gitee](https://gitee.com/wing-cloud/wing-elf-parser)
 - WingHexPy：一个强大的插件，以提供羽云十六进制编辑器的 Python 脚本分析支持。[Gitea](https://code.gitlink.org.cn/wingsummer/WingHexPy) | [Gitee](https://gitee.com/wing-cloud/wing-hex-py)
+- WingHexDisasm：一个反汇编插件，将文档所选字节解码为汇编语句。[Gitea](https://code.gitlink.org.cn/wingsummer/WingHexDisasm) | [Gitee](https://gitee.com/wing-cloud/wing-hex-disasm)
 
 ## 应用商店
 
