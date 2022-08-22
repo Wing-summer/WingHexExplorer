@@ -301,6 +301,8 @@ private:
   Logger *logger;
   RecentFileManager *recentmanager;
 
+  QTextBrowser *txtDecode;
+
 private:
   // hexview default setting
   bool _showheader = true;

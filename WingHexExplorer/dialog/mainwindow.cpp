@@ -689,6 +689,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   l->setAlignment(Qt::AlignCenter);
 
   AddNamedStatusLabel(lblloc, "(0,0)");
+
   connect(hexeditor, &QHexView::cursorLocationChanged, this,
           &MainWindow::on_locChanged);
   AddStatusLabel(tr("sel:"));
@@ -897,7 +898,21 @@ MainWindow::MainWindow(DMainWindow *parent) {
   dw->setWindowTitle(tr("BookMark"));
   this->addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, dw);
   this->tabifyDockWidget(dw2, dw);
-  dw2->raise();
+
+  dw = dw2;
+
+  dw2 = new DDockWidget(this);
+  AddDockWin2(tr("DecodeText"));
+  txtDecode = new QTextBrowser(this);
+  txtDecode->setUndoRedoEnabled(false);
+  dw2->setWindowTitle(tr("DecodeText"));
+  dw2->setObjectName("DecodeText");
+  dw2->setMinimumSize(450, 300);
+  dw2->setWidget(txtDecode);
+  this->addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, dw2);
+  this->tabifyDockWidget(dw, dw2);
+
+  dw->raise();
 
   connect(DGuiApplicationHelper::instance(),
           &DGuiApplicationHelper::themeTypeChanged, this,
@@ -995,6 +1010,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
     numshowtable->setFont(_font);
     findresult->setFont(_font);
     pluginInfo->setFont(_font);
+    txtDecode->setFont(_font);
   });
   connect(m_settings, &Settings::sigShowColNumber,
           [=](bool b) { _showheader = b; });
@@ -3036,6 +3052,16 @@ void MainWindow::on_locChanged() {
   } else {
     numsitem[NumTableIndex::Byte].setText("-");
     numsitem[NumTableIndex::Char].setText("-");
+  }
+
+  //解码字符串
+  if (hexeditor->selectlength() > 1) {
+    auto enc =
+        QTextCodec::codecForName(hexeditor->renderer()->encoding().toUtf8());
+    auto dec = enc->makeDecoder();
+    txtDecode->setText(dec->toUnicode(d->selectedBytes()));
+  } else {
+    txtDecode->clear();
   }
 }
 
