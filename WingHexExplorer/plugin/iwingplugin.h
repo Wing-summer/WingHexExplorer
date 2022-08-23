@@ -16,6 +16,10 @@
   (QCoreApplication::applicationDirPath() + "/plglang/" + name)
 #define PLUGINDIR (QCoreApplication::applicationDirPath() + "/plugin")
 
+#define HOSTRESPIMG(name) ":/images/" name ".png"
+#define HOSTAUTHORPIMG ":/images/author.jpg"
+#define SPONSORQRCODE ":/resources/sponsor.png"
+
 enum ErrFile {
   Success,
   Error,
