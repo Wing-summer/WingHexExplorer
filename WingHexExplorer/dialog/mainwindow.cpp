@@ -3085,11 +3085,17 @@ void MainWindow::on_locChanged() {
   }
 
   //解码字符串
-  if (hexeditor->selectlength() > 1) {
-    auto enc =
-        QTextCodec::codecForName(hexeditor->renderer()->encoding().toUtf8());
-    auto dec = enc->makeDecoder();
-    txtDecode->setText(dec->toUnicode(d->selectedBytes()));
+  if (sellen > 1) {
+    // 如果不超过 1KB 那么解码，防止太多卡死
+    if (sellen <= 1024 * 1024) {
+      auto enc =
+          QTextCodec::codecForName(hexeditor->renderer()->encoding().toUtf8());
+      auto dec = enc->makeDecoder();
+      txtDecode->setText(dec->toUnicode(d->selectedBytes()));
+    } else {
+      txtDecode->setHtml(QString("<font color=\"red\">%1</font>")
+                             .arg(tr("TooManyBytesDecode")));
+    }
   } else {
     txtDecode->clear();
   }
