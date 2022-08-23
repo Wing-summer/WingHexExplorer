@@ -3086,8 +3086,8 @@ void MainWindow::on_locChanged() {
 
   //解码字符串
   if (sellen > 1) {
-    // 如果不超过 1KB 那么解码，防止太多卡死
-    if (sellen <= 1024 * 1024) {
+    // 如果不超过 10KB 那么解码，防止太多卡死
+    if (sellen <= 10240) {
       auto enc =
           QTextCodec::codecForName(hexeditor->renderer()->encoding().toUtf8());
       auto dec = enc->makeDecoder();
