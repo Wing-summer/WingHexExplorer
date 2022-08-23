@@ -393,10 +393,23 @@ signals:
   bool requestControl(int timeout = 1500);
   bool requestRelease();
   bool hasControl();
-  QWidget *getParentWindow();
 
-  // extension
+  // extension and exposed to WingHexPyScript
   void toast(QIcon icon, QString message);
+
+  // extension only expoesd to plugin
+  QWidget *getParentWindow();
+  QDialog *newAboutDialog(QPixmap img = QPixmap(),
+                          QStringList searchPaths = QStringList(),
+                          QString source = QString());
+  QDialog *newSponsorDialog(QPixmap qrcode = QPixmap(),
+                            QString message = QString());
+
+  // 以下是为不想添加 DTK 依赖的插件提供统一样式的窗体函数
+  QDialog *newDDialog();
+  bool addContent(QDialog *ddialog, QWidget *widget, Qt::Alignment align = {});
+  bool addSpace(QDialog *ddialog, int space);
+  void moveToCenter(QDialog *ddialog);
 
 public:
   WingPlugin::Reader reader;

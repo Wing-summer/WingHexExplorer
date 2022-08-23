@@ -9,7 +9,8 @@ DWIDGET_USE_NAMESPACE
 class SponsorDialog : public DDialog {
   Q_OBJECT
 public:
-  explicit SponsorDialog(DMainWindow *parent = nullptr);
+  explicit SponsorDialog(DMainWindow *parent = nullptr,
+                         QString message = QString(), QPixmap img = QPixmap());
 
 signals:
 

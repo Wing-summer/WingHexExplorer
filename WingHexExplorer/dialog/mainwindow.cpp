@@ -21,6 +21,7 @@
 #include <DSettingsDialog>
 #include <DSettingsWidgetFactory>
 #include <DTitlebar>
+#include <DWidgetUtil>
 #include <QCheckBox>
 #include <QDesktopServices>
 #include <QFile>
@@ -1180,8 +1181,35 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   ConnectBase(IWingPlugin::hasControl, MainWindow::hasControl);
   ConnectBaseLamba(IWingPlugin::getParentWindow, [=] { return this; });
   ConnectBaseLamba(IWingPlugin::toast, [=](QIcon icon, QString message) {
-    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     DMessageManager::instance()->sendMessage(this, icon, message);
+  });
+  ConnectBaseLamba(IWingPlugin::newDDialog, [=] { return new DDialog(this); });
+  ConnectBaseLamba(IWingPlugin::newAboutDialog,
+                   [=](QPixmap img, QStringList searchPaths, QString source) {
+                     return new AboutSoftwareDialog(this, img, searchPaths,
+                                                    source);
+                   });
+  ConnectBaseLamba(IWingPlugin::newSponsorDialog,
+                   [=](QPixmap qrcode, QString message) {
+                     return new SponsorDialog(this, message, qrcode);
+                   });
+  ConnectBaseLamba(IWingPlugin::addContent,
+                   [=](QDialog *ddialog, QWidget *widget, Qt::Alignment align) {
+                     auto d = qobject_cast<DDialog *>(ddialog);
+                     if (!d)
+                       return false;
+                     d->addContent(widget, align);
+                     return true;
+                   });
+  ConnectBaseLamba(IWingPlugin::addSpace, [=](QDialog *ddialog, int space) {
+    auto d = qobject_cast<DDialog *>(ddialog);
+    if (!d)
+      return false;
+    d->addSpacing(space);
+    return true;
+  });
+  ConnectBaseLamba(IWingPlugin::moveToCenter, [=](QDialog *ddialog) {
+    Dtk::Widget::moveToCenter(ddialog);
   });
 
 #define PCHECK(T, TF, F)                                                       \

@@ -93,6 +93,7 @@ void QHexDocument::setDocSaved(bool b) {
   m_pluginModed = !b;
   emit documentSaved(b);
 }
+
 bool QHexDocument::isReadOnly() { return m_readonly; }
 bool QHexDocument::isKeepSize() { return m_keepsize; }
 bool QHexDocument::isLocked() { return m_islocked; }
@@ -374,6 +375,7 @@ bool QHexDocument::insert(qint64 offset, const QByteArray &data) {
       (offset < m_buffer->length() && m_metadata->hasMetadata()))
     return false;
   m_buffer->insert(offset, data);
+  setDocSaved(false);
   emit documentChanged();
   return true;
 }
@@ -388,6 +390,7 @@ bool QHexDocument::replace(qint64 offset, const QByteArray &data) {
   if (m_readonly || m_islocked)
     return false;
   m_buffer->replace(offset, data);
+  setDocSaved(false);
   emit documentChanged();
   return true;
 }
@@ -396,6 +399,7 @@ bool QHexDocument::remove(qint64 offset, int len) {
   if (m_keepsize || m_readonly || m_islocked || m_metadata->hasMetadata())
     return false;
   m_buffer->remove(offset, len);
+  setDocSaved(false);
   emit documentChanged();
   return true;
 }
