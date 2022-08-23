@@ -98,7 +98,7 @@ void QHexCursor::moveTo(quint64 line, int column, int nibbleindex) {
 
 void QHexCursor::select(quint64 line, int column, int nibbleindex) {
   m_position.line = line;
-  m_position.column = column;
+  m_position.column = qMax(0, column); // fix the bug by wingsummer
   m_position.nibbleindex = nibbleindex;
 
   emit positionChanged();
