@@ -513,31 +513,37 @@ void QHexView::renderCurrentLine() {
 }
 
 bool QHexView::processAction(QHexCursor *cur, QKeyEvent *e) {
-  if (isReadOnly() || isLocked())
-    return false;
+  auto canFlag = !(isReadOnly() || isLocked());
 
   if (e->modifiers() != Qt::NoModifier) {
     if (e->matches(QKeySequence::SelectAll)) {
       m_document->cursor()->moveTo(0, 0);
       m_document->cursor()->select(m_renderer->documentLastLine(),
                                    m_renderer->documentLastColumn() - 1);
-    } else if (e->matches(QKeySequence::Undo))
-      m_document->undo();
-    else if (e->matches(QKeySequence::Redo))
-      m_document->redo();
-    else if (e->matches(QKeySequence::Cut))
-      m_document->Cut((m_renderer->selectedArea() == QHexRenderer::HexArea));
-    else if (e->matches(QKeySequence::Copy))
-      m_document->copy((m_renderer->selectedArea() == QHexRenderer::HexArea));
-    else if (e->matches(QKeySequence::Paste))
-      m_document->Paste((m_renderer->selectedArea() == QHexRenderer::HexArea));
-    else
-      return false;
-
+    } else {
+      if (canFlag) {
+        if (e->matches(QKeySequence::Undo))
+          m_document->undo();
+        else if (e->matches(QKeySequence::Redo))
+          m_document->redo();
+        else if (e->matches(QKeySequence::Cut))
+          m_document->Cut(
+              (m_renderer->selectedArea() == QHexRenderer::HexArea));
+        else if (e->matches(QKeySequence::Copy))
+          m_document->copy(
+              (m_renderer->selectedArea() == QHexRenderer::HexArea));
+        else if (e->matches(QKeySequence::Paste))
+          m_document->Paste(
+              (m_renderer->selectedArea() == QHexRenderer::HexArea));
+      } else {
+        return false;
+      }
+    }
     return true;
   }
 
-  if ((e->key() == Qt::Key_Backspace) || (e->key() == Qt::Key_Delete)) {
+  if (canFlag &&
+      ((e->key() == Qt::Key_Backspace) || (e->key() == Qt::Key_Delete))) {
     if (!cur->hasSelection()) {
       const QHexPosition &pos = cur->position();
 
