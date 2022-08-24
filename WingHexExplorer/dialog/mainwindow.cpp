@@ -1059,6 +1059,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   }
 
   if (enplugin) {
+    addToolBarBreak();
     logger->logMessage(INFOLOG(tr("PluginLoading")));
     winmenu->addSeparator();
     // init plugin system
@@ -1109,6 +1110,11 @@ void MainWindow::PluginDockWidgetAdd(
   if (rdw.count() == 1) {
     auto dockw = rdw.firstKey();
     auto align = rdw.first();
+    if (align == Qt::DockWidgetArea::NoDockWidgetArea ||
+        align == Qt::DockWidgetArea::AllDockWidgetAreas ||
+        align == Qt::DockWidgetArea::DockWidgetArea_Mask) {
+      align = Qt::DockWidgetArea::BottomDockWidgetArea;
+    }
     auto t = dockw->windowTitle();
     if (!t.trimmed().length()) {
       logger->logMessage(ERRLOG(tr("ErrDockWidgetAddNoName")));
@@ -1117,6 +1123,7 @@ void MainWindow::PluginDockWidgetAdd(
     logger->logMessage(WARNLOG(tr("DockWidgetName :") + t));
     dockw->setParent(this);
     addDockWidget(align, dockw);
+    dockw->close();
     auto a = new QAction(t, winmenu);
     connect(a, &QAction::triggered, this, [dockw] {
       dockw->show();
@@ -1129,6 +1136,11 @@ void MainWindow::PluginDockWidgetAdd(
     for (auto p = rdw.constBegin(); p != rdw.constEnd(); p++) {
       auto dockw = p.key();
       auto align = p.value();
+      if (align == Qt::DockWidgetArea::NoDockWidgetArea ||
+          align == Qt::DockWidgetArea::AllDockWidgetAreas ||
+          align == Qt::DockWidgetArea::DockWidgetArea_Mask) {
+        align = Qt::DockWidgetArea::BottomDockWidgetArea;
+      }
       auto t = dockw->windowTitle();
       if (!t.trimmed().length()) {
         logger->logMessage(ERRLOG(tr("ErrDockWidgetAddNoName")));
@@ -1137,6 +1149,7 @@ void MainWindow::PluginDockWidgetAdd(
       logger->logMessage(WARNLOG(tr("DockWidgetName :") + t));
       dockw->setParent(this);
       addDockWidget(align, dockw);
+      dockw->close();
       if (dw)
         tabifyDockWidget(dw, dockw);
       dw = dockw;
@@ -1160,6 +1173,11 @@ void MainWindow::PluginToolButtonAdd(QToolButton *btn) {
 
 void MainWindow::PluginToolBarAdd(QToolBar *tb, Qt::ToolBarArea align) {
   if (tb) {
+    if (align == Qt::ToolBarArea::NoToolBarArea ||
+        align == Qt::ToolBarArea::AllToolBarAreas ||
+        align == Qt::ToolBarArea::ToolBarArea_Mask) {
+      align = Qt::ToolBarArea::TopToolBarArea;
+    }
     addToolBar(align, tb);
   }
 }
@@ -2698,9 +2716,10 @@ ErrFile MainWindow::closeFile(int index, bool force) {
     p.doc->deleteLater();
     p.render->deleteLater();
   }
-  if (hexfiles.count() == 0)
+  if (hexfiles.count() == 0) {
     setEditModeEnabled(false);
-
+    txtDecode->clear();
+  }
   if (_enableplugin) {
     params << ErrFile::Success;
     plgsys->raiseDispatch(HookIndex::CloseFileEnd, params);
