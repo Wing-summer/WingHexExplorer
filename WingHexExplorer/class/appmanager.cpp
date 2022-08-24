@@ -1,4 +1,5 @@
 #include "appmanager.h"
+#include <QMessageBox>
 
 AppManager *AppManager::m_instance = nullptr;
 MainWindow *AppManager::mWindow = nullptr;
@@ -37,14 +38,23 @@ ErrFile AppManager::openFile(QString file, bool readonly) {
 
 void AppManager::openFiles(QStringList files) {
   if (mWindow) {
+    bool err = false;
+    QStringList errof;
     for (auto file : files) {
       if (openFile(file) == ErrFile::Permission) {
-        openFile(file, true);
+        if (openFile(file, true)) {
+          err = true;
+          errof << file;
+        }
       }
     }
     //通过dbus接口从任务栏激活窗口
     if (!Q_LIKELY(Utilities::activeWindowFromDock(mWindow->winId()))) {
       mWindow->activateWindow();
+    }
+    if (err) {
+      QMessageBox::critical(mWindow, tr("Error"),
+                            tr("ErrOpenFileBelow") + "\n" + errof.join('\n'));
     }
   }
 }

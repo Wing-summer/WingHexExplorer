@@ -339,8 +339,13 @@ bool QHexDocument::cut(bool hex) {
   if (!m_cursor->hasSelection() || m_keepsize)
     return false;
 
-  this->copy(hex);
-  return this->removeSelection();
+  auto res = this->copy(hex);
+  if (res) {
+    return this->removeSelection();
+  } else {
+    emit copyLimitRaised();
+    return res;
+  }
 }
 
 void QHexDocument::paste(bool hex) {
@@ -522,15 +527,29 @@ bool QHexDocument::Cut(bool hex) {
   if (m_keepsize)
     return false;
 
-  this->copy(hex);
-  return this->RemoveSelection();
+  auto res = this->copy(hex);
+  if (res) {
+    return this->RemoveSelection();
+  } else {
+    emit copyLimitRaised();
+    return res;
+  }
 }
 
-void QHexDocument::copy(bool hex) {
+bool QHexDocument::copy(bool hex) {
   if (!m_cursor->hasSelection())
-    return;
+    return true;
 
   QClipboard *c = qApp->clipboard();
+
+  auto len = this->cursor()->selectionLength();
+
+  //如果拷贝字节超过 1 MB 阻止
+  if (len > 1024 * 1024) {
+    emit copyLimitRaised();
+    return false;
+  }
+
   QByteArray bytes = this->selectedBytes();
 
   if (hex)
@@ -541,6 +560,7 @@ void QHexDocument::copy(bool hex) {
   // fix the bug by wingsummer
 
   c->setText(bytes);
+  return true;
 }
 
 // modified by wingsummer

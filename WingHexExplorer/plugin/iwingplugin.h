@@ -190,7 +190,7 @@ signals:
   bool canUndo();
   bool canRedo();
 
-  void copy(bool hex = false);
+  bool copy(bool hex = false);
 
   QByteArray read(qint64 offset, int len);
 

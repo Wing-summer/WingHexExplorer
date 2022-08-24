@@ -164,6 +164,8 @@ void QHexView::establishSignal(QHexDocument *doc) {
           &QHexView::documentKeepSize);
   connect(doc, &QHexDocument::documentLockedFile, this,
           &QHexView::documentLockedFile);
+  connect(doc, &QHexDocument::copyLimitRaised, this,
+          &QHexView::copyLimitRaised);
 }
 
 /*======================*/

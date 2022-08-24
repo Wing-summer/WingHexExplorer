@@ -68,6 +68,8 @@ signals:
   void metaCommentVisibleChanged(bool b);
   void metaStatusChanged();
 
+  void copyLimitRaised();
+
   /*=============================*/
 
 protected:

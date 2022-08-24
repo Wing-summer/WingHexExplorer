@@ -113,7 +113,7 @@ public slots:
   void undo();
   void redo();
   bool Cut(bool hex = false);
-  void copy(bool hex = false);
+  bool copy(bool hex = false);
   void Paste(bool hex = false);
   void Insert(qint64 offset, uchar b);
   void Insert(qint64 offset, const QByteArray &data);
@@ -177,6 +177,8 @@ signals:
 
   void documentLockedFile(bool locked);
   void documentKeepSize(bool keep);
+
+  void copyLimitRaised();
 
   /*================================*/
 

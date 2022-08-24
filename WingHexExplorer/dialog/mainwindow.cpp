@@ -947,6 +947,11 @@ MainWindow::MainWindow(DMainWindow *parent) {
     CheckEnabled;
     iLocked->setIcon(b ? infoLock : infoUnLock);
   });
+  connect(hexeditor, &QHexView::copyLimitRaised, this, [=] {
+    CheckEnabled;
+    DMessageManager::instance()->sendMessage(this, ICONRES("copy"),
+                                             tr("CopyLimit"));
+  });
 
 #define ConnectShortCut(ShortCut, Slot)                                        \
   s = new QShortcut(ShortCut, this);                                           \
@@ -2814,9 +2819,9 @@ void MainWindow::on_cuthex() {
 
 void MainWindow::on_copyfile() {
   CheckEnabled;
-  hexeditor->document()->copy();
-  DMessageManager::instance()->sendMessage(this, ICONRES("copy"),
-                                           tr("CopyToClipBoard"));
+  if (hexeditor->document()->copy())
+    DMessageManager::instance()->sendMessage(this, ICONRES("copy"),
+                                             tr("CopyToClipBoard"));
 }
 
 void MainWindow::on_copyhex() {
