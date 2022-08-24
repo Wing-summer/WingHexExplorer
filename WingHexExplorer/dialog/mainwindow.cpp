@@ -1052,13 +1052,12 @@ MainWindow::MainWindow(DMainWindow *parent) {
     setWindowState(Qt::WindowState::WindowFullScreen);
   }
 
-  auto enplugin = _enableplugin;
   if (_enableplugin) {
     if (!_rootenableplugin && Utilities::isRoot())
-      enplugin = false;
+      _enableplugin = false;
   }
 
-  if (enplugin) {
+  if (_enableplugin) {
     addToolBarBreak();
     logger->logMessage(INFOLOG(tr("PluginLoading")));
     winmenu->addSeparator();
