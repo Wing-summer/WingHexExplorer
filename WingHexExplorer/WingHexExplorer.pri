@@ -19,7 +19,7 @@ SOURCES += \
     $$PWD/class/logger.cpp \
     $$PWD/dialog/settingwindow.cpp \
     $$PWD/mlicense/licensemanager.cpp \
-    $$PWD/mlicense/lincensedialog.cpp \
+    $$PWD/mlicense/lincensedialog.cpp
 
 
 RESOURCES +=         resources.qrc
@@ -49,7 +49,7 @@ HEADERS += \
     $$PWD/dialog/settingwindow.h \
     $$PWD/mlicense/licensemanager.h \
     $$PWD/mlicense/lincensedialog.h \
-    $$PWD/mlicense/qaesencryption.h \
+    $$PWD/mlicense/qaesencryption.h
 
 LIBS += $$PWD/mlicense/libQtAES.a
 

@@ -260,7 +260,9 @@ QByteArray QHexRenderer::getLine(quint64 line) const {
   return m_document->read(qint64(line * quint64(hexLineWidth())),
                           hexLineWidth());
 }
+
 void QHexRenderer::blinkCursor() { m_cursorenabled = !m_cursorenabled; }
+
 qint64 QHexRenderer::rendererLength() const { return m_document->length() + 1; }
 
 // modified by wingsummer

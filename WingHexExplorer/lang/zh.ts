@@ -19,7 +19,7 @@
     <message>
         <location filename="../class/appmanager.cpp" line="57"/>
         <source>ErrOpenFileBelow</source>
-        <translation>打开文件出现错误，如下为打开错误的文件：</translation>
+        <translation>打开文件出现错误（由于权限不足），如下为打开错误的文件：</translation>
     </message>
 </context>
 <context>
