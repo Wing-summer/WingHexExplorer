@@ -6,8 +6,7 @@
 #include <QListWidgetItem>
 #include <QShortcut>
 
-EncodingDialog::EncodingDialog(DMainWindow *parent) {
-  Q_UNUSED(parent);
+EncodingDialog::EncodingDialog(DMainWindow *parent) : DDialog(parent) {
   this->setWindowTitle(tr("Encoding"));
   this->setFixedSize(500, 600);
   auto l = new DLabel(tr("ChooseEncoding"), this);

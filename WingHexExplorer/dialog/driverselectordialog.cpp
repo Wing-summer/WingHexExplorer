@@ -40,6 +40,8 @@ DriverSelectorDialog::DriverSelectorDialog(DMainWindow *parent)
   connect(s, &QShortcut::activated, this, &DriverSelectorDialog::on_accepted);
   connect(drivers, &QListWidget::itemSelectionChanged, this,
           &DriverSelectorDialog::on_list_selectionChanged);
+
+  drivers->setCurrentRow(0); // 我不信你没有驱动器
 }
 
 void DriverSelectorDialog::on_list_selectionChanged() {

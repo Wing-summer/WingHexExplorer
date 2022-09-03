@@ -1,11 +1,13 @@
 #include "mainwindow.h"
 #include "QHexView/document/buffer/qfilebuffer.h"
+#include "QHexView/document/buffer/qfileregionbuffer.h"
 #include "QHexView/document/buffer/qmemorybuffer.h"
 #include "QHexView/document/qhexcursor.h"
 #include "QHexView/document/qhexmetadata.h"
 #include "aboutsoftwaredialog.h"
 #include "class/appmanager.h"
 #include "class/recentfilemanager.h"
+#include "dialog/openregiondialog.h"
 #include "driverselectordialog.h"
 #include "encodingdialog.h"
 #include "finddialog.h"
@@ -152,11 +154,15 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   auto keynewb = QKeySequence(Qt::KeyboardModifier::ControlModifier |
                               Qt::KeyboardModifier::ShiftModifier | Qt::Key_N);
+  auto keyopenr = QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                               Qt::KeyboardModifier::ShiftModifier | Qt::Key_O);
 
   AddToolSubMenuShortcutAction("newb", tr("NewBigFile"),
                                MainWindow::on_newbigfile, keynewb);
   AddToolSubMenuShortcutAction("open", tr("OpenF"), MainWindow::on_openfile,
                                QKeySequence::Open);
+  AddToolSubMenuShortcutAction("openr", tr("OpenFR"), MainWindow::on_openregion,
+                               keyopenr);
 
   auto keysaveas =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
@@ -513,7 +519,12 @@ MainWindow::MainWindow(DMainWindow *parent) {
   }
   AddToolBtnEnd2();
 
-  AddToolBarTool("open", MainWindow::on_openfile, tr("OpenF"));
+  AddToolBtnBegin2("open") {
+    AddToolBtnBtn("open", tr("OpenF"), MainWindow::on_openfile);
+    AddToolBtnBtn("openr", tr("OpenFR"), MainWindow::on_openregion);
+  }
+  AddToolBtnEnd2();
+
   AddToolBarTool("workspace", MainWindow::on_openworkspace,
                  tr("OpenWorkSpace"));
   AddToolBarTool("opendriver", MainWindow::on_opendriver, tr("OpenD"));
@@ -2391,10 +2402,18 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     newFile();
   });
+  ConnectControlLamba2(WingPlugin::Controller::openFile,
+                       [=](QString filename, bool readonly, int *openedIndex) {
+                         plgsys->resetTimeout(
+                             qobject_cast<IWingPlugin *>(sender()));
+                         return openFile(filename, readonly, openedIndex);
+                       });
   ConnectControlLamba2(
-      WingPlugin::Controller::openFile, [=](QString filename, bool readonly) {
+      WingPlugin::Controller::openRegionFile,
+      [=](QString filename, bool readonly, int *openedIndex, qint64 start,
+          qint64 length) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        return openFile(filename, readonly);
+        return openRegionFile(filename, readonly, openedIndex, start, length);
       });
   ConnectControlLamba2(WingPlugin::Controller::openDriver, [=](QString driver) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
@@ -2571,6 +2590,103 @@ void MainWindow::newFile(bool bigfile) {
   }
 }
 
+ErrFile MainWindow::openRegionFile(QString filename, bool readonly,
+                                   int *openedindex, qint64 start,
+                                   qint64 length) {
+  QList<QVariant> params;
+  if (_enableplugin) {
+    params << filename << readonly;
+    plgsys->raiseDispatch(HookIndex::OpenFileBegin, params);
+  }
+  QFileInfo info(filename);
+  if (info.exists()) {
+    if (!info.permission(QFile::ReadUser)) {
+      if (_enableplugin) {
+        params << ErrFile::Permission;
+        plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+      }
+      return ErrFile::Permission;
+    }
+
+    if (!readonly && !info.permission(QFile::WriteUser)) {
+      if (_enableplugin) {
+        params << ErrFile::Permission;
+        plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+      }
+      return ErrFile::Permission;
+    }
+
+    int i = 0;
+    for (auto item : hexfiles) {
+      if (item.filename == filename) {
+        if (openedindex) {
+          *openedindex = i;
+        }
+        if (_enableplugin) {
+          params << ErrFile::AlreadyOpened;
+          plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+        }
+        return ErrFile::AlreadyOpened;
+      }
+      i++;
+    }
+
+    HexFile hf;
+    auto *p =
+        QHexDocument::fromRegionFile(filename, start, length, readonly, this);
+
+    if (p == nullptr) {
+      if (_enableplugin) {
+        params << ErrFile::Permission;
+        plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+      }
+      return ErrFile::Permission;
+    }
+
+    hexeditor->setVisible(true);
+    hf.doc = p;
+    hf.filename = filename;
+    hf.workspace.clear();
+    hf.vBarValue = -1;
+    p->setDocumentType(DocumentType::RegionFile);
+    hf.isdriver = false;
+    hexeditor->setDocument(p);
+    hexeditor->setLockedFile(readonly);
+    hexeditor->setKeepSize(true);
+    hexeditor->renderer()->setEncoding(_encoding);
+    hf.render = hexeditor->renderer();
+    hexfiles.push_back(hf);
+    p->setDocSaved();
+    hexeditor->getStatus();
+
+    QIcon qicon;
+
+    QMimeDatabase db;
+    auto t = db.mimeTypeForFile(filename);
+    auto ico = t.iconName();
+    qicon = QIcon::fromTheme(ico, QIcon(ico));
+
+    tabs->addTab(qicon, info.fileName());
+    auto index = hexfiles.count() - 1;
+    tabs->setCurrentIndex(index);
+    tabs->setTabToolTip(index, filename);
+    setEditModeEnabled(true);
+    _currentfile = index;
+
+    if (_enableplugin) {
+      params << ErrFile::Success;
+      plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+    }
+    return ErrFile::Success;
+  }
+
+  if (_enableplugin) {
+    params << ErrFile::NotExist;
+    plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
+  }
+  return ErrFile::NotExist;
+}
+
 ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
                              QString workspace, bool *oldworkspace) {
   QList<QVariant> params;
@@ -2615,8 +2731,6 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
       i++;
     }
 
-    hexeditor->setVisible(true);
-
     HexFile hf;
     auto *p =
         info.size() > FILEMAXBUFFER
@@ -2625,17 +2739,19 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
 
     if (p == nullptr) {
       if (_enableplugin) {
-        params << ErrFile::Error;
+        params << ErrFile::Permission;
         plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
       }
-      return ErrFile::Error;
+      return ErrFile::Permission;
     }
 
+    hexeditor->setVisible(true);
     hf.doc = p;
     hf.filename = filename;
     hf.workspace = workspace;
     hf.vBarValue = -1;
-    p->isWorkspace = workspace.length() > 0;
+    p->setDocumentType(workspace.length() > 0 ? DocumentType::WorkSpace
+                                              : DocumentType::File);
     hf.isdriver = false;
     hexeditor->setDocument(p);
     hexeditor->setLockedFile(readonly);
@@ -2648,7 +2764,7 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
 
     QIcon qicon;
 
-    if (p->isWorkspace) {
+    if (p->documentType() == DocumentType::WorkSpace) {
       qicon = ICONRES("pro");
     } else {
       QMimeDatabase db;
@@ -2856,16 +2972,40 @@ void MainWindow::on_openfile() {
       QMessageBox::critical(this, tr("Error"), tr("FileNotExist"));
       return;
     }
+    if (res == ErrFile::Permission &&
+        openFile(filename, true, &index) == ErrFile::Permission) {
+      QMessageBox::critical(this, tr("Error"), tr("FilePermission"));
+      return;
+    }
     if (res == ErrFile::AlreadyOpened) {
       setFilePage(index);
       return;
     }
-    if (res == ErrFile::Permission &&
-        openFile(filename, true) == ErrFile::Permission) {
+    recentmanager->addRecentFile(filename);
+  }
+}
+
+void MainWindow::on_openregion() {
+  OpenRegionDialog d;
+  if (d.exec()) {
+    auto res = d.getResult();
+    int index;
+    auto ret =
+        openRegionFile(res.filename, false, &index, res.start, res.length);
+    if (ret == ErrFile::NotExist) {
+      QMessageBox::critical(this, tr("Error"), tr("FileNotExist"));
+      return;
+    }
+    if (ret == ErrFile::Permission &&
+        openRegionFile(res.filename, true, &index, res.start, res.length) ==
+            ErrFile::Permission) {
       QMessageBox::critical(this, tr("Error"), tr("FilePermission"));
       return;
     }
-    recentmanager->addRecentFile(filename);
+    if (ret == ErrFile::AlreadyOpened) {
+      setFilePage(index);
+      return;
+    }
   }
 }
 
@@ -3365,7 +3505,10 @@ void MainWindow::on_bookmarkChanged(BookMarkModEnum flag, int index, qint64 pos,
 void MainWindow::on_documentSwitched() {
   iReadWrite->setPixmap(hexeditor->isReadOnly() ? infoReadonly : infoWriteable);
   if (hexfiles.count()) {
-    iw->setPixmap(hexeditor->document()->isWorkspace ? infow : infouw);
+    iw->setPixmap(hexeditor->document()->documentType() ==
+                          DocumentType::WorkSpace
+                      ? infow
+                      : infouw);
   } else {
     iw->setPixmap(infouw);
   }
@@ -3394,7 +3537,7 @@ ErrFile MainWindow::save(int index) {
               doc->metadata()->getallMetas(), infos);
           if (!b)
             return ErrFile::WorkSpaceUnSaved;
-          f.doc->isWorkspace = true;
+          f.doc->setDocumentType(DocumentType::WorkSpace);
           iw->setPixmap(infow);
           tabs->setTabIcon(index, ICONRES("pro"));
           f.doc->setDocSaved();
@@ -3409,7 +3552,7 @@ ErrFile MainWindow::save(int index) {
           if (!b)
             return ErrFile::WorkSpaceUnSaved;
           hexfiles[index].workspace = f.filename + PROEXT;
-          f.doc->isWorkspace = true;
+          f.doc->setDocumentType(DocumentType::WorkSpace);
           iw->setPixmap(infow);
           tabs->setTabIcon(index, ICONRES("pro"));
           f.doc->setDocSaved();
@@ -3473,7 +3616,7 @@ ErrFile MainWindow::saveAs(QString filename, int index) {
         if (!b)
           return ErrFile::WorkSpaceUnSaved;
         hexfiles[index].workspace = filename + PROEXT;
-        f.doc->isWorkspace = true;
+        f.doc->setDocumentType(DocumentType::WorkSpace);
         iw->setPixmap(infow);
         tabs->setTabIcon(index, ICONRES("pro"));
         f.doc->setDocSaved();
@@ -3690,7 +3833,7 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
 
   if (b) {
     enableDirverLimit(isdriver);
-    auto dm = hexeditor->document()->isWorkspace;
+    auto dm = hexeditor->document()->documentType() == DocumentType::WorkSpace;
     iw->setPixmap(dm ? infow : infouw);
     auto doc = hexeditor->document();
     doc->canRedoChanged(doc->canRedo());

@@ -51,7 +51,8 @@ int main(int argc, char *argv[]) {
 
   a.setOrganizationName("WingCloud");
   a.setApplicationName(QObject::tr("WingHexExplorer"));
-  a.setApplicationVersion("1.4.9");
+  a.setApplicationVersion("1.4.10");
+  a.setApplicationLicense("GPL-3.0");
   a.setProductIcon(QIcon(":/images/icon.png"));
   a.setProductName(QObject::tr("WingHexExplorer"));
   a.setApplicationDescription(QObject::tr("AppDescription"));
@@ -81,14 +82,13 @@ int main(int argc, char *argv[]) {
 
     // 保存程序的窗口主题设置
     DApplicationSettings as;
-    Q_UNUSED(as)
+    Q_UNUSED(as);
 
     auto manager = AppManager::instance();
     MainWindow w;
     manager->mWindow = &w;
     manager->openFiles(urls);
     w.show();
-
     dbus.registerObject(com, manager, QDBusConnection::ExportScriptableSlots);
     Dtk::Widget::moveToCenter(&w);
     return a.exec();

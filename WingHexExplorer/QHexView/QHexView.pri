@@ -27,7 +27,8 @@ HEADERS += $$PWD/document/commands/hex/hexcommand.h \
     $$PWD/QHexEdit2/chunks.h \
     $$PWD/document/commands/meta/metashowcommand.h \
     $$PWD/document/commands/baseaddrcommand.h \
-    $$PWD/document/commands/encodingchangecommand.h
+    $$PWD/document/commands/encodingchangecommand.h \
+    $$PWD/document/buffer/qfileregionbuffer.h
 
 SOURCES += $$PWD/document/commands/hex/hexcommand.cpp \
            $$PWD/document/commands/hex/insertcommand.cpp \
@@ -56,6 +57,7 @@ SOURCES += $$PWD/document/commands/hex/hexcommand.cpp \
     $$PWD/QHexEdit2/chunks.cpp \
     $$PWD/document/commands/meta/metashowcommand.cpp \
     $$PWD/document/commands/baseaddrcommand.cpp \
-    $$PWD/document/commands/encodingchangecommand.cpp
+    $$PWD/document/commands/encodingchangecommand.cpp \
+    $$PWD/document/buffer/qfileregionbuffer.cpp
 
 INCLUDEPATH += $$PWD

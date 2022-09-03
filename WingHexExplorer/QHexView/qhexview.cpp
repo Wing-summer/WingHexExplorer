@@ -18,17 +18,6 @@
 
 QHexRenderer *QHexView::renderer() { return m_renderer; }
 
-int QHexView::getWorkSpaceState(QHexDocument *doc, bool b) {
-  if (doc->isWorkspace) {
-    if (b)
-      return 1;
-    else
-      return 0;
-  } else {
-    return -1;
-  }
-}
-
 void QHexView::switchDocument(QHexDocument *document, QHexRenderer *renderer,
                               int vBarValue) {
   if (document && renderer) {

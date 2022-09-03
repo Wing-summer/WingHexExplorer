@@ -81,6 +81,7 @@
         <file>images/usr.jpg</file>
         <file>images/fullscreen.png</file>
         <file>images/reload.png</file>
+        <file>images/openr.png</file>
     </qresource>
     <qresource prefix="/resources">
         <file>settings.json</file>

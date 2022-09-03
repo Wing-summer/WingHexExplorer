@@ -137,6 +137,9 @@ public:
 
 private:
   void newFile(bool bigfile = false);
+  ErrFile openRegionFile(QString filename, bool readonly = false,
+                         int *openedindex = nullptr, qint64 start = 0,
+                         qint64 length = 1024);
   ErrFile openDriver(QString driver);
   ErrFile closeFile(int index, bool force = false);
   ErrFile save(int index);
@@ -165,6 +168,7 @@ private:
   void on_newfile();
   void on_newbigfile();
   void on_openfile();
+  void on_openregion();
   void on_redofile();
   void on_undofile();
   void on_copyfile();

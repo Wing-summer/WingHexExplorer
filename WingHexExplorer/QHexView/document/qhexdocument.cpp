@@ -1,5 +1,6 @@
 #include "qhexdocument.h"
 #include "buffer/qfilebuffer.h"
+#include "buffer/qfileregionbuffer.h"
 #include "commands/baseaddrcommand.h"
 #include "commands/bookmark/bookmarkaddcommand.h"
 #include "commands/bookmark/bookmarkclearcommand.h"
@@ -94,9 +95,12 @@ void QHexDocument::setDocSaved(bool b) {
   emit documentSaved(b);
 }
 
+DocumentType QHexDocument::documentType() { return m_doctype; }
+void QHexDocument::setDocumentType(DocumentType type) { m_doctype = type; }
 bool QHexDocument::isReadOnly() { return m_readonly; }
 bool QHexDocument::isKeepSize() { return m_keepsize; }
 bool QHexDocument::isLocked() { return m_islocked; }
+
 bool QHexDocument::setLockedFile(bool b) {
   if (m_readonly)
     return false;
@@ -109,6 +113,9 @@ bool QHexDocument::setLockedFile(bool b) {
 bool QHexDocument::setKeepSize(bool b) {
   if (m_readonly)
     return false;
+  if (!b && m_doctype == DocumentType::RegionFile)
+    return false;
+
   m_keepsize = b;
   if (b)
     m_cursor->setInsertionMode(QHexCursor::OverwriteMode);
@@ -333,6 +340,24 @@ bool QHexDocument::removeSelection() {
   if (res)
     m_cursor->clearSelection();
   return res;
+}
+
+QHexDocument *QHexDocument::fromRegionFile(QString filename, qint64 start,
+                                           qint64 length, bool readonly,
+                                           QObject *parent) {
+
+  QFile iodevice(filename);
+  auto hexbuffer = new QFileRegionBuffer;
+  hexbuffer->setReadOffset(start);
+  hexbuffer->setReadMaxBytes(length);
+
+  if (hexbuffer->read(&iodevice)) {
+    return new QHexDocument(hexbuffer, readonly, parent);
+  } else {
+    delete hexbuffer;
+  }
+
+  return nullptr;
 }
 
 bool QHexDocument::cut(bool hex) {

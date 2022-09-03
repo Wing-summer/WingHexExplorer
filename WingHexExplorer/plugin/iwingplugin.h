@@ -11,7 +11,7 @@
 #include <QWidget>
 #include <QtCore>
 
-#define SDKVERSION 8
+#define SDKVERSION 9
 #define GETPLUGINQM(name)                                                      \
   (QCoreApplication::applicationDirPath() + "/plglang/" + name)
 #define PLUGINDIR (QCoreApplication::applicationDirPath() + "/plugin")
@@ -309,7 +309,11 @@ signals:
 
   // mainwindow
   void newFile(bool bigfile = false);
-  ErrFile openFile(QString filename, bool readonly = false);
+  ErrFile openFile(QString filename, bool readonly = false,
+                   int *openedIndex = nullptr);
+  ErrFile openRegionFile(QString filename, bool readonly = false,
+                         int *openedIndex = nullptr, qint64 start = 0,
+                         qint64 length = 1024);
   ErrFile openDriver(QString driver);
   ErrFile closeFile(int index, bool force = false);
   ErrFile saveFile(int index);

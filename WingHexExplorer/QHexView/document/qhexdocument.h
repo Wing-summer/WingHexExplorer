@@ -18,6 +18,8 @@ struct BookMarkStruct {
 
 enum class BookMarkModEnum { Insert, Modify, Remove, Apply, Clear };
 
+enum class DocumentType { File, WorkSpace, RegionFile };
+
 /*=========================*/
 
 class QHexDocument : public QObject {
@@ -83,7 +85,8 @@ public:
   bool isDocSaved();
   void setDocSaved(bool b = true);
 
-  bool isWorkspace = false;
+  DocumentType documentType();
+  void setDocumentType(DocumentType type);
 
   void setMetafgVisible(bool b);
   void setMetabgVisible(bool b);
@@ -152,6 +155,11 @@ public:
   template <typename T>
   static QHexDocument *fromFile(QString filename, bool readonly = false,
                                 QObject *parent = nullptr);
+
+  static QHexDocument *fromRegionFile(QString filename, qint64 start,
+                                      qint64 length, bool readonly = false,
+                                      QObject *parent = nullptr);
+
   template <typename T>
   static QHexDocument *fromMemory(char *data, int size, bool readonly = false,
                                   QObject *parent = nullptr);
@@ -209,6 +217,8 @@ private:
   bool m_metabg = true;
   bool m_metacomment = true;
 
+  DocumentType m_doctype = DocumentType::File;
+
   /*======================*/
 };
 
@@ -222,8 +232,7 @@ QHexDocument *QHexDocument::fromDevice(QIODevice *iodevice, bool readonly,
 
   if (!iodevice->isOpen()) {
     needsclose = true;
-    iodevice->open(readonly ? QIODevice::ReadOnly
-                            : QIODevice::ReadWrite); // modifed by wingsummer
+    iodevice->open(QIODevice::ReadOnly);
   }
 
   QHexBuffer *hexbuffer = new T();

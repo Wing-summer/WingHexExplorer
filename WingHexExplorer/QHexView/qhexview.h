@@ -46,7 +46,6 @@ public:
   void setAddressBase(quint64 base);
 
   bool isSaved();
-  int getWorkSpaceState(QHexDocument *doc, bool b);
   static QFont getHexeditorFont();
   void getStatus();
 
