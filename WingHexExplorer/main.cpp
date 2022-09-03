@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
   a.setOrganizationName("WingCloud");
   a.setApplicationName(QObject::tr("WingHexExplorer"));
   a.setApplicationVersion("1.4.10");
-  a.setApplicationLicense("GPL-3.0");
+  a.setApplicationLicense("AGPL-3.0");
   a.setProductIcon(QIcon(":/images/icon.png"));
   a.setProductName(QObject::tr("WingHexExplorer"));
   a.setApplicationDescription(QObject::tr("AppDescription"));
