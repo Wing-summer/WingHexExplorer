@@ -56,6 +56,8 @@ signals:
   void sigChangePluginEnabled(bool b);
   void sigChangeRootPluginEnabled(bool b);
   void sigAdjustFindMaxCount(int count);
+  void sigAdjustCopyLimit(int count);
+  void sigAdjustDecodeStringLimit(int count);
 
 private:
   DDialog *createDialog(const QString &title, const QString &content,

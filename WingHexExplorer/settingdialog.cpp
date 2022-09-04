@@ -18,4 +18,6 @@ void GenerateSettingTranslate() {
   auto window = QObject::tr("Window");
   auto editor_encoding = QObject::tr("Encoding");
   auto editor_findrc = QObject::tr("FindMaxResultCount");
+  auto editor_copylimit = QObject::tr("CopyByteLimit(MB)");
+  auto editor_decstr = QObject::tr("DecodeStringLimit(KB)");
 }

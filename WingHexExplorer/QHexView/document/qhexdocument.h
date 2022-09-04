@@ -101,6 +101,9 @@ public:
   bool metabgVisible();
   bool metaCommentVisible();
 
+  void setCopyLimit(int count);
+  int copyLimit();
+
   /*======================*/
 
 public:
@@ -218,6 +221,8 @@ private:
   bool m_metacomment = true;
 
   DocumentType m_doctype = DocumentType::File;
+
+  int m_copylimit = 1; // MB
 
   /*======================*/
 };

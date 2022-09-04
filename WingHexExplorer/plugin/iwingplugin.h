@@ -29,7 +29,8 @@ enum ErrFile {
   AlreadyOpened,
   IsNewFile,
   IsDirver,
-  WorkSpaceUnSaved
+  WorkSpaceUnSaved,
+  SourceFileChanged
 };
 
 struct FindResult {
@@ -316,10 +317,10 @@ signals:
                          qint64 length = 1024);
   ErrFile openDriver(QString driver);
   ErrFile closeFile(int index, bool force = false);
-  ErrFile saveFile(int index);
-  ErrFile exportFile(QString filename, int index);
+  ErrFile saveFile(int index, bool ignoreMd5 = false);
+  ErrFile exportFile(QString filename, int index, bool ignoreMd5 = false);
   void exportFileGUI();
-  ErrFile saveasFile(QString filename, int index);
+  ErrFile saveasFile(QString filename, int index, bool ignoreMd5 = false);
   void saveasFileGUI();
   ErrFile closeCurrentFile(bool force = false);
   ErrFile saveCurrentFile();

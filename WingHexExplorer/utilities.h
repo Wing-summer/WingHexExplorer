@@ -4,6 +4,7 @@
 #include "QHexView/document/qhexdocument.h"
 #include "QHexView/document/qhexrenderer.h"
 #include "plugin/iwingplugin.h"
+#include <QCryptographicHash>
 #include <QDBusInterface>
 #include <QDBusReply>
 #include <QDebug>
@@ -21,6 +22,7 @@ struct HexFile {
   QString workspace;
   int vBarValue;
   bool isdriver;
+  QByteArray md5; // only for RegionFile
 };
 
 static QStringList encodingsBuffer;
@@ -44,7 +46,7 @@ public:
     return bRet;
   }
 
-  static QString ProcessBytesCount(qint64 bytescount) {
+  static QString processBytesCount(qint64 bytescount) {
     QString B[] = {"B", "KB", "MB", "GB", "TB"};
     auto av = bytescount;
     auto r = av;
@@ -61,7 +63,7 @@ public:
     return QString("%1 TB").arg(av);
   }
 
-  static QStringList GetEncodings() {
+  static QStringList getEncodings() {
     if (encodingsBuffer.length() > 0)
       return encodingsBuffer;
     QStringList encodings;
@@ -78,6 +80,32 @@ public:
     }
     encodingsBuffer = encodings;
     return encodings;
+  }
+
+  static QByteArray getMd5(QString filename) {
+    QFile sourceFile(filename);
+    qint64 fileSize = sourceFile.size();
+    const qint64 bufferSize = 10240;
+
+    if (sourceFile.open(QIODevice::ReadOnly)) {
+      char buffer[bufferSize];
+      int bytesRead;
+      auto readSize = qMin(fileSize, bufferSize);
+
+      QCryptographicHash hash(QCryptographicHash::Md5);
+
+      while (readSize > 0 &&
+             (bytesRead = int(sourceFile.read(buffer, readSize))) > 0) {
+        fileSize -= bytesRead;
+        hash.addData(buffer, bytesRead);
+        readSize = qMin(fileSize, bufferSize);
+      }
+
+      sourceFile.close();
+      return hash.result();
+    }
+
+    return QByteArray();
   }
 };
 

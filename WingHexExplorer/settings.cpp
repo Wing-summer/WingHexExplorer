@@ -85,10 +85,20 @@ Settings::Settings(QWidget *parent) : QObject(parent) {
     DMessageManager::instance()->sendMessage(
         m_pSettingsDialog, ICONRES("setting"), tr("FindNextTakeEffect"));
   });
+  BindConfigSignal(cplim, "editor.basic.copylimit", {
+    emit sigAdjustCopyLimit(value.toInt());
+    DMessageManager::instance()->sendMessage(
+        m_pSettingsDialog, ICONRES("setting"), tr("CopyNextTakeEffect"));
+  });
+  BindConfigSignal(decstrlim, "editor.basic.decstrlimit", {
+    emit sigAdjustDecodeStringLimit(value.toInt());
+    DMessageManager::instance()->sendMessage(
+        m_pSettingsDialog, ICONRES("setting"), tr("SelectionNextTakeEffect"));
+  });
 
   auto enCoding = settings->option("editor.basic.encoding");
   QMap<QString, QVariant> encodingMap;
-  QStringList encodings = Utilities::GetEncodings();
+  QStringList encodings = Utilities::getEncodings();
   encodingMap.insert("keys", encodings);
   encodingMap.insert("values", encodings);
   encoding->setData("items", encodingMap);
@@ -190,6 +200,10 @@ void Settings::applySetting() {
         sigChangedEncoding(encoding->value().toString()));
   Apply(fmax, "editor.basic.findmaxcount",
         sigAdjustFindMaxCount(fmax->value().toInt()););
+  Apply(cplim, "editor.basic.copylimit",
+        sigAdjustCopyLimit(cplim->value().toInt()););
+  Apply(decstrlim, "editor.basic.decstrlimit",
+        sigAdjustDecodeStringLimit(decstrlim->value().toInt()););
 }
 
 DDialog *Settings::createDialog(const QString &title, const QString &content,

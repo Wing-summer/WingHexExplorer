@@ -56,8 +56,8 @@ void DriverSelectorDialog::on_list_selectionChanged() {
   if (item.isReady()) {
     Info(tr("isReady"), "True");
     Info(tr("bytesAvailable"),
-         Utilities::ProcessBytesCount(item.bytesAvailable()));
-    Info(tr("bytesTotal"), Utilities::ProcessBytesCount(item.bytesTotal()));
+         Utilities::processBytesCount(item.bytesAvailable()));
+    Info(tr("bytesTotal"), Utilities::processBytesCount(item.bytesTotal()));
   } else {
     Info(tr("isReady"), "False");
   }

@@ -142,9 +142,9 @@ private:
                          qint64 length = 1024);
   ErrFile openDriver(QString driver);
   ErrFile closeFile(int index, bool force = false);
-  ErrFile save(int index);
-  ErrFile exportFile(QString filename, int index);
-  ErrFile saveAs(QString filename, int index);
+  ErrFile save(int index, bool ignoreMd5 = false);
+  ErrFile exportFile(QString filename, int index, bool ignoreMd5 = false);
+  ErrFile saveAs(QString filename, int index, bool ignoreMd5 = false);
   ErrFile closeCurrentFile(bool force = false);
   ErrFile saveCurrent();
   bool isSavedFile(int index);
@@ -322,6 +322,9 @@ private:
 
   int _findmax = 100;
   int findres = 0;
+  int _cplim = 1;      // MB
+  int _decstrlim = 10; // KB
+
   QString lastusedpath;
 };
 

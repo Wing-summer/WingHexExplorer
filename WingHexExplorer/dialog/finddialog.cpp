@@ -16,7 +16,7 @@ FindDialog::FindDialog(bool sel, DMainWindow *parent) : DDialog(parent) {
   addSpacing(3);
 
   m_encodings = new DComboBox(this);
-  m_encodings->addItems(Utilities::GetEncodings());
+  m_encodings->addItems(Utilities::getEncodings());
   m_encodings->setCurrentIndex(0);
   m_encodings->setEnabled(false);
   connect(m_string, &DRadioButton::toggled, m_encodings,

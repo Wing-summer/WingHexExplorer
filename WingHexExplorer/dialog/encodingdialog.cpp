@@ -13,7 +13,7 @@ EncodingDialog::EncodingDialog(DMainWindow *parent) : DDialog(parent) {
   addContent(l);
   addSpacing(5);
   enclist = new DListWidget(this);
-  for (auto item : Utilities::GetEncodings()) {
+  for (auto item : Utilities::getEncodings()) {
     enclist->addItem(item);
   }
   addContent(enclist);

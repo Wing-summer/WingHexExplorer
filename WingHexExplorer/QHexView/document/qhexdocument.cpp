@@ -84,6 +84,14 @@ bool QHexDocument::metafgVisible() { return m_metafg; }
 
 bool QHexDocument::metaCommentVisible() { return m_metacomment; }
 
+void QHexDocument::setCopyLimit(int count) {
+  if (count > 0) {
+    m_copylimit = count;
+  }
+}
+
+int QHexDocument::copyLimit() { return m_copylimit; }
+
 bool QHexDocument::isDocSaved() {
   return m_undostack.isClean() && !m_pluginModed;
 }
@@ -569,8 +577,8 @@ bool QHexDocument::copy(bool hex) {
 
   auto len = this->cursor()->selectionLength();
 
-  //如果拷贝字节超过 1 MB 阻止
-  if (len > 1024 * 1024) {
+  //如果拷贝字节超过 ? MB 阻止
+  if (len > 1024 * 1024 * m_copylimit) {
     emit copyLimitRaised();
     return false;
   }
@@ -579,12 +587,12 @@ bool QHexDocument::copy(bool hex) {
 
   if (hex)
     bytes = bytes.toHex(' ').toUpper();
-  else
-    bytes = bytes.toHex();
+
+  auto mime = new QMimeData;
+  mime->setData("text/plain;charset=utf-8", bytes); // don't use setText()
+  c->setMimeData(mime);
 
   // fix the bug by wingsummer
-
-  c->setText(bytes);
   return true;
 }
 
@@ -593,14 +601,15 @@ void QHexDocument::Paste(bool hex) {
   Q_UNUSED(hex)
 
   QClipboard *c = qApp->clipboard();
-  QByteArray data = c->text().toUtf8();
+  QByteArray data =
+      c->mimeData()->data("text/plain;charset=utf-8"); // don't use getText()
 
   if (data.isEmpty())
     return;
 
   this->RemoveSelection();
 
-  if (hex || (!hex && data.indexOf(' ') < 0))
+  if (hex)
     data = QByteArray::fromHex(data);
 
   auto pos = m_cursor->position().offset();

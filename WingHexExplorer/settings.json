@@ -45,6 +45,22 @@
                             "min": 10
                         },
                         {
+                            "key": "copylimit",
+                            "name": "CopyByteLimit(MB)",
+                            "type": "spinbutton",
+                            "default": 1,
+                            "max": 100,
+                            "min": 1
+                        },
+                        {
+                            "key": "decstrlimit",
+                            "name": "DecodeStringLimit(KB)",
+                            "type": "spinbutton",
+                            "default": 10,
+                            "max": 10240,
+                            "min": 1
+                        },
+                        {
                             "key": "encoding",
                             "name": "Encoding",
                             "type": "combobox",

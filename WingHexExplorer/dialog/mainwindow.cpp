@@ -1052,6 +1052,14 @@ MainWindow::MainWindow(DMainWindow *parent) {
           [=](QString encoding) { _encoding = encoding; });
   connect(m_settings, &Settings::sigAdjustFindMaxCount,
           [=](int count) { _findmax = count; });
+  connect(m_settings, &Settings::sigAdjustCopyLimit, [=](int count) {
+    _cplim = count;
+    for (auto &item : hexfiles) {
+      item.doc->setCopyLimit(count);
+    }
+  });
+  connect(m_settings, &Settings::sigAdjustDecodeStringLimit,
+          [=](int count) { _decstrlim = count; });
 
   m_settings->applySetting();
   hexeditor->setAddressVisible(_showaddr);
@@ -1591,7 +1599,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
     return files;
   });
   ConnectBase2(WingPlugin::Reader::getSupportedEncodings,
-               Utilities::GetEncodings);
+               Utilities::getEncodings);
   ConnectBaseLamba2(WingPlugin::Reader::currentEncoding, [=] {
     PCHECKRETURN(hexfiles[_pcurfile].render->encoding(),
                  hexeditor->renderer()->encoding(), QString());
@@ -2424,24 +2432,27 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         return closeFile(index, force);
       });
-  ConnectControlLamba2(WingPlugin::Controller::saveFile, [=](int index) {
-    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    return save(index);
-  });
   ConnectControlLamba2(
-      WingPlugin::Controller::exportFile, [=](QString filename, int index) {
+      WingPlugin::Controller::saveFile, [=](int index, bool ignoreMd5) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        return exportFile(filename, index);
+        return save(index, ignoreMd5);
       });
+  ConnectControlLamba2(WingPlugin::Controller::exportFile,
+                       [=](QString filename, int index, bool ignoreMd5) {
+                         plgsys->resetTimeout(
+                             qobject_cast<IWingPlugin *>(sender()));
+                         return exportFile(filename, index, ignoreMd5);
+                       });
   ConnectControlLamba2(WingPlugin::Controller::exportFileGUI, [=] {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     on_exportfile();
   });
-  ConnectControlLamba2(
-      WingPlugin::Controller::saveasFile, [=](QString filename, int index) {
-        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        return saveAs(filename, index);
-      });
+  ConnectControlLamba2(WingPlugin::Controller::saveasFile,
+                       [=](QString filename, int index, bool ignoreMd5) {
+                         plgsys->resetTimeout(
+                             qobject_cast<IWingPlugin *>(sender()));
+                         return saveAs(filename, index, ignoreMd5);
+                       });
   ConnectControlLamba2(WingPlugin::Controller::saveasFileGUI, [=] {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     on_saveas();
@@ -2590,6 +2601,7 @@ void MainWindow::newFile(bool bigfile) {
 
   auto p = bigfile ? QHexDocument::fromLargeFile(nullptr)
                    : QHexDocument::fromFile<QMemoryBuffer>(nullptr);
+  p->setCopyLimit(_cplim);
   HexFile hf;
   hf.doc = p;
   hexeditor->setDocument(p);
@@ -2670,9 +2682,11 @@ ErrFile MainWindow::openRegionFile(QString filename, bool readonly,
     }
 
     hexeditor->setVisible(true);
+    p->setCopyLimit(_cplim);
     hf.doc = p;
     hf.filename = filename;
     hf.workspace.clear();
+    hf.md5 = Utilities::getMd5(filename);
     hf.vBarValue = -1;
     p->setDocumentType(DocumentType::RegionFile);
     hf.isdriver = false;
@@ -2772,6 +2786,7 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
     }
 
     hexeditor->setVisible(true);
+    p->setCopyLimit(_cplim);
     hf.doc = p;
     hf.filename = filename;
     hf.workspace = workspace;
@@ -2869,6 +2884,7 @@ ErrFile MainWindow::openDriver(QString driver) {
         return ErrFile::Error;
       }
 
+      p->setCopyLimit(_cplim);
       hf.doc = p;
       hexeditor->setDocument(p);
       hexeditor->setKeepSize(true);
@@ -3122,7 +3138,33 @@ void MainWindow::on_exportfile() {
   if (filename.isEmpty())
     return;
   lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
-  exportFile(filename, _currentfile);
+  auto res = exportFile(filename, _currentfile);
+
+restart:
+  switch (res) {
+  case ErrFile::Success: {
+    DMessageManager::instance()->sendMessage(this, ICONRES("export"),
+                                             tr("ExportSuccessfully"));
+    break;
+  }
+  case ErrFile::SourceFileChanged: {
+    if (QMessageBox::warning(this, tr("Warn"), tr("SourceChanged"),
+                             QMessageBox::Yes | QMessageBox::No) ==
+        QMessageBox::Yes) {
+      res = exportFile(filename, _currentfile, true);
+      goto restart;
+    } else {
+      DMessageManager::instance()->sendMessage(this, ICONRES("export"),
+                                               tr("ExportSourceFileError"));
+    }
+    break;
+  }
+  default: {
+    DMessageManager::instance()->sendMessage(this, ICONRES("export"),
+                                             tr("ExportUnSuccessfully"));
+    break;
+  }
+  }
 }
 
 void MainWindow::on_exit() { close(); }
@@ -3174,17 +3216,41 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 void MainWindow::on_save() {
   CheckEnabled;
   auto res = saveCurrent();
-  if (res == ErrFile::IsNewFile)
+
+restart:
+
+  switch (res) {
+  case ErrFile::IsNewFile: {
     on_saveas();
-  else if (res == ErrFile::Success) {
+    break;
+  }
+  case ErrFile::Success: {
     DMessageManager::instance()->sendMessage(this, ICONRES("save"),
                                              tr("SaveSuccessfully"));
-  } else if (res == ErrFile::WorkSpaceUnSaved) {
+    break;
+  }
+  case ErrFile::WorkSpaceUnSaved: {
     DMessageManager::instance()->sendMessage(this, ICONRES("save"),
                                              tr("SaveWSError"));
-  } else {
+    break;
+  }
+  case ErrFile::SourceFileChanged: {
+    if (QMessageBox::warning(this, tr("Warn"), tr("SourceChanged"),
+                             QMessageBox::Yes | QMessageBox::No) ==
+        QMessageBox::Yes) {
+      res = save(_currentfile, true);
+      goto restart;
+    } else {
+      DMessageManager::instance()->sendMessage(this, ICONRES("save"),
+                                               tr("SaveSourceFileError"));
+    }
+    break;
+  }
+  default: {
     DMessageManager::instance()->sendMessage(this, ICONRES("save"),
                                              tr("SaveUnSuccessfully"));
+    break;
+  }
   }
 }
 
@@ -3201,15 +3267,36 @@ void MainWindow::on_saveas() {
     return;
   lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
   auto res = saveAs(filename, _currentfile);
-  if (res == ErrFile::Success) {
+
+restart:
+  switch (res) {
+  case ErrFile::Success: {
     DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                              tr("SaveSuccessfully"));
-  } else if (res == ErrFile::WorkSpaceUnSaved) {
+    break;
+  }
+  case ErrFile::WorkSpaceUnSaved: {
     DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                              tr("SaveWSError"));
-  } else {
+    break;
+  }
+  case ErrFile::SourceFileChanged: {
+    if (QMessageBox::warning(this, tr("Warn"), tr("SourceChanged"),
+                             QMessageBox::Yes | QMessageBox::No) ==
+        QMessageBox::Yes) {
+      res = saveAs(filename, _currentfile, true);
+      goto restart;
+    } else {
+      DMessageManager::instance()->sendMessage(this, ICONRES("save"),
+                                               tr("SaveSourceFileError"));
+    }
+    break;
+  }
+  default: {
     DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                              tr("SaveUnSuccessfully"));
+    break;
+  }
   }
 }
 
@@ -3375,7 +3462,7 @@ void MainWindow::on_locChanged() {
   //解码字符串
   if (sellen > 1) {
     // 如果不超过 10KB 那么解码，防止太多卡死
-    if (sellen <= 10240) {
+    if (sellen <= ulong(1024 * _decstrlim)) {
       auto enc =
           QTextCodec::codecForName(hexeditor->renderer()->encoding().toUtf8());
       auto dec = enc->makeDecoder();
@@ -3446,6 +3533,7 @@ void MainWindow::on_reload() {
     }
 
     hf.doc->deleteLater();
+    p->setCopyLimit(_cplim);
     hf.doc = p;
     hf.render->switchDoc(p);
     hexeditor->switchDocument(p, hf.render, hf.vBarValue);
@@ -3540,7 +3628,7 @@ void MainWindow::on_documentSwitched() {
   }
 }
 
-ErrFile MainWindow::save(int index) {
+ErrFile MainWindow::save(int index, bool ignoreMd5) {
   if (index >= 0 && index < hexfiles.count()) {
     auto f = hexfiles.at(index);
     if (f.isdriver)
@@ -3551,6 +3639,9 @@ ErrFile MainWindow::save(int index) {
     QFile file(f.filename);
 
     if (f.doc->documentType() == DocumentType::RegionFile) {
+      if (!ignoreMd5 && Utilities::getMd5(f.filename) != f.md5) {
+        return ErrFile::SourceFileChanged;
+      }
       if (!file.open(QFile::ReadWrite)) {
         return ErrFile::Permission;
       }
@@ -3602,7 +3693,7 @@ ErrFile MainWindow::save(int index) {
   return ErrFile::Error;
 }
 
-ErrFile MainWindow::exportFile(QString filename, int index) {
+ErrFile MainWindow::exportFile(QString filename, int index, bool ignoreMd5) {
   if (index >= 0 && index < hexfiles.count()) {
     auto f = hexfiles.at(index);
     if (f.isdriver)
@@ -3611,6 +3702,9 @@ ErrFile MainWindow::exportFile(QString filename, int index) {
 
     // 如果是局部文件就拷贝一份
     if (f.doc->documentType() == DocumentType::RegionFile) {
+      if (!ignoreMd5 && Utilities::getMd5(f.filename) != f.md5) {
+        return ErrFile::SourceFileChanged;
+      }
       if (!QFile::copy(f.filename, filename)) {
         return ErrFile::Error;
       }
@@ -3643,7 +3737,7 @@ ErrFile MainWindow::exportFile(QString filename, int index) {
   return ErrFile::Error;
 }
 
-ErrFile MainWindow::saveAs(QString filename, int index) {
+ErrFile MainWindow::saveAs(QString filename, int index, bool ignoreMd5) {
   if (index >= 0 && index < hexfiles.count()) {
     auto f = hexfiles.at(index);
     if (f.isdriver)
@@ -3653,6 +3747,9 @@ ErrFile MainWindow::saveAs(QString filename, int index) {
 
     // 如果是局部文件就拷贝一份
     if (f.doc->documentType() == DocumentType::RegionFile) {
+      if (!ignoreMd5 && Utilities::getMd5(f.filename) != f.md5) {
+        return ErrFile::SourceFileChanged;
+      }
       if (!QFile::copy(f.filename, filename)) {
         return ErrFile::Error;
       }
