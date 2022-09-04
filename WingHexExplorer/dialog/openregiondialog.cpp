@@ -3,13 +3,25 @@
 #include <DDialogButtonBox>
 #include <DLabel>
 #include <DMessageManager>
+#include <QDir>
+#include <QFileInfo>
 #include <QShortcut>
 
-OpenRegionDialog::OpenRegionDialog(DMainWindow *parent) : DDialog(parent) {
+OpenRegionDialog::OpenRegionDialog(QString &curdir, QString filename, int start,
+                                   int length, DMainWindow *parent)
+    : DDialog(parent) {
   this->setWindowTitle(tr("OpenRegion"));
   addContent(new DLabel(tr("ChooseFile"), this));
   addSpacing(5);
   filepath = new DFileChooserEdit(this);
+  filepath->setText(filename);
+  filepath->setDirectoryUrl(QUrl(curdir));
+
+  connect(filepath, &DFileChooserEdit::fileChoosed, this,
+          [&curdir](const QString &fileName) {
+            curdir = QFileInfo(fileName).absoluteDir().absolutePath();
+          });
+
   filepath->initDialog();
   addContent(filepath);
   addSpacing(10);
@@ -18,6 +30,7 @@ OpenRegionDialog::OpenRegionDialog(DMainWindow *parent) : DDialog(parent) {
   addSpacing(5);
   sbStart = new DSpinBox(this);
   sbStart->setRange(0, INT_MAX);
+  sbStart->setValue(start);
   sbStart->setPrefix("0x");
   sbStart->setDisplayIntegerBase(16);
   addContent(sbStart);
@@ -27,6 +40,7 @@ OpenRegionDialog::OpenRegionDialog(DMainWindow *parent) : DDialog(parent) {
   addSpacing(5);
   sbLength = new DSpinBox(this);
   sbLength->setRange(1, INT_MAX);
+  sbLength->setValue(length);
   addContent(sbLength);
 
   addSpacing(20);

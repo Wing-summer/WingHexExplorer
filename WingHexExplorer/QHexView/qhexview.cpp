@@ -526,6 +526,9 @@ bool QHexView::processAction(QHexCursor *cur, QKeyEvent *e) {
         else if (e->matches(QKeySequence::Paste))
           m_document->Paste(
               (m_renderer->selectedArea() == QHexRenderer::HexArea));
+        else
+          return false;
+
       } else {
         return false;
       }

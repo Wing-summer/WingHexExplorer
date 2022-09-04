@@ -17,7 +17,8 @@ struct RegionFileResult {
 class OpenRegionDialog : public DDialog {
   Q_OBJECT
 public:
-  OpenRegionDialog(DMainWindow *parent = nullptr);
+  OpenRegionDialog(QString &curdir, QString filename = QString(), int start = 0,
+                   int length = 1024, DMainWindow *parent = nullptr);
   RegionFileResult getResult();
 
 private:

@@ -324,6 +324,8 @@ signals:
   ErrFile closeCurrentFile(bool force = false);
   ErrFile saveCurrentFile();
   void openFileGUI();
+  void openRegionFileGUI(QString filename, qint64 start = 0,
+                         qint64 length = 1024);
   void openDriverGUI();
   void findGUI();
   void gotoGUI();

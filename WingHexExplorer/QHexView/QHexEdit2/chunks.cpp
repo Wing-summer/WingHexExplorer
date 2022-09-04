@@ -113,7 +113,10 @@ QByteArray Chunks::data(qint64 pos, qint64 maxSize) {
 bool Chunks::write(QIODevice *iODevice, qint64 pos, qint64 count) {
   if (count == -1)
     count = qint64(_size);
-  bool ok = iODevice->open(QIODevice::WriteOnly);
+
+  // fix the bug
+  bool ok = (iODevice->isOpen() && iODevice->isWritable()) ||
+            iODevice->open(QIODevice::WriteOnly);
   if (ok) {
     for (qint64 idx = pos; idx < count; idx += BUFFER_SIZE) {
       QByteArray ba = data(idx, BUFFER_SIZE);

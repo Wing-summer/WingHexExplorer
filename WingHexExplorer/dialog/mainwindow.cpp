@@ -2459,6 +2459,32 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     on_openfile();
   });
+  ConnectControlLamba2(
+      WingPlugin::Controller::openRegionFileGUI,
+      [=](QString filename, qint64 start, qint64 length) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        OpenRegionDialog d(lastusedpath, filename, int(start), int(length));
+        if (d.exec()) {
+          auto res = d.getResult();
+          int index;
+          auto ret = openRegionFile(res.filename, false, &index, res.start,
+                                    res.length);
+          if (ret == ErrFile::NotExist) {
+            QMessageBox::critical(this, tr("Error"), tr("FileNotExist"));
+            return;
+          }
+          if (ret == ErrFile::Permission &&
+              openRegionFile(res.filename, true, &index, res.start,
+                             res.length) == ErrFile::Permission) {
+            QMessageBox::critical(this, tr("Error"), tr("FilePermission"));
+            return;
+          }
+          if (ret == ErrFile::AlreadyOpened) {
+            setFilePage(index);
+            return;
+          }
+        }
+      });
   ConnectControlLamba2(WingPlugin::Controller::openDriverGUI, [=] {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     on_opendriver();
@@ -2986,7 +3012,7 @@ void MainWindow::on_openfile() {
 }
 
 void MainWindow::on_openregion() {
-  OpenRegionDialog d;
+  OpenRegionDialog d(lastusedpath);
   if (d.exec()) {
     auto res = d.getResult();
     int index;
@@ -3521,8 +3547,19 @@ ErrFile MainWindow::save(int index) {
       return ErrFile::IsDirver;
     if (f.filename.at(0) == ':')
       return ErrFile::IsNewFile;
+
     QFile file(f.filename);
-    file.open(QFile::WriteOnly);
+
+    if (f.doc->documentType() == DocumentType::RegionFile) {
+      if (!file.open(QFile::ReadWrite)) {
+        return ErrFile::Permission;
+      }
+    } else {
+      if (!file.open(QFile::WriteOnly)) {
+        return ErrFile::Permission;
+      }
+    }
+
     if (f.doc->saveTo(&file, true)) {
       file.close();
       if (f.doc->metadata()->hasMetadata()) {
@@ -3571,13 +3608,26 @@ ErrFile MainWindow::exportFile(QString filename, int index) {
     if (f.isdriver)
       return ErrFile::IsDirver;
     QFile file(filename);
-    file.open(QFile::WriteOnly);
+
+    // 如果是局部文件就拷贝一份
+    if (f.doc->documentType() == DocumentType::RegionFile) {
+      if (!QFile::copy(f.filename, filename)) {
+        return ErrFile::Error;
+      }
+      if (!file.open(QFile::ReadWrite)) {
+        return ErrFile::Permission;
+      }
+    } else {
+      if (!file.open(QFile::WriteOnly)) {
+        return ErrFile::Permission;
+      }
+    }
+
     if (f.doc->saveTo(&file, false)) {
       file.close();
       if (f.doc->metadata()->hasMetadata()) {
         auto doc = hexeditor->document();
         auto render = hexeditor->renderer();
-
         SaveWorkSpaceInitInfo;
         auto b = WorkSpaceManager::saveWorkSpace(
             filename + PROEXT, filename, doc->getAllBookMarks(),
@@ -3598,8 +3648,23 @@ ErrFile MainWindow::saveAs(QString filename, int index) {
     auto f = hexfiles.at(index);
     if (f.isdriver)
       return ErrFile::IsDirver;
+
     QFile file(filename);
-    file.open(QFile::WriteOnly);
+
+    // 如果是局部文件就拷贝一份
+    if (f.doc->documentType() == DocumentType::RegionFile) {
+      if (!QFile::copy(f.filename, filename)) {
+        return ErrFile::Error;
+      }
+      if (!file.open(QFile::ReadWrite)) {
+        return ErrFile::Permission;
+      }
+    } else {
+      if (!file.open(QFile::WriteOnly)) {
+        return ErrFile::Permission;
+      }
+    }
+
     if (f.doc->saveTo(&file, true)) {
       hexfiles[index].filename = filename;
       tabs->setTabText(index, QFileInfo(file).fileName());

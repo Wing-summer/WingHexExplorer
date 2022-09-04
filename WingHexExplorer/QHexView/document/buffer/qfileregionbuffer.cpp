@@ -8,15 +8,12 @@ QFileRegionBuffer::QFileRegionBuffer(QObject *parent) : QHexBuffer(parent) {}
 qint64 QFileRegionBuffer::length() const { return buffer.length(); }
 
 void QFileRegionBuffer::insert(qint64 offset, const QByteArray &data) {
-  Q_UNUSED(offset);
-  Q_UNUSED(data);
-  // 不支持插入，仅支持复写
+  buffer.insert(int(offset), data);
   return;
 }
 
 void QFileRegionBuffer::remove(qint64 offset, int length) {
-  // 在此模式下，删除视为按 0 填充
-  replace(offset, QByteArray(length, 0));
+  buffer.remove(int(offset), int(length));
 }
 
 QByteArray QFileRegionBuffer::read(qint64 offset, int length) {
@@ -35,13 +32,12 @@ bool QFileRegionBuffer::read(QIODevice *iodevice) {
   return false;
 }
 
+#include <QDebug>
+
 void QFileRegionBuffer::write(QIODevice *iodevice) {
-  QFile file(iodevice);
-  if (file.open(QFile::WriteOnly)) {
-    lseek(file.handle(), offset, SEEK_SET);
-    file.write(buffer);
-    file.close();
-  }
+  auto file = qobject_cast<QFile *>(iodevice);
+  lseek(file->handle(), offset, SEEK_SET);
+  file->write(buffer);
 }
 
 qint64 QFileRegionBuffer::indexOf(const QByteArray &ba, qint64 from) {
