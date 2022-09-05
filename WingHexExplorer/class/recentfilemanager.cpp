@@ -98,6 +98,8 @@ void RecentFileManager::trigger() {
     m_menu->removeAction(send);
     hitems.removeAt(index);
     m_recents.removeAt(index);
+    DMessageManager::instance()->sendMessage(m_parent, ICONRES("clearhis"),
+                                             tr("FileNotExistClean"));
   }
 }
 

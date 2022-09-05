@@ -1,4 +1,5 @@
 #include "appmanager.h"
+#include <DMessageManager>
 #include <QMessageBox>
 
 AppManager *AppManager::m_instance = nullptr;
@@ -28,6 +29,9 @@ ErrFile AppManager::openFile(QString file, bool readonly) {
           if (res == ErrFile::AlreadyOpened ||
               res == ErrFile::WorkSpaceUnSaved) {
             mWindow->setFilePage(oldindex);
+          } else {
+            DMessageManager::instance()->sendMessage(mWindow, ICONRES("open"),
+                                                     tr("OpenErrorPermission"));
           }
         }
       }

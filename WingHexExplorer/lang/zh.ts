@@ -12,12 +12,17 @@
 <context>
     <name>AppManager</name>
     <message>
-        <location filename="../class/appmanager.cpp" line="56"/>
+        <location filename="../class/appmanager.cpp" line="34"/>
+        <source>OpenErrorPermission</source>
+        <translation>因文件权限，无法继续打开文件！</translation>
+    </message>
+    <message>
+        <location filename="../class/appmanager.cpp" line="60"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../class/appmanager.cpp" line="57"/>
+        <location filename="../class/appmanager.cpp" line="61"/>
         <source>ErrOpenFileBelow</source>
         <translation>打开文件出现错误（由于权限不足），如下为打开错误的文件：</translation>
     </message>
@@ -1365,13 +1370,18 @@
         <translation>请输入删除索引</translation>
     </message>
     <message>
-        <location filename="../class/recentfilemanager.cpp" line="117"/>
+        <location filename="../class/recentfilemanager.cpp" line="102"/>
+        <source>FileNotExistClean</source>
+        <translation>文件不存在，该选项已被清除！</translation>
+    </message>
+    <message>
+        <location filename="../class/recentfilemanager.cpp" line="119"/>
         <source>HistoryClearFinished</source>
         <translation>打开历史记录完成！</translation>
     </message>
     <message>
         <location filename="../class/recentfilemanager.cpp" line="27"/>
-        <location filename="../class/recentfilemanager.cpp" line="107"/>
+        <location filename="../class/recentfilemanager.cpp" line="109"/>
         <source>NoHistoryDel</source>
         <translation>无打开历史项目可删除！</translation>
     </message>

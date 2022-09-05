@@ -167,9 +167,6 @@ MainWindow::MainWindow(DMainWindow *parent) {
   auto keysaveas =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::ShiftModifier | Qt::Key_S);
-  auto keyOpenDriver =
-      QKeySequence(Qt::KeyboardModifier::ControlModifier |
-                   Qt::KeyboardModifier::ShiftModifier | Qt::Key_O);
   auto keygoto =
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_G);
   auto keyGeneral =
@@ -244,8 +241,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   AddToolSubMenuShortcutAction("workspace", tr("OpenWorkSpace"),
                                MainWindow::on_openworkspace, keyopenws);
-  AddToolSubMenuShortcutAction("opendriver", tr("OpenD"),
-                               MainWindow::on_opendriver, keyOpenDriver);
+  AddToolSubMenuAction("opendriver", tr("OpenD"), MainWindow::on_opendriver);
   tm->addSeparator();
   AddToolSubMenuShortcutAction("save", tr("Save"), MainWindow::on_save,
                                QKeySequence::Save);
@@ -987,7 +983,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keygoto, MainWindow::on_gotoline);
   ConnectShortCut(keyplugin, MainWindow::on_setting_plugin);
   ConnectShortCut(keyGeneral, MainWindow::on_setting_general);
-  ConnectShortCut(keyOpenDriver, MainWindow::on_opendriver);
+  ConnectShortCut(keyopenr, MainWindow::on_openregion);
   ConnectShortCut(keymetadata, MainWindow::on_metadata);
   ConnectShortCut(keyfill, MainWindow::on_fill);
   ConnectShortCut(keyfillnop, MainWindow::on_fillnop);
