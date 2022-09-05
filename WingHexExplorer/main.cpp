@@ -1,5 +1,6 @@
 #include "./dialog/mainwindow.h"
 #include "class/appmanager.h"
+#include "qBreakpad/QBreakpadHandler.h"
 #include "winghexapplication.h"
 #include <DApplication>
 #include <DApplicationSettings>
@@ -12,8 +13,10 @@
 #include <QDBusConnection>
 #include <QDBusInterface>
 #include <QDate>
+#include <QDir>
 #include <QFileInfo>
 #include <QLayout>
+#include <QStandardPaths>
 #include <QUrl>
 
 DWIDGET_USE_NAMESPACE
@@ -51,7 +54,7 @@ int main(int argc, char *argv[]) {
 
   a.setOrganizationName("WingCloud");
   a.setApplicationName(QObject::tr("WingHexExplorer"));
-  a.setApplicationVersion("1.4.10");
+  a.setApplicationVersion("1.5.0");
   a.setApplicationLicense("AGPL-3.0");
   a.setProductIcon(QIcon(":/images/icon.png"));
   a.setProductName(QObject::tr("WingHexExplorer"));
@@ -87,8 +90,22 @@ int main(int argc, char *argv[]) {
     auto manager = AppManager::instance();
     MainWindow w;
     manager->mWindow = &w;
-    manager->openFiles(urls);
+    QDir dumpdir(
+        QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+    dumpdir.mkdir("dump");
+    auto &breakpad = QBreakpadInstance;
+    breakpad.setDumpPath(dumpdir.absolutePath() + "/dump");
+    QObject::connect(&breakpad, &QBreakpadHandler::appCrashed,
+                     [=](const QString &path) {
+                       QMessageBox msg(manager->mWindow);
+                       msg.setIcon(QMessageBox::Icon::Critical);
+                       msg.setText(QObject::tr("AppCrashed"));
+                       msg.setInformativeText(QObject::tr("Issue2Author"));
+                       msg.setDetailedText(QObject::tr("Path:") + path);
+                       msg.exec();
+                     });
     w.show();
+    manager->openFiles(urls);
     dbus.registerObject(com, manager, QDBusConnection::ExportScriptableSlots);
     Dtk::Widget::moveToCenter(&w);
     return a.exec();
