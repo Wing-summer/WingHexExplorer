@@ -64,9 +64,17 @@ int main(int argc, char *argv[]) {
   a.loadTranslator();
   a.setApplicationDisplayName("WingHexExplorer");
 
-  QDBusConnection dbus = QDBusConnection::sessionBus();
-  QString service("com.Wingsummer.WingHexExplorer");
-  QString com("/com/Wingsummer/WingHexExplorer");
+  if (!a.setSingleInstance("com.Wingsummer.WingHexExplorer")) {
+    return -1;
+  }
+
+  // 单例传参
+  auto instance = DGuiApplicationHelper::instance();
+  QObject::connect(instance, &DGuiApplicationHelper::newProcessInstance,
+                   [=](qint64 pid, const QStringList &arguments) {
+                     Q_UNUSED(pid);
+                     AppManager::openFiles(arguments.mid(1));
+                   });
 
   QCommandLineParser parser;
   parser.process(a);
@@ -79,45 +87,28 @@ int main(int argc, char *argv[]) {
     urls << info.absoluteFilePath();
   }
 
-  // 参考：Deepin 自带的文本编辑器的单例通信方式
-  // Start editor process if not found any editor use DBus.
-  if (dbus.registerService(service)) {
+  // 保存程序的窗口主题设置
+  DApplicationSettings as;
+  Q_UNUSED(as);
 
-    // 保存程序的窗口主题设置
-    DApplicationSettings as;
-    Q_UNUSED(as);
-
-    auto manager = AppManager::instance();
-    MainWindow w;
-    manager->mWindow = &w;
-    QDir dumpdir(
-        QStandardPaths::writableLocation(QStandardPaths::DataLocation));
-    dumpdir.mkdir("dump");
-    auto &breakpad = QBreakpadInstance;
-    breakpad.setDumpPath(dumpdir.absolutePath() + "/dump");
-    QObject::connect(&breakpad, &QBreakpadHandler::appCrashed,
-                     [=](const QString &path) {
-                       QMessageBox msg(manager->mWindow);
-                       msg.setIcon(QMessageBox::Icon::Critical);
-                       msg.setText(QObject::tr("AppCrashed"));
-                       msg.setInformativeText(QObject::tr("Issue2Author"));
-                       msg.setDetailedText(QObject::tr("Path:") + path);
-                       msg.exec();
-                     });
-    w.show();
-    manager->openFiles(urls);
-    dbus.registerObject(com, manager, QDBusConnection::ExportScriptableSlots);
-    Dtk::Widget::moveToCenter(&w);
-    return a.exec();
-  }
-  // Just send dbus message to exist editor process.
-  else {
-    QDBusInterface notification(service, com, service,
-                                QDBusConnection::sessionBus());
-
-    QList<QVariant> args;
-    args << urls;
-    notification.callWithArgumentList(QDBus::AutoDetect, "openFiles", args);
-    return 0;
-  }
+  auto manager = AppManager::instance();
+  MainWindow w;
+  manager->mWindow = &w;
+  QDir dumpdir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+  dumpdir.mkdir("dump");
+  auto &breakpad = QBreakpadInstance;
+  breakpad.setDumpPath(dumpdir.absolutePath() + "/dump");
+  QObject::connect(&breakpad, &QBreakpadHandler::appCrashed,
+                   [=](const QString &path) {
+                     QMessageBox msg(manager->mWindow);
+                     msg.setIcon(QMessageBox::Icon::Critical);
+                     msg.setText(QObject::tr("AppCrashed"));
+                     msg.setInformativeText(QObject::tr("Issue2Author"));
+                     msg.setDetailedText(QObject::tr("Path:") + path);
+                     msg.exec();
+                   });
+  w.show();
+  manager->openFiles(urls);
+  Dtk::Widget::moveToCenter(&w);
+  return a.exec();
 }

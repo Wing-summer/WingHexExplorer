@@ -12,17 +12,16 @@
 <context>
     <name>AppManager</name>
     <message>
-        <location filename="../class/appmanager.cpp" line="34"/>
         <source>OpenErrorPermission</source>
-        <translation>因文件权限，无法继续打开文件！</translation>
+        <translation type="vanished">因文件权限，无法继续打开文件！</translation>
     </message>
     <message>
-        <location filename="../class/appmanager.cpp" line="60"/>
+        <location filename="../class/appmanager.cpp" line="57"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../class/appmanager.cpp" line="61"/>
+        <location filename="../class/appmanager.cpp" line="58"/>
         <source>ErrOpenFileBelow</source>
         <translation>打开文件出现错误（由于权限不足），如下为打开错误的文件：</translation>
     </message>
