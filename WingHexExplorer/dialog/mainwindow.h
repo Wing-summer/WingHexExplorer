@@ -134,6 +134,7 @@ public:
   ErrFile openWorkSpace(QString filename, bool readonly = false,
                         int *openedindex = nullptr);
   bool setFilePage(int index);
+  QString saveLog(); // 当程序崩溃发生时，自动保存日志
 
 private:
   void newFile(bool bigfile = false);
@@ -228,6 +229,9 @@ private:
   void on_metadatabg(bool b);
   void on_metadatafg(bool b);
   void on_metadatacomment(bool b);
+
+  void on_exportlog();
+  void on_clslog();
 
 private:
   QList<HexFile> hexfiles;

@@ -98,15 +98,22 @@ int main(int argc, char *argv[]) {
   dumpdir.mkdir("dump");
   auto &breakpad = QBreakpadInstance;
   breakpad.setDumpPath(dumpdir.absolutePath() + "/dump");
-  QObject::connect(&breakpad, &QBreakpadHandler::appCrashed,
-                   [=](const QString &path) {
-                     QMessageBox msg(manager->mWindow);
-                     msg.setIcon(QMessageBox::Icon::Critical);
-                     msg.setText(QObject::tr("AppCrashed"));
-                     msg.setInformativeText(QObject::tr("Issue2Author"));
-                     msg.setDetailedText(QObject::tr("Path:") + path);
-                     msg.exec();
-                   });
+  QObject::connect(
+      &breakpad, &QBreakpadHandler::appCrashed,
+      [&w, manager](const QString &path) {
+        auto logfile = w.saveLog();
+        QMessageBox msg(manager->mWindow);
+        msg.setIcon(QMessageBox::Icon::Critical);
+        msg.setText(QObject::tr("AppCrashed"));
+        msg.setInformativeText(QObject::tr("Issue2Author"));
+        msg.setDetailedText(
+            QString("%1:%2\n%3:%4")
+                .arg(QObject::tr("dmpPath"))
+                .arg(path)
+                .arg(QObject::tr("logPath"))
+                .arg(logfile.isEmpty() ? QObject::tr("ExportFail") : logfile));
+        msg.exec();
+      });
   w.show();
   manager->openFiles(urls);
   Dtk::Widget::moveToCenter(&w);

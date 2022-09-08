@@ -388,6 +388,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolSubMenuAction("layout", tr("RestoreLayout"),
                        MainWindow::on_restoreLayout);
   tm->addSeparator();
+  AddToolSubMenuAction("log", tr("ExportLog"), MainWindow::on_exportlog);
+  AddToolSubMenuAction("clearhis", tr("ClearLog"), MainWindow::on_clslog);
+  tm->addSeparator();
   AddToolSubMenuAction("fullscreen", tr("Fullscreen"),
                        MainWindow::on_fullScreen);
   menu->addMenu(tm);
@@ -838,6 +841,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   dw->setMinimumSize(450, 300);
   pluginInfo->setFocusPolicy(Qt::StrongFocus);
   pluginInfo->setOpenExternalLinks(true);
+  pluginInfo->setUndoRedoEnabled(false);
   dw->setWidget(pluginInfo);
   this->addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, dw);
 
@@ -2582,6 +2586,21 @@ bool MainWindow::setFilePage(int index) {
   }
 }
 
+QString MainWindow::saveLog() {
+  QDir ndir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+  ndir.mkdir("log"); // 确保日志存放目录存在
+
+  QFile lfile(ndir.absolutePath() + "/log/" +
+              QDateTime::currentDateTime().toString("yyyyMMddhhmmsszzz") +
+              ".log");
+  if (lfile.open(QFile::WriteOnly)) {
+    lfile.write(pluginInfo->toPlainText().toUtf8());
+    lfile.close();
+    return lfile.fileName();
+  }
+  return QString();
+}
+
 void MainWindow::on_newfile() { newFile(); }
 void MainWindow::on_newbigfile() { newFile(true); }
 
@@ -4029,6 +4048,23 @@ void MainWindow::on_metadatafg(bool b) {
 void MainWindow::on_metadatacomment(bool b) {
   CheckEnabled;
   hexeditor->document()->SetMetaCommentVisible(b);
+}
+
+void MainWindow::on_exportlog() {
+  auto nfile = saveLog();
+  if (nfile.isEmpty()) {
+    DMessageManager::instance()->sendMessage(this, ICONRES("log"),
+                                             tr("ExportLogError"));
+  } else {
+    DMessageManager::instance()->sendMessage(this, ICONRES("log"),
+                                             tr("ExportLogSuccess") + nfile);
+  }
+}
+
+void MainWindow::on_clslog() {
+  pluginInfo->clear();
+  DMessageManager::instance()->sendMessage(this, ICONRES("clearhis"),
+                                           tr("ClearLogSuccess"));
 }
 
 void MainWindow::enableDirverLimit(bool b) {

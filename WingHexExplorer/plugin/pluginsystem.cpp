@@ -165,6 +165,8 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
           ERRLOG(QString(tr("ErrLoadPluginLoc") + m.valueToKey(int(lp)))));
       loader.unload();
     }
+
+    logger->logMessage("<br />");
   }
 }
 
@@ -180,10 +182,14 @@ bool PluginSystem::LoadPlugin() {
 #endif
   auto plgs = plugindir.entryInfoList();
   logger->logMessage(
-      INFOLOG(tr("FoundPluginCount") + QString::number(plgs.count())));
+      INFOLOG(tr("FoundPluginCount") + QString::number(plgs.count())) +
+      "<br />");
   for (auto item : plgs) {
     loadPlugin(item);
   }
+
+  logger->logMessage(INFOLOG(tr("PluginLoadingFinished")) + "<br />");
+
   return true;
 }
 
@@ -204,16 +210,23 @@ bool PluginSystem::requestControl(IWingPlugin *plugin, int timeout) {
       return true;
     } else {
       if (plugintimeout[oldctl]) {
+        logger->logMessage(WARNLOG(tr("[PluginTimeout]") +
+                                   plugin->pluginName() + " --> " +
+                                   oldctl->pluginName()));
         initControl(plugin);
         oldctl->plugin2MessagePipe(
             WingPluginMessage::ConnectTimeout,
             QList<QVariant>({plugin->pluginName(), plugin->puid()}));
       } else {
+        logger->logMessage(
+            ERRLOG(tr("[PluginRequestError]") + plugin->pluginName()));
         mutex.unlock();
         return false;
       }
     }
   } else {
+    logger->logMessage(
+        WARNLOG(tr("[PluginRequestSuccess]") + plugin->pluginName()));
     initControl(plugin);
   }
   mutex.unlock();
