@@ -116,8 +116,10 @@ private:
 
   DMenu *hexeditorMenu;
   DMenu *findresultMenu;
+  DMenu *numtableMenu;
 
   QAction *settingplg;
+  QAction *littleEndian, *bigEndian;
 
 private:
   QHexView *hexeditor;
@@ -135,6 +137,19 @@ public:
                         int *openedindex = nullptr);
   bool setFilePage(int index);
   QString saveLog(); // 当程序崩溃发生时，自动保存日志
+
+  template <typename T> inline T processEndian(T source) {
+    if (Utilities::checkIsLittleEndian()) {
+      if (!islittle) {
+        return qToBigEndian(source);
+      }
+    } else {
+      if (islittle) {
+        return qToLittleEndian(source);
+      }
+    }
+    return source;
+  }
 
 private:
   void newFile(bool bigfile = false);
@@ -328,6 +343,8 @@ private:
   int findres = 0;
   int _cplim = 1;      // MB
   int _decstrlim = 10; // KB
+
+  bool islittle = true;
 
   QString lastusedpath;
 };

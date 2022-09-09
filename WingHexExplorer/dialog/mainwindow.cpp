@@ -25,11 +25,13 @@
 #include <DTitlebar>
 #include <DWidgetUtil>
 #include <QCheckBox>
+#include <QClipboard>
 #include <QDesktopServices>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QGraphicsOpacityEffect>
+#include <QHeaderView>
 #include <QIcon>
 #include <QKeySequence>
 #include <QList>
@@ -862,6 +864,47 @@ MainWindow::MainWindow(DMainWindow *parent) {
   numshowtable->setVerticalHeaderLabels(
       QStringList({"byte", "char", "ushort", "short", "uint32", "int32",
                    "uint64", "int64"}));
+
+  numtableMenu = new DMenu(numshowtable);
+  a = new QAction(numtableMenu);
+  a->setText(tr("Copy"));
+  connect(a, &QAction::triggered, this, [=] {
+    auto r = numshowtable->currentRow();
+    qApp->clipboard()->setText(numsitem[r].text());
+    DMessageManager::instance()->sendMessage(this, ICONRES("copy"),
+                                             tr("CopyToClipBoard"));
+  });
+  numtableMenu->addAction(a);
+  numtableMenu->addSeparator();
+  a = new QAction(numtableMenu);
+  a->setText(tr("LittleEndian"));
+  a->setCheckable(true);
+  a->setChecked(true);
+  connect(a, &QAction::triggered, this, [=] {
+    islittle = true;
+    this->on_locChanged();
+    littleEndian->setChecked(true);
+    bigEndian->setChecked(false);
+  });
+  littleEndian = a;
+  numtableMenu->addAction(a);
+
+  a = new QAction(numtableMenu);
+  a->setText(tr("BigEndian"));
+  a->setCheckable(true);
+  connect(a, &QAction::triggered, this, [=] {
+    islittle = false;
+    this->on_locChanged();
+    littleEndian->setChecked(false);
+    bigEndian->setChecked(true);
+  });
+  bigEndian = a;
+  numtableMenu->addAction(a);
+
+  numshowtable->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+  connect(numshowtable, &DTableWidget::customContextMenuRequested, this,
+          [=] { numtableMenu->popup(cursor().pos()); });
+
   numsitem = new QTableWidgetItem[NumTableIndexCount];
   for (int i = 0; i < NumTableIndexCount; i++) {
     auto item = numsitem + i;
@@ -3429,14 +3472,15 @@ void MainWindow::on_locChanged() {
   auto d = hexeditor->document();
 
   auto tmp = d->read(off, sizeof(quint64));
-  auto n = *reinterpret_cast<const quint64 *>(tmp.constData());
+  quint64 n = *reinterpret_cast<const quint64 *>(tmp.constData());
+
   auto len = tmp.length();
 
   if (len == sizeof(quint64)) {
-    auto s = n;
+    auto s = processEndian(n);
     numsitem[NumTableIndex::Uint64].setText(
         QString("0x%1").arg(QString::number(s, 16).toUpper()));
-    auto s1 = qint64(n);
+    auto s1 = processEndian(qint64(n));
     numsitem[NumTableIndex::Int64].setText(QString::number(s1));
   } else {
     numsitem[NumTableIndex::Uint64].setText("-");
@@ -3444,21 +3488,21 @@ void MainWindow::on_locChanged() {
   }
 
   if (len > int(sizeof(quint32))) {
-    auto s = ulong(n);
+    auto s = processEndian(quint32(n));
     numsitem[NumTableIndex::Uint32].setText(
         QString("0x%1").arg(QString::number(s, 16).toUpper()));
-    auto s1 = long(n);
+    auto s1 = processEndian(qint32(n));
     numsitem[NumTableIndex::Int32].setText(QString::number(s1));
   } else {
     numsitem[NumTableIndex::Uint32].setText("-");
     numsitem[NumTableIndex::Int32].setText("-");
   }
 
-  if (len > int(sizeof(ushort))) {
-    auto s = ushort(n);
+  if (len > int(sizeof(quint16))) {
+    auto s = processEndian(quint16(n));
     numsitem[NumTableIndex::Ushort].setText(
         QString("0x%1").arg(QString::number(s, 16).toUpper()));
-    auto s1 = short(n);
+    auto s1 = processEndian(qint16(n));
     numsitem[NumTableIndex::Short].setText(QString::number(s1));
   } else {
     numsitem[NumTableIndex::Ushort].setText("-");

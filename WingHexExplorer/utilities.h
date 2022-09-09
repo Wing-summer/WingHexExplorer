@@ -107,6 +107,12 @@ public:
 
     return QByteArray();
   }
+
+  static bool checkIsLittleEndian() {
+    short s = 0x1122;
+    auto l = *reinterpret_cast<char *>(&s);
+    return l == 0x22;
+  }
 };
 
 #endif // UTILITIES_H
