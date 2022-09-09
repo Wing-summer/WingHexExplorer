@@ -2462,10 +2462,11 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         return closeFile(_pcurfile, force);
       });
-  ConnectControlLamba2(WingPlugin::Controller::saveCurrentFile, [=] {
-    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    return save(_pcurfile);
-  });
+  ConnectControlLamba2(
+      WingPlugin::Controller::saveCurrentFile, [=](bool ignoreMd5) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        return save(_pcurfile, ignoreMd5);
+      });
   ConnectControlLamba2(WingPlugin::Controller::openFileGUI, [=] {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     on_openfile();

@@ -323,7 +323,7 @@ signals:
   ErrFile saveasFile(QString filename, int index, bool ignoreMd5 = false);
   void saveasFileGUI();
   ErrFile closeCurrentFile(bool force = false);
-  ErrFile saveCurrentFile();
+  ErrFile saveCurrentFile(bool ignoreMd5 = false);
   void openFileGUI();
   void openRegionFileGUI(QString filename, qint64 start = 0,
                          qint64 length = 1024);
