@@ -876,10 +876,12 @@ MainWindow::MainWindow(DMainWindow *parent) {
   });
   numtableMenu->addAction(a);
   numtableMenu->addSeparator();
+
+  auto le = Utilities::checkIsLittleEndian();
   a = new QAction(numtableMenu);
   a->setText(tr("LittleEndian"));
   a->setCheckable(true);
-  a->setChecked(true);
+  a->setChecked(le);
   connect(a, &QAction::triggered, this, [=] {
     islittle = true;
     this->on_locChanged();
@@ -892,6 +894,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   a = new QAction(numtableMenu);
   a->setText(tr("BigEndian"));
   a->setCheckable(true);
+  a->setChecked(!le);
   connect(a, &QAction::triggered, this, [=] {
     islittle = false;
     this->on_locChanged();
