@@ -2883,10 +2883,13 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
     setEditModeEnabled(true);
     _currentfile = index;
 
+    recentmanager->addRecentFile(filename);
+
     if (_enableplugin) {
       params << ErrFile::Success;
       plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
     }
+
     return ErrFile::Success;
   }
 
@@ -3085,7 +3088,6 @@ void MainWindow::on_openfile() {
       setFilePage(index);
       return;
     }
-    recentmanager->addRecentFile(filename);
   }
 }
 

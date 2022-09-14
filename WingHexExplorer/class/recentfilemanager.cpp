@@ -63,10 +63,12 @@ RecentFileManager::~RecentFileManager() {
 }
 
 void RecentFileManager::addRecentFile(QString filename) {
-  while (m_recents.count() >= 10) {
-    m_recents.pop_back();
-  }
   if (QFile::exists(filename) && m_recents.indexOf(filename) < 0) {
+
+    while (m_recents.count() >= 10) {
+      m_recents.pop_back();
+    }
+
     auto a = new QAction(m_menu);
     a = new QAction(m_menu);
     a->setData(filename);
