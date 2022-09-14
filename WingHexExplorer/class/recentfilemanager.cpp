@@ -63,7 +63,8 @@ RecentFileManager::~RecentFileManager() {
 }
 
 void RecentFileManager::addRecentFile(QString filename) {
-  if (QFile::exists(filename) && m_recents.indexOf(filename) < 0) {
+  int o;
+  if (QFile::exists(filename) && (o = m_recents.indexOf(filename)) < 0) {
 
     while (m_recents.count() >= 10) {
       m_recents.pop_back();
@@ -82,6 +83,17 @@ void RecentFileManager::addRecentFile(QString filename) {
     auto i = 0;
     for (auto item : hitems) {
       item->setText(QString("%1 : %2").arg(i++).arg(item->data().toString()));
+    }
+  } else {
+    if (hitems.count() > 1) {
+      auto a = hitems.at(o);
+      m_menu->removeAction(a);
+      m_menu->insertAction(hitems.first(), a);
+      hitems.move(o, 0);
+      auto i = 0;
+      for (auto item : hitems) {
+        item->setText(QString("%1 : %2").arg(i++).arg(item->data().toString()));
+      }
     }
   }
 }
