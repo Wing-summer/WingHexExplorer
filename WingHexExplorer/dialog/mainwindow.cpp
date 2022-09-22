@@ -3701,7 +3701,7 @@ void MainWindow::on_documentSwitched() {
     iw->setPixmap(hexeditor->document()->documentType() ==
                           DocumentType::WorkSpace
                       ? infow
-                      : infow);
+                      : infouw);
   } else {
     iw->setPixmap(infouw);
   }

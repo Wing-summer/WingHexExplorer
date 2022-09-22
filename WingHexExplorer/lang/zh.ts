@@ -87,62 +87,62 @@
 <context>
     <name>FileInfoDialog</name>
     <message>
-        <location filename="../dialog/fileinfodialog.cpp" line="11"/>
+        <location filename="../dialog/fileinfodialog.cpp" line="13"/>
         <source>FileInfo</source>
         <translation>文件信息</translation>
     </message>
     <message>
-        <location filename="../dialog/fileinfodialog.cpp" line="31"/>
+        <location filename="../dialog/fileinfodialog.cpp" line="22"/>
         <source>FileNew</source>
         <translation>新建文件，暂无信息！</translation>
     </message>
     <message>
-        <location filename="../dialog/fileinfodialog.cpp" line="33"/>
+        <location filename="../dialog/fileinfodialog.cpp" line="29"/>
         <source>FileName:</source>
         <translation>文件名：</translation>
     </message>
     <message>
-        <location filename="../dialog/fileinfodialog.cpp" line="34"/>
+        <location filename="../dialog/fileinfodialog.cpp" line="30"/>
         <source>FilePath:</source>
         <translation>文件路径：</translation>
     </message>
     <message>
-        <location filename="../dialog/fileinfodialog.cpp" line="35"/>
+        <location filename="../dialog/fileinfodialog.cpp" line="31"/>
         <source>FileSize:</source>
         <translation>文件大小：</translation>
     </message>
     <message>
-        <location filename="../dialog/fileinfodialog.cpp" line="36"/>
+        <location filename="../dialog/fileinfodialog.cpp" line="32"/>
         <source>Mime:</source>
         <translation>Mime 类型：</translation>
     </message>
     <message>
-        <location filename="../dialog/fileinfodialog.cpp" line="37"/>
+        <location filename="../dialog/fileinfodialog.cpp" line="33"/>
         <source>Md5:</source>
         <translation>MD5：</translation>
     </message>
     <message>
-        <location filename="../dialog/fileinfodialog.cpp" line="38"/>
+        <location filename="../dialog/fileinfodialog.cpp" line="34"/>
         <source>FileBirthTime:</source>
         <translation>文件创建时间：</translation>
     </message>
     <message>
-        <location filename="../dialog/fileinfodialog.cpp" line="40"/>
+        <location filename="../dialog/fileinfodialog.cpp" line="36"/>
         <source>FileAccessTime:</source>
         <translation>文件访问时间：</translation>
     </message>
     <message>
-        <location filename="../dialog/fileinfodialog.cpp" line="43"/>
+        <location filename="../dialog/fileinfodialog.cpp" line="39"/>
         <source>FileModificationTime:</source>
         <translation>文件修改时间：</translation>
     </message>
     <message>
-        <location filename="../dialog/fileinfodialog.cpp" line="45"/>
+        <location filename="../dialog/fileinfodialog.cpp" line="41"/>
         <source>LastRead:</source>
         <translation>最后读取时间：</translation>
     </message>
     <message>
-        <location filename="../dialog/fileinfodialog.cpp" line="46"/>
+        <location filename="../dialog/fileinfodialog.cpp" line="42"/>
         <source>LastMod:</source>
         <translation>最后修改时间：</translation>
     </message>

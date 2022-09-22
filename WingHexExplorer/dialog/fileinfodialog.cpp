@@ -8,28 +8,24 @@
 
 FileInfoDialog::FileInfoDialog(QString filename, DMainWindow *parent)
     : DDialog(parent) {
+  static const QString dfmt("yyyy/MM/dd hh:mm:ss ddd");
+
   setWindowTitle(tr("FileInfo"));
-
-  QFileInfo finfo(filename);
-
-  QMimeDatabase db;
-  auto t = db.mimeTypeForFile(filename);
-  auto ico = t.iconName();
-  auto icon = QIcon::fromTheme(ico, QIcon(ico));
-
   auto l = new DLabel(this);
   l->setFixedSize(100, 100);
   l->setScaledContents(true);
-  l->setPixmap(icon.pixmap(icon.availableSizes().last()));
-  addContent(l, Qt::AlignHCenter);
-  addSpacing(10);
+  QIcon icon;
   auto b = new DTextBrowser(this);
 
-  static const QString dfmt("yyyy/MM/dd hh:mm:ss ddd");
-
   if (filename[0] != '/') {
+    icon = this->style()->standardIcon(QStyle::SP_FileIcon);
     b->append(tr("FileNew"));
   } else {
+    QMimeDatabase db;
+    auto t = db.mimeTypeForFile(filename);
+    auto ico = t.iconName();
+    icon = QIcon::fromTheme(ico, QIcon(ico));
+    QFileInfo finfo(filename);
     b->append(tr("FileName:") + finfo.fileName());
     b->append(tr("FilePath:") + finfo.filePath());
     b->append(tr("FileSize:") + Utilities::processBytesCount(finfo.size()));
@@ -45,7 +41,9 @@ FileInfoDialog::FileInfoDialog(QString filename, DMainWindow *parent)
     b->append(tr("LastRead:") + finfo.lastRead().toString(dfmt));
     b->append(tr("LastMod:") + finfo.lastModified().toString(dfmt));
   }
-
+  l->setPixmap(icon.pixmap(icon.availableSizes().last()));
+  addContent(l, Qt::AlignHCenter);
+  addSpacing(10);
   b->setFixedSize(400, 300);
   addContent(b);
 }
