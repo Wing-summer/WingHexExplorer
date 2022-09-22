@@ -88,7 +88,8 @@ class MainWindow : public DMainWindow {
     BookMark,
     DelBookMark,
     ClsBookMark,
-    Encoding
+    Encoding,
+    FileInfo
   };
 
 public:
@@ -200,6 +201,7 @@ private:
   void on_gotoline();
   void on_findfile();
   void on_tabCloseRequested(int index);
+  void on_tabBarDoubleClicked(int index);
   void on_tabAddRequested();
   void on_tabMoved(int from, int to);
   void on_opendriver();
@@ -238,6 +240,7 @@ private:
   void on_clearfindresult();
   void on_loadplg();
   void on_encoding();
+  void on_fileInfo();
   void on_openworkspace();
   void on_bookmarkChanged(BookMarkModEnum flag, int index, qint64 pos,
                           QString comment);

@@ -10,6 +10,7 @@
 #include "dialog/openregiondialog.h"
 #include "driverselectordialog.h"
 #include "encodingdialog.h"
+#include "fileinfodialog.h"
 #include "finddialog.h"
 #include "metadialog.h"
 #include "plugin/iwingplugin.h"
@@ -92,6 +93,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
           &MainWindow::on_tabCloseRequested);
   connect(tabs, &DTabBar::tabAddRequested, this,
           &MainWindow::on_tabAddRequested);
+  connect(tabs, &DTabBar::tabBarDoubleClicked, this,
+          &MainWindow::on_tabBarDoubleClicked);
   connect(tabs, &DTabBar::tabMoved, this, &MainWindow::on_tabMoved);
 
   iconmetah = ICONRES("metadatah");
@@ -224,6 +227,8 @@ MainWindow::MainWindow(DMainWindow *parent) {
   auto keyencoding =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::AltModifier | Qt::Key_E);
+  auto keyfinfo =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_I);
   auto keyopenws =
       QKeySequence(Qt::KeyboardModifier::ControlModifier | Qt::Key_W);
 
@@ -322,6 +327,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddToolSubMenuShortcutAction("encoding", tr("Encoding"),
                                MainWindow::on_encoding, keyencoding);
   AddMenuDB(ToolBoxIndex::Encoding);
+  AddToolSubMenuShortcutAction("info", tr("FileInfo"), MainWindow::on_fileInfo,
+                               keyfinfo);
+  AddMenuDB(ToolBoxIndex::FileInfo);
   menu->addMenu(tm);
 
   tm = new DMenu(this);
@@ -1041,6 +1049,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keyexport, MainWindow::on_exportfile);
   ConnectShortCut(keyloadplg, MainWindow::on_loadplg);
   ConnectShortCut(keyencoding, MainWindow::on_encoding);
+  ConnectShortCut(keyfinfo, MainWindow::on_fileInfo);
   ConnectShortCut(keyopenws, MainWindow::on_openworkspace);
   ConnectShortCut(keycuthex, MainWindow::on_cuthex);
   ConnectShortCut(keycopyhex, MainWindow::on_copyhex);
@@ -2677,7 +2686,7 @@ void MainWindow::newFile(bool bigfile) {
   hf.workspace = "";
   hf.isdriver = false;
   hexfiles.push_back(hf);
-  tabs->addTab(QIcon::fromTheme("text-plain"), title);
+  tabs->addTab(this->style()->standardIcon(QStyle::SP_FileIcon), title);
   defaultindex++;
   auto curindex = hexfiles.count() - 1;
   tabs->setCurrentIndex(curindex);
@@ -3126,6 +3135,11 @@ void MainWindow::on_tabCloseRequested(int index) {
       closeFile(index, true);
     }
   }
+}
+
+void MainWindow::on_tabBarDoubleClicked(int index) {
+  FileInfoDialog d(hexfiles[index].filename);
+  d.exec();
 }
 
 void MainWindow::on_tabAddRequested() { newFile(); }
@@ -3687,7 +3701,7 @@ void MainWindow::on_documentSwitched() {
     iw->setPixmap(hexeditor->document()->documentType() ==
                           DocumentType::WorkSpace
                       ? infow
-                      : infouw);
+                      : infow);
   } else {
     iw->setPixmap(infouw);
   }
@@ -3750,6 +3764,12 @@ ErrFile MainWindow::save(int index, bool ignoreMd5) {
           tabs->setTabIcon(index, ICONRES("pro"));
           f.doc->setDocSaved();
         }
+      } else {
+        // 如果不是工作区，更新文件关联的图标
+        QMimeDatabase db;
+        auto t = db.mimeTypeForFile(f.filename);
+        auto ico = t.iconName();
+        tabs->setTabIcon(index, QIcon::fromTheme(ico, QIcon(ico)));
       }
       return ErrFile::Success;
     }
@@ -3847,6 +3867,12 @@ ErrFile MainWindow::saveAs(QString filename, int index, bool ignoreMd5) {
         iw->setPixmap(infow);
         tabs->setTabIcon(index, ICONRES("pro"));
         f.doc->setDocSaved();
+      } else {
+        // 如果不是工作区，更新文件关联的图标
+        QMimeDatabase db;
+        auto t = db.mimeTypeForFile(filename);
+        auto ico = t.iconName();
+        tabs->setTabIcon(index, QIcon::fromTheme(ico, QIcon(ico)));
       }
       return ErrFile::Success;
     }
@@ -4044,6 +4070,12 @@ void MainWindow::on_encoding() {
     auto res = d.getResult();
     hexeditor->renderer()->SetEncoding(res);
   }
+}
+
+void MainWindow::on_fileInfo() {
+  CheckEnabled;
+  FileInfoDialog d(hexfiles[_currentfile].filename);
+  d.exec();
 }
 
 void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
