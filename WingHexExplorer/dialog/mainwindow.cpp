@@ -2770,14 +2770,8 @@ ErrFile MainWindow::openRegionFile(QString filename, bool readonly,
     p->setDocSaved();
     hexeditor->getStatus();
 
-    QIcon qicon;
-
-    QMimeDatabase db;
-    auto t = db.mimeTypeForFile(filename);
-    auto ico = t.iconName();
-    qicon = QIcon::fromTheme(ico, QIcon(ico));
-
-    tabs->addTab(qicon, info.fileName());
+    tabs->addTab(Utilities::getIconFromFile(style(), filename),
+                 info.fileName());
     auto index = hexfiles.count() - 1;
     tabs->setCurrentIndex(index);
     tabs->setTabToolTip(index, filename);
@@ -2879,10 +2873,7 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
     if (p->documentType() == DocumentType::WorkSpace) {
       qicon = ICONRES("pro");
     } else {
-      QMimeDatabase db;
-      auto t = db.mimeTypeForFile(filename);
-      auto ico = t.iconName();
-      qicon = QIcon::fromTheme(ico, QIcon(ico));
+      qicon = Utilities::getIconFromFile(style(), filename);
     }
 
     tabs->addTab(qicon, info.fileName());
@@ -2969,11 +2960,8 @@ ErrFile MainWindow::openDriver(QString driver) {
       hexfiles.push_back(hf);
       p->setDocSaved();
       hexeditor->getStatus();
-
-      QMimeDatabase db;
-      auto t = db.mimeTypeForFile(driver);
-      auto ico = t.iconName();
-      tabs->addTab(QIcon::fromTheme(ico, QIcon(ico)), info.fileName());
+      tabs->addTab(Utilities::getIconFromFile(style(), driver),
+                   info.fileName());
       auto index = hexfiles.count() - 1;
       tabs->setCurrentIndex(index);
       tabs->setTabToolTip(index, driver);
@@ -3138,7 +3126,8 @@ void MainWindow::on_tabCloseRequested(int index) {
 }
 
 void MainWindow::on_tabBarDoubleClicked(int index) {
-  FileInfoDialog d(hexfiles[index].filename);
+  auto &h = hexfiles[index];
+  FileInfoDialog d(h.filename, Utilities::isRegionFile(h.doc));
   d.exec();
 }
 
@@ -3766,10 +3755,8 @@ ErrFile MainWindow::save(int index, bool ignoreMd5) {
         }
       } else {
         // 如果不是工作区，更新文件关联的图标
-        QMimeDatabase db;
-        auto t = db.mimeTypeForFile(f.filename);
-        auto ico = t.iconName();
-        tabs->setTabIcon(index, QIcon::fromTheme(ico, QIcon(ico)));
+        tabs->setTabIcon(index,
+                         Utilities::getIconFromFile(style(), f.filename));
       }
       return ErrFile::Success;
     }
@@ -3869,10 +3856,7 @@ ErrFile MainWindow::saveAs(QString filename, int index, bool ignoreMd5) {
         f.doc->setDocSaved();
       } else {
         // 如果不是工作区，更新文件关联的图标
-        QMimeDatabase db;
-        auto t = db.mimeTypeForFile(filename);
-        auto ico = t.iconName();
-        tabs->setTabIcon(index, QIcon::fromTheme(ico, QIcon(ico)));
+        tabs->setTabIcon(index, Utilities::getIconFromFile(style(), filename));
       }
       return ErrFile::Success;
     }
@@ -4074,7 +4058,8 @@ void MainWindow::on_encoding() {
 
 void MainWindow::on_fileInfo() {
   CheckEnabled;
-  FileInfoDialog d(hexfiles[_currentfile].filename);
+  auto &h = hexfiles[_currentfile];
+  FileInfoDialog d(h.filename, Utilities::isRegionFile(h.doc));
   d.exec();
 }
 

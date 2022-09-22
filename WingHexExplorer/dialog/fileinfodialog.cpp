@@ -6,7 +6,10 @@
 #include <QFileInfo>
 #include <QMimeDatabase>
 
-FileInfoDialog::FileInfoDialog(QString filename, DMainWindow *parent)
+#define TextBroswerWidth 400
+
+FileInfoDialog::FileInfoDialog(QString filename, bool isRegionFile,
+                               DMainWindow *parent)
     : DDialog(parent) {
   static const QString dfmt("yyyy/MM/dd hh:mm:ss ddd");
 
@@ -40,10 +43,16 @@ FileInfoDialog::FileInfoDialog(QString filename, DMainWindow *parent)
         finfo.fileTime(QFile::FileTime::FileModificationTime).toString(dfmt));
     b->append(tr("LastRead:") + finfo.lastRead().toString(dfmt));
     b->append(tr("LastMod:") + finfo.lastModified().toString(dfmt));
+
+    auto w = b->fontMetrics().horizontalAdvance('=');
+    b->append(QString(TextBroswerWidth / w, '='));
+    b->append(tr("IsRegionFile:") + (isRegionFile ? tr("True") : tr("False")));
   }
   l->setPixmap(icon.pixmap(icon.availableSizes().last()));
   addContent(l, Qt::AlignHCenter);
   addSpacing(10);
-  b->setFixedSize(400, 300);
+  b->setFixedSize(TextBroswerWidth, 300);
   addContent(b);
 }
+
+FileInfoDialog::~FileInfoDialog() {}

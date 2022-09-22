@@ -9,6 +9,7 @@
 #include <QDBusReply>
 #include <QDebug>
 #include <QList>
+#include <QStyle>
 #include <QTextCodec>
 #include <unistd.h>
 
@@ -112,6 +113,20 @@ public:
     short s = 0x1122;
     auto l = *reinterpret_cast<char *>(&s);
     return l == 0x22;
+  }
+
+  static bool isRegionFile(QHexDocument *doc) {
+    return doc ? doc->documentType() == DocumentType::RegionFile : false;
+  }
+
+  static QIcon getIconFromFile(QStyle *style, QString &filename) {
+    QMimeDatabase db;
+    auto t = db.mimeTypeForFile(filename);
+    auto ico = t.iconName();
+    auto qicon = QIcon::fromTheme(ico, QIcon(ico));
+    return qicon.availableSizes().count()
+               ? qicon
+               : style->standardIcon(QStyle::SP_FileIcon);
   }
 };
 
