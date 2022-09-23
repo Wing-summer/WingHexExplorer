@@ -1,3 +1,5 @@
+If you are a English speaker, please click [here](README_EN.md)
+
 - [QHexView](#qhexview)
   - [Features](#features)
   - [Buffer Backends](#buffer-backends)
@@ -153,7 +155,7 @@ QHexEdit is released under MIT license
 &emsp;&emsp;本人对改组件的改进如下：
 
 1. 增加有关描述文件状态相关的功能：指示是否被修改、是否具有可写权限、是否锁定文件以防修改、是否可以增改字节数
-2. 增加可隐藏地址蓝栏和 ASCII 解码字符栏以及表头的功能
+2. 增加可隐藏地址栏和 ASCII 解码字符栏以及表头的功能
 3. 实现超大文件（超出2GB）读写功能模块（原组件并未实现此功能）
 4. 修改地址显示长度，以适应地址的使用习惯
 5. 简化编码方式，删除一些冗余代码
