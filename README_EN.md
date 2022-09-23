@@ -213,7 +213,7 @@ The completion of this procedure is basically that I learn and use. Although I h
 
 ## Repositories
 
-&emsp;&emsp;Recently, I found a warehouse, which is very simple and allows you to download the distribution without logging in. It is enough for me to maintain the software warehouse. Gitee is only used for backup in the future, but it can also be submitted to issue or PR. If you want to contribute ideas or code suggestions to GitLink ： https://www.gitlink.org.cn/wingsummer/WingHexExplorer 。
+Recently, I found a warehouse, which is very simple and allows you to download the distribution without logging in. It is enough for me to maintain the software warehouse. Gitee is only used for backup in the future, but it can also be submitted to issue or PR. If you want to contribute ideas or code suggestions to GitLink ： https://www.gitlink.org.cn/wingsummer/WingHexExplorer 。
 
 If you want to visit Gitea, please go to：https://code.gitlink.org.cn/wingsummer/WingHexExplorer .In fact, it is GitLink, but it seems that GitLink shows a bug in the repository image. **Recommended here!**
 
@@ -231,11 +231,11 @@ If you want to learn how to use the WingHexEditor and how to develop plugins for
 
 ## Plugins
 
-- WingElfParser：A Marker plugin for Elf.[Gitea](https://code.gitlink.org.cn/wingsummer/WingElfParser) | [Gitee](https://gitee.com/wing-cloud/wing-elf-parser)
-- WingHexPy：A useful plugin for python3.7 support.[Gitea](https://code.gitlink.org.cn/wingsummer/WingHexPy) | [Gitee](https://gitee.com/wing-cloud/wing-hex-py)
-- WingHexDisasm：A small disassembly plugin for WingHexExplorer.[Gitea](https://code.gitlink.org.cn/wingsummer/WingHexDisasm) | [Gitee](https://gitee.com/wing-cloud/wing-hex-disasm)
-- WingHexAsm：A small assembly plugin for WingHexExplorer.[Gitea](https://code.gitlink.org.cn/wingsummer/WingHexAsm) | [Gitee](https://gitee.com/wing-cloud/wing-hex-asm)
+- WingElfParser : A Marker plugin for Elf.[Gitea](https://code.gitlink.org.cn/wingsummer/WingElfParser) | [Gitee](https://gitee.com/wing-cloud/wing-elf-parser)
+- WingHexPy : A useful plugin for python3.7 support.[Gitea](https://code.gitlink.org.cn/wingsummer/WingHexPy) | [Gitee](https://gitee.com/wing-cloud/wing-hex-py)
+- WingHexDisasm : A small disassembly plugin for WingHexExplorer.[Gitea](https://code.gitlink.org.cn/wingsummer/WingHexDisasm) | [Gitee](https://gitee.com/wing-cloud/wing-hex-disasm)
+- WingHexAsm : A small assembly plugin for WingHexExplorer.[Gitea](https://code.gitlink.org.cn/wingsummer/WingHexAsm) | [Gitee](https://gitee.com/wing-cloud/wing-hex-asm)
 
 ## App Store
 
-&emsp;&emsp;The software can be installed through the app store. Currently, it supports Deepin store and Spark store only in Chinese.
+The software can be installed through the app store. Currently, it supports Deepin store and Spark store only in Chinese.
