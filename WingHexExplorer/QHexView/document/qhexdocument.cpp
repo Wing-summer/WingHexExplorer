@@ -700,14 +700,18 @@ qint64 QHexDocument::searchBackward(qint64 begin, const QByteArray &ba) {
 QHexDocument *QHexDocument::fromLargeFile(QString filename, bool readonly,
                                           QObject *parent) {
 
-  QFile *f = new QFile(filename);
-
-  QHexBuffer *hexbuffer = new QFileBuffer();
-  if (hexbuffer->read(f)) {
-    return new QHexDocument(hexbuffer, readonly,
-                            parent); // modified by wingsummer
+  auto f = new QFile;
+  if (filename.length()) {
+    f->setFileName(filename);
+    QHexBuffer *hexbuffer = new QFileBuffer();
+    if (hexbuffer->read(f)) {
+      return new QHexDocument(hexbuffer, readonly,
+                              parent); // modified by wingsummer
+    } else {
+      delete hexbuffer;
+    }
   } else {
-    delete hexbuffer;
+    return new QHexDocument(new QFileBuffer(), readonly, parent);
   }
 
   return nullptr;

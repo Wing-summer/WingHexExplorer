@@ -53,7 +53,7 @@ Settings::Settings(QWidget *parent) : QObject(parent) {
 
   BindConfigSignal(hexfontSize, "editor.basic.size",
                    { emit sigAdjustEditorFontSize(value.toInt()); });
-  BindConfigSignal(infofontSize, "appearance.basic.size",
+  BindConfigSignal(infofontSize, "appearance.font.size",
                    { emit sigAdjustInfoFontSize(value.toInt()); });
   BindConfigSignal(showAddr, "editor.basic.showaddr", {
     emit sigShowAddressNumber(value.toBool());
@@ -69,11 +69,6 @@ Settings::Settings(QWidget *parent) : QObject(parent) {
     emit sigShowEncodingText(value.toBool());
     DMessageManager::instance()->sendMessage(
         m_pSettingsDialog, ICONRES("setting"), tr("OpenNextTakeEffect"));
-  });
-  BindConfigSignal(windowstate, "appearance.window.windowstate", {
-    emit sigChangeWindowState(value.toString());
-    DMessageManager::instance()->sendMessage(
-        m_pSettingsDialog, ICONRES("setting"), tr("RestartTakeEffect"));
   });
   BindConfigSignal(encoding, "editor.basic.encoding", {
     emit sigChangedEncoding(value.toString());
@@ -186,7 +181,7 @@ void Settings::applySetting() {
         sigAdjustFont(fontFamliy->value().toString()));
   Apply(hexfontSize, "editor.basic.size",
         sigAdjustEditorFontSize(hexfontSize->value().toInt()));
-  Apply(infofontSize, "appearance.basic.size",
+  Apply(infofontSize, "appearance.font.size",
         sigAdjustInfoFontSize(infofontSize->value().toInt()));
   Apply(showAddr, "editor.basic.showaddr",
         sigShowAddressNumber(showAddr->value().toBool()));
@@ -195,7 +190,7 @@ void Settings::applySetting() {
   Apply(showText, "editor.basic.showtext",
         sigShowEncodingText(showText->value().toBool()));
   Apply(windowstate, "appearance.window.windowsize",
-        sigChangeWindowState(windowstate->value().toString()));
+        sigChangeWindowSize(windowstate->value().toString()));
   Apply(encoding, "editor.basic.encoding",
         sigChangedEncoding(encoding->value().toString()));
   Apply(fmax, "editor.basic.findmaxcount",

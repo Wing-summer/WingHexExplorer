@@ -856,9 +856,12 @@ MainWindow::MainWindow(DMainWindow *parent) {
   this->addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, dw);
 
   logger = new Logger(this);
-  connect(logger, &Logger::log,
-          [=](QString msg) { pluginInfo->insertHtml(msg); });
-  logger->logMessage(INFOLOG(tr("LoggerInitFinish")));
+  connect(logger, &Logger::log, [=](QString msg) {
+    pluginInfo->insertHtml(msg);
+    pluginInfo->append("");
+  });
+
+  qInfo() << tr("LoggerInitFinish");
 
   auto dw2 = new DDockWidget(this);
   AddDockWin2(tr("Number"));
@@ -1069,7 +1072,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keymetashow, MainWindow::on_metashowall);
   ConnectShortCut(keymetahide, MainWindow::on_metahideall);
 
-  logger->logMessage(INFOLOG(tr("SettingLoading")));
+  qInfo() << tr("SettingLoading");
 
   // setting
   _font = this->font();
@@ -1097,7 +1100,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
           [=](bool b) { _showascii = b; });
   connect(m_settings, &Settings::sigShowAddressNumber,
           [=](bool b) { _showaddr = b; });
-  connect(m_settings, &Settings::sigChangeWindowState,
+  connect(m_settings, &Settings::sigChangeWindowSize,
           [=](QString mode) { _windowmode = mode; });
   connect(m_settings, &Settings::sigChangePluginEnabled,
           [=](bool b) { _enableplugin = b; });
@@ -1138,7 +1141,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   if (_enableplugin) {
     addToolBarBreak();
-    logger->logMessage(INFOLOG(tr("PluginLoading")));
+    qInfo() << tr("PluginLoading");
     winmenu->addSeparator();
     // init plugin system
     plgsys = new PluginSystem(this);
@@ -1156,7 +1159,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
     plgsys->LoadPlugin();
   } else {
     plgmenu->setEnabled(false);
-    logger->logMessage(ERRLOG(tr("UnLoadPluginSetting")));
+    qCritical() << tr("UnLoadPluginSetting");
     settingplg->setEnabled(false);
   }
 
@@ -1178,7 +1181,7 @@ MainWindow::~MainWindow() {
 
 void MainWindow::PluginMenuNeedAdd(QMenu *menu) {
   if (menu) {
-    logger->logMessage(WARNLOG(tr("MenuName :") + menu->title()));
+    qWarning() << (tr("MenuName :") + menu->title());
     plgmenu->addMenu(menu);
   }
 }
@@ -1195,10 +1198,10 @@ void MainWindow::PluginDockWidgetAdd(
     }
     auto t = dockw->windowTitle();
     if (!t.trimmed().length()) {
-      logger->logMessage(ERRLOG(tr("ErrDockWidgetAddNoName")));
+      qCritical() << tr("ErrDockWidgetAddNoName");
       return;
     }
-    logger->logMessage(WARNLOG(tr("DockWidgetName :") + t));
+    qWarning() << (tr("DockWidgetName :") + t);
     dockw->setParent(this);
     addDockWidget(align, dockw);
     dockw->close();
@@ -1221,10 +1224,10 @@ void MainWindow::PluginDockWidgetAdd(
       }
       auto t = dockw->windowTitle();
       if (!t.trimmed().length()) {
-        logger->logMessage(ERRLOG(tr("ErrDockWidgetAddNoName")));
+        qCritical() << tr("ErrDockWidgetAddNoName");
         return;
       }
-      logger->logMessage(WARNLOG(tr("DockWidgetName :") + t));
+      qWarning() << (tr("DockWidgetName :") + t);
       dockw->setParent(this);
       addDockWidget(align, dockw);
       dockw->close();

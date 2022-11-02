@@ -51,40 +51,39 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
 
   if (fileinfo.exists()) {
     QPluginLoader loader(fileinfo.absoluteFilePath());
-    logger->logMessage(
-        INFOLOG(QString(">> ") + tr("LoadingPlugin") + fileinfo.fileName()));
+    qInfo() << (tr("LoadingPlugin") + fileinfo.fileName());
     QList<WingPluginInfo> loadedplginfos;
     try {
       auto p = qobject_cast<IWingPlugin *>(loader.instance());
       if (p) {
         lp = LP::signature;
         if (p->signature() != WINGSUMMER) {
-          logger->logMessage(ERRLOG(tr("ErrLoadPluginSign")));
+          qCritical() << tr("ErrLoadPluginSign");
           loader.unload();
           return;
         }
         lp = LP::sdkVersion;
         if (p->sdkVersion() != SDKVERSION) {
-          logger->logMessage(ERRLOG(tr("ErrLoadPluginSDKVersion")));
+          qCritical() << tr("ErrLoadPluginSDKVersion");
           loader.unload();
           return;
         }
         lp = LP::pluginName;
         if (!p->pluginName().trimmed().length()) {
-          logger->logMessage(ERRLOG(tr("ErrLoadPluginNoName")));
+          qCritical() << tr("ErrLoadPluginNoName");
           loader.unload();
           return;
         }
         lp = LP::puid;
         auto puid = IWingPlugin::GetPUID(p);
         if (puid != p->puid()) {
-          logger->logMessage(ERRLOG(tr("ErrLoadPluginPUID")));
+          qCritical() << tr("ErrLoadPluginPUID");
           loader.unload();
           return;
         }
 
         if (loadedpuid.contains(puid)) {
-          logger->logMessage(ERRLOG(tr("ErrLoadLoadedPlugin")));
+          qCritical() << tr("ErrLoadLoadedPlugin");
           loader.unload();
           return;
         }
@@ -94,7 +93,7 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
                                    emptyparam);
 
         if (!p->init(loadedplginfos)) {
-          logger->logMessage(ERRLOG(tr("ErrLoadInitPlugin")));
+          qCritical() << tr("ErrLoadInitPlugin");
           loader.unload();
           return;
         }
@@ -110,7 +109,7 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         loadedplgs.push_back(p);
         loadedpuid << puid;
 
-        logger->logMessage(WARNLOG(tr("PluginWidgetRegister")));
+        qWarning() << tr("PluginWidgetRegister");
         lp = LP::registerMenu;
         auto menu = p->registerMenu();
         if (menu) {
@@ -156,17 +155,16 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         emit p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
 
       } else {
-        logger->logMessage(ERRLOG(loader.errorString()));
+        qCritical() << loader.errorString();
         loader.unload();
       }
     } catch (...) {
       auto m = QMetaEnum::fromType<LP>();
-      logger->logMessage(
-          ERRLOG(QString(tr("ErrLoadPluginLoc") + m.valueToKey(int(lp)))));
+      qCritical() << (QString(tr("ErrLoadPluginLoc") + m.valueToKey(int(lp))));
       loader.unload();
     }
 
-    logger->logMessage("<br />");
+    qDebug() << "";
   }
 }
 
@@ -181,14 +179,13 @@ bool PluginSystem::LoadPlugin() {
   plugindir.setNameFilters(QStringList("*.wingplg"));
 #endif
   auto plgs = plugindir.entryInfoList();
-  logger->logMessage(
-      INFOLOG(tr("FoundPluginCount") + QString::number(plgs.count())) +
-      "<br />");
+  qInfo() << (tr("FoundPluginCount") + QString::number(plgs.count()));
+
   for (auto item : plgs) {
     loadPlugin(item);
   }
 
-  logger->logMessage(INFOLOG(tr("PluginLoadingFinished")) + "<br />");
+  qInfo() << tr("PluginLoadingFinished");
 
   return true;
 }
@@ -210,23 +207,20 @@ bool PluginSystem::requestControl(IWingPlugin *plugin, int timeout) {
       return true;
     } else {
       if (plugintimeout[oldctl]) {
-        logger->logMessage(WARNLOG(tr("[PluginTimeout]") +
-                                   plugin->pluginName() + " --> " +
-                                   oldctl->pluginName()));
+        qWarning() << (tr("[PluginTimeout]") + plugin->pluginName() + " --> " +
+                       oldctl->pluginName());
         initControl(plugin);
         oldctl->plugin2MessagePipe(
             WingPluginMessage::ConnectTimeout,
             QList<QVariant>({plugin->pluginName(), plugin->puid()}));
       } else {
-        logger->logMessage(
-            ERRLOG(tr("[PluginRequestError]") + plugin->pluginName()));
+        qWarning() << (tr("[PluginRequestError]") + plugin->pluginName());
         mutex.unlock();
         return false;
       }
     }
   } else {
-    logger->logMessage(
-        WARNLOG(tr("[PluginRequestSuccess]") + plugin->pluginName()));
+    qWarning() << (tr("[PluginRequestSuccess]") + plugin->pluginName());
     initControl(plugin);
   }
   mutex.unlock();

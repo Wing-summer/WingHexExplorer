@@ -10,14 +10,12 @@ SOURCES += \
     $$PWD/dialog/driverselectordialog.cpp \
     $$PWD/dialog/aboutsoftwaredialog.cpp \
     $$PWD/dialog/sponsordialog.cpp \
-    $$PWD/winghexapplication.cpp \
     $$PWD/settingdialog.cpp \
     $$PWD/dialog/encodingdialog.cpp \
     $$PWD/class/workspacemanager.cpp \
     $$PWD/class/recentfilemanager.cpp \
     $$PWD/class/appmanager.cpp \
     $$PWD/class/logger.cpp \
-    $$PWD/dialog/settingwindow.cpp \
     $$PWD/mlicense/licensemanager.cpp \
     $$PWD/mlicense/lincensedialog.cpp \
     $$PWD/dialog/openregiondialog.cpp \
@@ -42,13 +40,11 @@ HEADERS += \
     $$PWD/dialog/driverselectordialog.h \
     $$PWD/dialog/aboutsoftwaredialog.h \
     $$PWD/dialog/sponsordialog.h \
-    $$PWD/winghexapplication.h \
     $$PWD/dialog/encodingdialog.h \
     $$PWD/class/workspacemanager.h \
     $$PWD/class/recentfilemanager.h \
     $$PWD/class/appmanager.h \
     $$PWD/class/logger.h \
-    $$PWD/dialog/settingwindow.h \
     $$PWD/mlicense/licensemanager.h \
     $$PWD/mlicense/lincensedialog.h \
     $$PWD/mlicense/qaesencryption.h \

@@ -63,7 +63,7 @@ RecentFileManager::~RecentFileManager() {
 }
 
 void RecentFileManager::addRecentFile(QString filename) {
-  int o;
+  int o = 0;
   if (QFile::exists(filename) && (o = m_recents.indexOf(filename)) < 0) {
 
     while (m_recents.count() >= 10) {

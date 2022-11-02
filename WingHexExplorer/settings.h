@@ -52,7 +52,6 @@ signals:
   void sigShowEncodingText(bool enable);
   void sigChangedEncoding(QString encoding);
   void sigChangeWindowSize(QString mode);
-  void sigChangeWindowState(QString state);
   void sigChangePluginEnabled(bool b);
   void sigChangeRootPluginEnabled(bool b);
   void sigAdjustFindMaxCount(int count);

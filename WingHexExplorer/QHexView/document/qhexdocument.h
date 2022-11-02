@@ -256,11 +256,16 @@ QHexDocument *QHexDocument::fromDevice(QIODevice *iodevice, bool readonly,
 template <typename T>
 QHexDocument *QHexDocument::fromFile(QString filename, bool readonly,
                                      QObject *parent) {
-  QFile f(filename);
-  f.open(QFile::ReadOnly);
-
-  QHexDocument *doc = QHexDocument::fromDevice<T>(&f, readonly, parent);
-  f.close();
+  QFile f;
+  QHexDocument *doc;
+  if (filename.length()) {
+    f.setFileName(filename);
+    f.open(QFile::ReadOnly);
+    doc = QHexDocument::fromDevice<T>(&f, readonly, parent);
+    f.close();
+  } else {
+    doc = new QHexDocument(new T(), readonly, parent);
+  }
   return doc;
 }
 

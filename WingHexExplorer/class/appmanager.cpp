@@ -49,10 +49,11 @@ void AppManager::openFiles(QStringList files) {
         }
       }
     }
-    //通过dbus接口从任务栏激活窗口
-    if (!Q_LIKELY(Utilities::activeWindowFromDock(mWindow->winId()))) {
-      mWindow->activateWindow();
-    }
+
+    mWindow->show();
+    mWindow->raise();
+    mWindow->activateWindow();
+
     if (err) {
       QMessageBox::critical(mWindow, tr("Error"),
                             tr("ErrOpenFileBelow") + "\n" + errof.join('\n'));

@@ -33,20 +33,6 @@ private:
 public:
   static inline bool isRoot() { return getuid() == 0; }
 
-  static bool activeWindowFromDock(quintptr winId) {
-    bool bRet = true;
-    // new interface use application as id
-    QDBusInterface dockDbusInterface("com.deepin.dde.daemon.Dock",
-                                     "/com/deepin/dde/daemon/Dock",
-                                     "com.deepin.dde.daemon.Dock");
-    QDBusReply<void> reply = dockDbusInterface.call("ActivateWindow", winId);
-    if (!reply.isValid()) {
-      qDebug() << "call com.deepin.dde.daemon.Dock failed" << reply.error();
-      bRet = false;
-    }
-    return bRet;
-  }
-
   static QString processBytesCount(qint64 bytescount) {
     QString B[] = {"B", "KB", "MB", "GB", "TB"};
     auto av = bytescount;

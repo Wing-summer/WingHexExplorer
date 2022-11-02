@@ -1,7 +1,6 @@
 #include "./dialog/mainwindow.h"
 #include "class/appmanager.h"
 #include "qBreakpad/QBreakpadHandler.h"
-#include "winghexapplication.h"
 #include <DApplication>
 #include <DApplicationSettings>
 #include <DFontSizeManager>
@@ -40,7 +39,7 @@ int main(int argc, char *argv[]) {
     fakeArgs[i + 2] = argv[i];
   int fakeArgc = argc + 2;
 
-  WingHexApplication a(fakeArgc, fakeArgs.data());
+  DApplication a(fakeArgc, fakeArgs.data());
   QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
 
   auto s = a.applicationDirPath() + "/lang/default.qm";
@@ -54,7 +53,7 @@ int main(int argc, char *argv[]) {
 
   a.setOrganizationName("WingCloud");
   a.setApplicationName(QObject::tr("WingHexExplorer"));
-  a.setApplicationVersion("1.5.1");
+  a.setApplicationVersion("1.5.2");
   a.setApplicationLicense("AGPL-3.0");
   a.setProductIcon(QIcon(":/images/icon.png"));
   a.setProductName(QObject::tr("WingHexExplorer"));
@@ -114,7 +113,9 @@ int main(int argc, char *argv[]) {
                 .arg(logfile.isEmpty() ? QObject::tr("ExportFail") : logfile));
         msg.exec();
       });
+
   w.show();
+
   manager->openFiles(urls);
   Dtk::Widget::moveToCenter(&w);
   return a.exec();
