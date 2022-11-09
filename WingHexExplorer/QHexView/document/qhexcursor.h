@@ -60,6 +60,8 @@ public:
   void moveTo(const QHexPosition &pos);
   void moveTo(quint64 line, int column, int nibbleindex = 1);
   void moveTo(qint64 offset);
+  void setPos(qint64 offset, int nibbleindex);
+  // 和 moveTo 其实一样，只是为了不冲突
   void select(const QHexPosition &pos);
   void select(quint64 line, int column, int nibbleindex = 1);
   void select(int length);

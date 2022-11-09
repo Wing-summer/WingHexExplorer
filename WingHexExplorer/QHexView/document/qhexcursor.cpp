@@ -109,6 +109,11 @@ void QHexCursor::moveTo(qint64 offset) {
   this->moveTo(quint64(line), int(offset - (line * m_lineWidth)));
 }
 
+void QHexCursor::setPos(qint64 offset, int nibbleindex) {
+  qint64 line = offset / m_lineWidth;
+  this->moveTo(quint64(line), int(offset - (line * m_lineWidth)), nibbleindex);
+}
+
 void QHexCursor::select(int length) {
   this->select(m_position.line,
                std::min(m_lineWidth - 1, m_position.column + length - 1));

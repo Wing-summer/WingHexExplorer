@@ -857,6 +857,10 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   logger = new Logger(this);
   connect(logger, &Logger::log, [=](QString msg) {
+    QMutexLocker locker(&logmutex);
+    auto cur = pluginInfo->textCursor();
+    cur.movePosition(QTextCursor::End);
+    pluginInfo->setTextCursor(cur);
     pluginInfo->insertHtml(msg);
     pluginInfo->append("");
   });

@@ -26,6 +26,7 @@
 #include <QFile>
 #include <QList>
 #include <QMutex>
+#include <QMutexLocker>
 #include <QObject>
 #include <QPixmap>
 #include <QPoint>
@@ -350,6 +351,7 @@ private:
   bool islittle = true;
 
   QString lastusedpath;
+  QMutex logmutex;
 };
 
 #endif // MAINWINDOW_H

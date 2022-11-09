@@ -6,6 +6,7 @@
 class RemoveCommand : public HexCommand {
 public:
   RemoveCommand(QHexBuffer *buffer, qint64 offset, int length,
+                QHexCursor *cursor, int nibbleindex,
                 QUndoCommand *parent = nullptr);
   void undo() override;
   void redo() override;

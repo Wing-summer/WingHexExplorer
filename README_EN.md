@@ -162,6 +162,7 @@ My improvements on the modified components are as follows:
 10. Add some interfaces to meet the needs of workspace support
 11. Fix the bug with excessive part in the first line of the background color of the mark
 12. Fix the bug that the bytes in the copy contain zero bytes and will be truncated
+13. Undo recovery supports cursor following
 
 ### About QHexEdit2
 

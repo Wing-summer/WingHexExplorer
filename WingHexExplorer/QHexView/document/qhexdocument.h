@@ -107,7 +107,7 @@ public:
   /*======================*/
 
 public:
-  bool RemoveSelection();
+  bool RemoveSelection(int nibbleindex = 1);
   QByteArray read(qint64 offset, int len = 0);
   QByteArray selectedBytes() const;
   char at(int offset) const;
@@ -118,14 +118,14 @@ public:
 public slots:
   void undo();
   void redo();
-  bool Cut(bool hex = false);
+  bool Cut(int nibbleindex = 0, bool hex = false);
   bool copy(bool hex = false);
-  void Paste(bool hex = false);
-  void Insert(qint64 offset, uchar b);
-  void Insert(qint64 offset, const QByteArray &data);
-  void Replace(qint64 offset, uchar b);
-  void Replace(qint64 offset, const QByteArray &data);
-  bool Remove(qint64 offset, int len);
+  void Paste(int nibbleindex = 0, bool hex = false);
+  void Insert(qint64 offset, uchar b, int nibbleindex);
+  void Insert(qint64 offset, const QByteArray &data, int nibbleindex);
+  void Replace(qint64 offset, uchar b, int nibbleindex);
+  void Replace(qint64 offset, const QByteArray &data, int nibbleindex = 0);
+  bool Remove(qint64 offset, int len, int nibbleindex = 0);
   QByteArray read(qint64 offset, int len) const;
   bool saveTo(QIODevice *device, bool cleanUndo);
 

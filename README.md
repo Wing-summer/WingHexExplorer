@@ -166,6 +166,7 @@ QHexEdit is released under MIT license
 10. 增加一些接口适应工作区支持需要
 11. 修复标记背景色第一行有超出部分的 Bug
 12. 修复复制中字节含有零字节会截断的 Bug
+13. 撤销恢复支持光标跟随
 
 ### 有关 QHexEdit2
 

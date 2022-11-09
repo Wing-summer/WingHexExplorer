@@ -28,7 +28,10 @@ void Logger::messageHandler(QtMsgType type, const QMessageLogContext &,
       emit instance->log(INFOLOG(tr("[Info]") + output));
       break;
     case QtMsgType::QtWarningMsg:
-      emit instance->log(WARNLOG(tr("[Warn]") + output));
+      // QXcbConnection WarningMsg
+      // It's Qt noise on Linux I can't do nothing to avoid it.
+      if (!output.startsWith("QXcbConnection"))
+        emit instance->log(WARNLOG(tr("[Warn]") + output));
       break;
     case QtMsgType::QtCriticalMsg:
       emit instance->log(ERRLOG(tr("[Error]") + output));

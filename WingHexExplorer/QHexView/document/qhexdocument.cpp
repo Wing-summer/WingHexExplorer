@@ -508,12 +508,12 @@ QByteArray QHexDocument::read(qint64 offset, int len) {
   return m_buffer->read(offset, len);
 }
 
-bool QHexDocument::RemoveSelection() {
+bool QHexDocument::RemoveSelection(int nibbleindex) {
   if (!m_cursor->hasSelection())
     return false;
 
   auto res = this->Remove(m_cursor->selectionStart().offset(),
-                          m_cursor->selectionLength());
+                          m_cursor->selectionLength(), nibbleindex);
   if (res)
     m_cursor->clearSelection();
   return res;
@@ -553,7 +553,7 @@ void QHexDocument::redo() {
   emit documentChanged();
 }
 
-bool QHexDocument::Cut(bool hex) {
+bool QHexDocument::Cut(int nibbleindex, bool hex) {
   if (!m_cursor->hasSelection())
     return true;
 
@@ -562,7 +562,7 @@ bool QHexDocument::Cut(bool hex) {
 
   auto res = this->copy(hex);
   if (res) {
-    return this->RemoveSelection();
+    return this->RemoveSelection(nibbleindex);
   } else {
     emit copyLimitRaised();
     return res;
@@ -597,7 +597,7 @@ bool QHexDocument::copy(bool hex) {
 }
 
 // modified by wingsummer
-void QHexDocument::Paste(bool hex) {
+void QHexDocument::Paste(int nibbleindex, bool hex) {
   Q_UNUSED(hex)
 
   QClipboard *c = qApp->clipboard();
@@ -607,53 +607,58 @@ void QHexDocument::Paste(bool hex) {
   if (data.isEmpty())
     return;
 
-  this->RemoveSelection();
+  this->RemoveSelection(nibbleindex);
 
   if (hex)
     data = QByteArray::fromHex(data);
 
   auto pos = m_cursor->position().offset();
   if (!m_keepsize) {
-    this->Insert(pos, data);
+    this->Insert(pos, data, nibbleindex);
     m_cursor->moveTo(pos + data.length()); // added by wingsummer
   } else
-    this->Replace(pos, data);
+    this->Replace(pos, data, nibbleindex);
 }
 
-void QHexDocument::Insert(qint64 offset, uchar b) {
+void QHexDocument::Insert(qint64 offset, uchar b, int nibbleindex) {
   if (m_keepsize || m_readonly || m_islocked)
     return;
-  this->Insert(offset, QByteArray(1, char(b)));
+  this->Insert(offset, QByteArray(1, char(b)), nibbleindex);
 }
 
-void QHexDocument::Replace(qint64 offset, uchar b) {
+void QHexDocument::Replace(qint64 offset, uchar b, int nibbleindex) {
   if (m_readonly || m_islocked)
     return;
-  this->Replace(offset, QByteArray(1, char(b)));
+  this->Replace(offset, QByteArray(1, char(b)), nibbleindex);
 }
 
-void QHexDocument::Insert(qint64 offset, const QByteArray &data) {
+void QHexDocument::Insert(qint64 offset, const QByteArray &data,
+                          int nibbleindex) {
   if (m_keepsize || m_readonly || m_islocked ||
       (offset < m_buffer->length() && m_metadata->hasMetadata()))
     return;
   if (!m_metadata->hasMetadata())
-    m_undostack.push(new InsertCommand(m_buffer, offset, data));
+    m_undostack.push(
+        new InsertCommand(m_buffer, offset, data, m_cursor, nibbleindex));
   else
     m_buffer->insert(offset, data);
   emit documentChanged();
 }
 
-void QHexDocument::Replace(qint64 offset, const QByteArray &data) {
+void QHexDocument::Replace(qint64 offset, const QByteArray &data,
+                           int nibbleindex) {
   if (m_readonly || m_islocked)
     return;
-  m_undostack.push(new ReplaceCommand(m_buffer, offset, data));
+  m_undostack.push(
+      new ReplaceCommand(m_buffer, offset, data, m_cursor, nibbleindex));
   emit documentChanged();
 }
 
-bool QHexDocument::Remove(qint64 offset, int len) {
+bool QHexDocument::Remove(qint64 offset, int len, int nibbleindex) {
   if (m_keepsize || m_readonly || m_islocked || m_metadata->hasMetadata())
     return false;
-  m_undostack.push(new RemoveCommand(m_buffer, offset, len));
+  m_undostack.push(
+      new RemoveCommand(m_buffer, offset, len, m_cursor, nibbleindex));
   emit documentChanged();
   return true;
 }
