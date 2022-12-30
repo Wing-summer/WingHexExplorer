@@ -28,7 +28,7 @@ void RecentFileManager::apply() {
       return;
     }
     bool ok;
-    auto d = DInputDialog::getInt(nullptr, tr("Input"), tr("InputIndex"), 0, 0,
+    auto d = QInputDialog::getInt(nullptr, tr("Input"), tr("InputIndex"), 0, 0,
                                   m_recents.count(), 1, &ok);
     if (ok) {
       m_menu->removeAction(hitems.at(d));

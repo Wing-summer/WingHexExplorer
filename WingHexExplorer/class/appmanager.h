@@ -11,7 +11,7 @@ public:
   static AppManager *instance();
   explicit AppManager(QObject *parent = nullptr);
   static MainWindow *mWindow;
-  static ErrFile openFile(QString file, bool readonly = false);
+  static ErrFile openFile(QString file);
 
 private:
   static AppManager *m_instance;

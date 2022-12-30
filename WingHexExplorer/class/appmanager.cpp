@@ -15,19 +15,18 @@ AppManager *AppManager::instance() {
   return m_instance;
 }
 
-ErrFile AppManager::openFile(QString file, bool readonly) {
+ErrFile AppManager::openFile(QString file) {
   auto res = ErrFile::Error;
   int oldindex = 0;
   if (mWindow) {
-    res = mWindow->openWorkSpace(file, readonly, &oldindex);
+    res = mWindow->openWorkSpace(file, &oldindex);
     if (res != ErrFile::Success) {
       if (res == ErrFile::AlreadyOpened || res == ErrFile::WorkSpaceUnSaved) {
         mWindow->setFilePage(oldindex);
       } else {
-        res = mWindow->openFile(file, readonly, &oldindex);
+        res = mWindow->openFile(file, &oldindex);
         if (res != ErrFile::Success) {
-          if (res == ErrFile::AlreadyOpened ||
-              res == ErrFile::WorkSpaceUnSaved) {
+          if (res == ErrFile::AlreadyOpened) {
             mWindow->setFilePage(oldindex);
           }
         }
@@ -42,11 +41,9 @@ void AppManager::openFiles(QStringList files) {
     bool err = false;
     QStringList errof;
     for (auto file : files) {
-      if (openFile(file) == ErrFile::Permission) {
-        if (openFile(file, true)) {
-          err = true;
-          errof << file;
-        }
+      if (openFile(file)) {
+        err = true;
+        errof << file;
       }
     }
 

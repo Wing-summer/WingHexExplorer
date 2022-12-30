@@ -13,6 +13,7 @@
 #include <DApplicationHelper>
 #include <DDockWidget>
 #include <DIconButton>
+#include <DInputDialog>
 #include <DLabel>
 #include <DLineEdit>
 #include <DMainWindow>
@@ -132,11 +133,9 @@ private:
   void setTheme(DGuiApplicationHelper::ColorType theme);
 
 public:
-  ErrFile openFile(QString filename, bool readonly = false,
-                   int *openedindex = nullptr, QString workspace = "",
-                   bool *oldworkspace = nullptr);
-  ErrFile openWorkSpace(QString filename, bool readonly = false,
-                        int *openedindex = nullptr);
+  ErrFile openFile(QString filename, int *openedindex = nullptr,
+                   QString workspace = "", bool *oldworkspace = nullptr);
+  ErrFile openWorkSpace(QString filename, int *openedindex = nullptr);
   bool setFilePage(int index);
   QString saveLog(); // 当程序崩溃发生时，自动保存日志
 
@@ -155,9 +154,8 @@ public:
 
 private:
   void newFile(bool bigfile = false);
-  ErrFile openRegionFile(QString filename, bool readonly = false,
-                         int *openedindex = nullptr, qint64 start = 0,
-                         qint64 length = 1024);
+  ErrFile openRegionFile(QString filename, int *openedindex = nullptr,
+                         qint64 start = 0, qint64 length = 1024);
   ErrFile openDriver(QString driver);
   ErrFile closeFile(int index, bool force = false);
   ErrFile save(int index, bool ignoreMd5 = false);

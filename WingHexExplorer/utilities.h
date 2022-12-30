@@ -114,6 +114,10 @@ public:
                ? qicon
                : style->standardIcon(QStyle::SP_FileIcon);
   }
+
+  static bool fileCanWrite(QString path) {
+    return QFileInfo(path).permission(QFile::WriteUser);
+  }
 };
 
 #endif // UTILITIES_H

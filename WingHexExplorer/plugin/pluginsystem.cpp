@@ -109,6 +109,8 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         loadedplgs.push_back(p);
         loadedpuid << puid;
 
+        qWarning() << (tr("PluginName :") + info.pluginName);
+        qWarning() << (tr("PluginAuthor :") + info.pluginAuthor);
         qWarning() << tr("PluginWidgetRegister");
         lp = LP::registerMenu;
         auto menu = p->registerMenu();
@@ -207,14 +209,14 @@ bool PluginSystem::requestControl(IWingPlugin *plugin, int timeout) {
       return true;
     } else {
       if (plugintimeout[oldctl]) {
-        qWarning() << (tr("[PluginTimeout]") + plugin->pluginName() + " --> " +
-                       oldctl->pluginName());
+        qCritical() << (tr("[PluginTimeout]") + plugin->pluginName() + " --> " +
+                        oldctl->pluginName());
         initControl(plugin);
         oldctl->plugin2MessagePipe(
             WingPluginMessage::ConnectTimeout,
             QList<QVariant>({plugin->pluginName(), plugin->puid()}));
       } else {
-        qWarning() << (tr("[PluginRequestError]") + plugin->pluginName());
+        qCritical() << (tr("[PluginRequestError]") + plugin->pluginName());
         mutex.unlock();
         return false;
       }

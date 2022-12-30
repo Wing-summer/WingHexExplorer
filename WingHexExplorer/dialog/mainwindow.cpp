@@ -18,7 +18,6 @@
 #include "settings.h"
 #include "sponsordialog.h"
 #include <DAnchors>
-#include <DInputDialog>
 #include <DMenuBar>
 #include <DMessageManager>
 #include <DSettingsDialog>
@@ -671,7 +670,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   AddFunctionIconButton(iSetBaseAddr, "mAddr");
   iSetBaseAddr->setToolTip(tr("SetaddressBase"));
   connect(iSetBaseAddr, &DIconButton::clicked, this, [=] {
-    DInputDialog d;
+    QInputDialog d;
     bool b;
     auto num = d.getText(this, tr("addressBase"), tr("inputAddressBase"),
                          QLineEdit::Normal, QString(), &b);
@@ -2462,28 +2461,25 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
             }, );
       });
 
-  ConnectControlLamba2(WingPlugin::Controller::openWorkSpace,
-                       [=](QString filename, bool readonly) {
-                         plgsys->resetTimeout(
-                             qobject_cast<IWingPlugin *>(sender()));
-                         return openWorkSpace(filename, readonly);
-                       });
+  ConnectControlLamba2(
+      WingPlugin::Controller::openWorkSpace, [=](QString filename) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        return openWorkSpace(filename);
+      });
   ConnectControlLamba2(WingPlugin::Controller::newFile, [=] {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     newFile();
   });
-  ConnectControlLamba2(WingPlugin::Controller::openFile,
-                       [=](QString filename, bool readonly, int *openedIndex) {
-                         plgsys->resetTimeout(
-                             qobject_cast<IWingPlugin *>(sender()));
-                         return openFile(filename, readonly, openedIndex);
-                       });
+  ConnectControlLamba2(WingPlugin::Controller::openFile, [=](QString filename,
+                                                             int *openedIndex) {
+    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+    return openFile(filename, openedIndex);
+  });
   ConnectControlLamba2(
       WingPlugin::Controller::openRegionFile,
-      [=](QString filename, bool readonly, int *openedIndex, qint64 start,
-          qint64 length) {
+      [=](QString filename, int *openedIndex, qint64 start, qint64 length) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        return openRegionFile(filename, readonly, openedIndex, start, length);
+        return openRegionFile(filename, openedIndex, start, length);
       });
   ConnectControlLamba2(WingPlugin::Controller::openDriver, [=](QString driver) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
@@ -2541,15 +2537,13 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         if (d.exec()) {
           auto res = d.getResult();
           int index;
-          auto ret = openRegionFile(res.filename, false, &index, res.start,
-                                    res.length);
+          auto ret =
+              openRegionFile(res.filename, &index, res.start, res.length);
           if (ret == ErrFile::NotExist) {
             QMessageBox::critical(this, tr("Error"), tr("FileNotExist"));
             return;
           }
-          if (ret == ErrFile::Permission &&
-              openRegionFile(res.filename, true, &index, res.start,
-                             res.length) == ErrFile::Permission) {
+          if (ret == ErrFile::Permission) {
             QMessageBox::critical(this, tr("Error"), tr("FilePermission"));
             return;
           }
@@ -2706,25 +2700,16 @@ void MainWindow::newFile(bool bigfile) {
   }
 }
 
-ErrFile MainWindow::openRegionFile(QString filename, bool readonly,
-                                   int *openedindex, qint64 start,
-                                   qint64 length) {
+ErrFile MainWindow::openRegionFile(QString filename, int *openedindex,
+                                   qint64 start, qint64 length) {
   QList<QVariant> params;
   if (_enableplugin) {
-    params << filename << readonly;
+    params << filename;
     plgsys->raiseDispatch(HookIndex::OpenFileBegin, params);
   }
   QFileInfo info(filename);
   if (info.exists()) {
     if (!info.permission(QFile::ReadUser)) {
-      if (_enableplugin) {
-        params << ErrFile::Permission;
-        plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
-      }
-      return ErrFile::Permission;
-    }
-
-    if (!readonly && !info.permission(QFile::WriteUser)) {
       if (_enableplugin) {
         params << ErrFile::Permission;
         plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
@@ -2747,6 +2732,7 @@ ErrFile MainWindow::openRegionFile(QString filename, bool readonly,
       i++;
     }
 
+    auto readonly = Utilities::fileCanWrite(filename);
     HexFile hf;
     auto *p =
         QHexDocument::fromRegionFile(filename, start, length, readonly, this);
@@ -2799,25 +2785,17 @@ ErrFile MainWindow::openRegionFile(QString filename, bool readonly,
   return ErrFile::NotExist;
 }
 
-ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
+ErrFile MainWindow::openFile(QString filename, int *openedindex,
                              QString workspace, bool *oldworkspace) {
   QList<QVariant> params;
   if (_enableplugin) {
-    params << filename << readonly;
+    params << filename;
     plgsys->raiseDispatch(HookIndex::OpenFileBegin, params);
   }
   QFileInfo info(filename);
   if (info.exists()) {
 
     if (!info.permission(QFile::ReadUser)) {
-      if (_enableplugin) {
-        params << ErrFile::Permission;
-        plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
-      }
-      return ErrFile::Permission;
-    }
-
-    if (!readonly && !info.permission(QFile::WriteUser)) {
       if (_enableplugin) {
         params << ErrFile::Permission;
         plgsys->raiseDispatch(HookIndex::OpenFileEnd, params);
@@ -2844,6 +2822,7 @@ ErrFile MainWindow::openFile(QString filename, bool readonly, int *openedindex,
     }
 
     HexFile hf;
+    auto readonly = !Utilities::fileCanWrite(filename);
     auto *p =
         info.size() > FILEMAXBUFFER
             ? QHexDocument::fromLargeFile(filename, readonly, this)
@@ -3078,13 +3057,12 @@ void MainWindow::on_openfile() {
   if (!filename.isEmpty()) {
     lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
     int index;
-    auto res = openFile(filename, false, &index);
+    auto res = openFile(filename, &index);
     if (res == ErrFile::NotExist) {
       QMessageBox::critical(this, tr("Error"), tr("FileNotExist"));
       return;
     }
-    if (res == ErrFile::Permission &&
-        openFile(filename, true, &index) == ErrFile::Permission) {
+    if (res == ErrFile::Permission) {
       QMessageBox::critical(this, tr("Error"), tr("FilePermission"));
       return;
     }
@@ -3100,15 +3078,12 @@ void MainWindow::on_openregion() {
   if (d.exec()) {
     auto res = d.getResult();
     int index;
-    auto ret =
-        openRegionFile(res.filename, false, &index, res.start, res.length);
+    auto ret = openRegionFile(res.filename, &index, res.start, res.length);
     if (ret == ErrFile::NotExist) {
       QMessageBox::critical(this, tr("Error"), tr("FileNotExist"));
       return;
     }
-    if (ret == ErrFile::Permission &&
-        openRegionFile(res.filename, true, &index, res.start, res.length) ==
-            ErrFile::Permission) {
+    if (ret == ErrFile::Permission) {
       QMessageBox::critical(this, tr("Error"), tr("FilePermission"));
       return;
     }
@@ -4012,7 +3987,7 @@ void MainWindow::on_bookmark() {
     bool ok;
     hexeditor->renderer()->enableCursor();
     auto comment =
-        DInputDialog::getText(this, tr("BookMark"), tr("InputComment"),
+        QInputDialog::getText(this, tr("BookMark"), tr("InputComment"),
                               QLineEdit::Normal, b.comment, &ok);
     if (ok) {
       doc->ModBookMark(b.pos, comment);
@@ -4020,7 +3995,7 @@ void MainWindow::on_bookmark() {
   } else {
     bool ok;
     auto comment =
-        DInputDialog ::getText(this, tr("BookMark"), tr("InputComment"),
+        QInputDialog ::getText(this, tr("BookMark"), tr("InputComment"),
                                QLineEdit::Normal, QString(), &ok);
     if (ok) {
       auto pos = qint64(hexeditor->currentOffset());
@@ -4154,7 +4129,7 @@ void MainWindow::on_restoreLayout() { m_settings->loadWindowState(this, true); }
 void MainWindow::on_fill() {
   CheckEnabled;
   bool b;
-  auto in = DInputDialog::getText(this, tr("Fill"), tr("PleaseInputFill"),
+  auto in = QInputDialog::getText(this, tr("Fill"), tr("PleaseInputFill"),
                                   QLineEdit::Normal, QString(), &b);
   if (b) {
     auto ch = char(in.toULongLong(&b, 0));
@@ -4269,8 +4244,7 @@ void MainWindow::on_about() {
   d.exec();
 }
 
-ErrFile MainWindow::openWorkSpace(QString filename, bool readonly,
-                                  int *openedindex) {
+ErrFile MainWindow::openWorkSpace(QString filename, int *openedindex) {
   QString file;
   QList<BookMarkStruct> bookmarks;
   QList<QHexMetadataAbsoluteItem> metas;
@@ -4281,7 +4255,7 @@ ErrFile MainWindow::openWorkSpace(QString filename, bool readonly,
                                       infos)) {
     bool b;
     int index;
-    res = openFile(file, readonly, &index, filename, &b);
+    res = openFile(file, &index, filename, &b);
     if (res == ErrFile::AlreadyOpened) {
       if (openedindex)
         *openedindex = index;
@@ -4318,7 +4292,7 @@ void MainWindow::on_openworkspace() {
     return;
   lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
   int index;
-  auto res = openWorkSpace(filename, false, &index);
+  auto res = openWorkSpace(filename, &index);
   if (res == ErrFile::AlreadyOpened) {
     if (hexfiles[index].workspace.length() == 0)
       DMessageManager::instance()->sendMessage(this, ICONRES("workspace"),

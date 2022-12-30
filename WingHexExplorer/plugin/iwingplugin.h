@@ -11,7 +11,7 @@
 #include <QWidget>
 #include <QtCore>
 
-#define SDKVERSION 9
+#define SDKVERSION 10
 #define GETPLUGINQM(name)                                                      \
   (QCoreApplication::applicationDirPath() + "/plglang/" + name)
 #define PLUGINDIR (QCoreApplication::applicationDirPath() + "/plugin")
@@ -310,11 +310,9 @@ signals:
 
   // mainwindow
   void newFile(bool bigfile = false);
-  ErrFile openFile(QString filename, bool readonly = false,
-                   int *openedIndex = nullptr);
-  ErrFile openRegionFile(QString filename, bool readonly = false,
-                         int *openedIndex = nullptr, qint64 start = 0,
-                         qint64 length = 1024);
+  ErrFile openFile(QString filename, int *openedIndex = nullptr);
+  ErrFile openRegionFile(QString filename, int *openedIndex = nullptr,
+                         qint64 start = 0, qint64 length = 1024);
   ErrFile openDriver(QString driver);
   ErrFile closeFile(int index, bool force = false);
   ErrFile saveFile(int index, bool ignoreMd5 = false);
@@ -342,7 +340,7 @@ signals:
   bool clearBookMark();
 
   // workspace
-  bool openWorkSpace(QString filename, bool readonly = false);
+  bool openWorkSpace(QString filename);
   bool setCurrentEncoding(QString encoding);
 };
 } // namespace WingPlugin

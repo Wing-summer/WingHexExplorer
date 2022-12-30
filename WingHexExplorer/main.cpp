@@ -21,7 +21,6 @@
 DWIDGET_USE_NAMESPACE
 
 int main(int argc, char *argv[]) {
-
   //解决 root/ubuntu 主题样式走形
   qputenv("XDG_CURRENT_DESKTOP", "Deepin");
   QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
@@ -41,7 +40,6 @@ int main(int argc, char *argv[]) {
 
   DApplication a(fakeArgc, fakeArgs.data());
   QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
-
   auto s = a.applicationDirPath() + "/lang/default.qm";
   QTranslator translator;
   if (!translator.load(s)) {
@@ -53,7 +51,7 @@ int main(int argc, char *argv[]) {
 
   a.setOrganizationName("WingCloud");
   a.setApplicationName(QObject::tr("WingHexExplorer"));
-  a.setApplicationVersion("1.5.3");
+  a.setApplicationVersion("1.5.4");
   a.setApplicationLicense("AGPL-3.0");
   a.setProductIcon(QIcon(":/images/icon.png"));
   a.setProductName(QObject::tr("WingHexExplorer"));
@@ -90,8 +88,8 @@ int main(int argc, char *argv[]) {
   DApplicationSettings as;
   Q_UNUSED(as);
 
-  auto manager = AppManager::instance();
   MainWindow w;
+  auto manager = AppManager::instance();
   manager->mWindow = &w;
   QDir dumpdir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
   dumpdir.mkdir("dump");
