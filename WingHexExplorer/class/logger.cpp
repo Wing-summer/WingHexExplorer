@@ -4,49 +4,34 @@
 #define ERRLOG(msg) "<font color=\"red\">" + msg + "</font>"
 #define WARNLOG(msg) "<font color=\"gold\">" + msg + "</font>"
 
-Logger *Logger::instance = nullptr;
+Logger *Logger::instance = new Logger;
 
-Logger::Logger(QObject *parent) : QObject(parent) {
-  instance = this;
-  qInstallMessageHandler(messageHandler);
+Logger::Logger(QObject *parent) : QObject(parent) {}
+
+Logger *Logger::getInstance() { return instance; }
+
+void Logger::_log(const QString &message) { emit instance->log(message); }
+
+void Logger::warning(const QString &message) {
+  qlogger::QLogger::warn(message);
+  QString str = message;
+  emit instance->log(WARNLOG(tr("[Warn]") + str.replace("\n", "<br />")));
 }
 
-void Logger::messageHandler(QtMsgType type, const QMessageLogContext &,
-                            const QString &msg) {
-  auto output = msg;
-  auto len = msg.length();
-  // 去掉烦人的双引号字符串输出，比如 "hello world" 这种输出
-  if (len) {
-    if (msg[0] == '"' && msg[len - 1] == '"') {
-      output = msg.mid(1, len - 2);
-    }
-    switch (type) {
-    case QtMsgType::QtDebugMsg:
-      emit instance->log(tr("[Debug]") + output);
-      break;
-    case QtMsgType::QtInfoMsg:
-      emit instance->log(INFOLOG(tr("[Info]") + output));
-      break;
-    case QtMsgType::QtWarningMsg:
-      // QXcbConnection WarningMsg
-      // It's Qt noise on Linux I can't do nothing to avoid it.
-      if (!output.startsWith("QXcbConnection"))
-        emit instance->log(WARNLOG(tr("[Warn]") + output));
-      break;
-    case QtMsgType::QtCriticalMsg:
-      emit instance->log(ERRLOG(tr("[Error]") + output));
-      break;
-    default:
-      break;
-    }
-  } else {
-    emit instance->log("");
-  }
+void Logger::info(const QString &message) {
+  qlogger::QLogger::info(message);
+  QString str = message;
+  emit instance->log(INFOLOG(tr("[Info]") + str.replace("\n", "<br />")));
 }
 
-Logger *Logger::getInstance() {
-  if (instance == nullptr) {
-    instance = new Logger;
-  }
-  return instance;
+void Logger::debug(const QString &message) {
+  qlogger::QLogger::debug(message);
+  QString str = message;
+  emit instance->log(tr("[Debug]") + str.replace("\n", "<br />"));
+}
+
+void Logger::critical(const QString &message) {
+  qlogger::QLogger::error(message);
+  QString str = message;
+  emit instance->log(ERRLOG(tr("[Error]") + str.replace("\n", "<br />")));
 }

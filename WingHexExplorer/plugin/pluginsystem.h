@@ -1,11 +1,10 @@
 #ifndef PLUGINSYSTEM_H
 #define PLUGINSYSTEM_H
 
-#include "class/logger.h"
 #include "plugin/iwingplugin.h"
 #include <QDockWidget>
+#include <QHash>
 #include <QList>
-#include <QMap>
 #include <QMenu>
 #include <QMutex>
 #include <QObject>
@@ -55,13 +54,13 @@ private:
 
 signals:
   void PluginMenuNeedAdd(QMenu *menu);
-  void PluginDockWidgetAdd(QString pluginname,
-                           QMap<QDockWidget *, Qt::DockWidgetArea> &rdw);
+  void PluginDockWidgetAdd(const QString &pluginname,
+                           const QHash<QDockWidget *, Qt::DockWidgetArea> &rdw);
   void PluginToolButtonAdd(QToolButton *btn);
   void PluginToolBarAdd(QToolBar *tb, Qt::ToolBarArea align);
-  void ConnectBase(IWingPlugin *plugin);
-  void ConnectControl(IWingPlugin *plugin);
-  void DisconnectControl(IWingPlugin *plugin);
+  void ConnectBase(const IWingPlugin *plugin);
+  void ConnectControl(const IWingPlugin *plugin);
+  void DisconnectControl(const IWingPlugin *plugin);
 
 private:
   QStringList loadedpuid;
@@ -70,7 +69,6 @@ private:
   QMap<IWingPlugin *, QTimer *> plugintimer;
   IWingPlugin *curpluginctl;
   QMap<HookIndex, QList<IWingPlugin *>> dispatcher;
-  Logger *logger;
   QMutex mutex;
 };
 

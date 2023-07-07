@@ -41,11 +41,7 @@ struct QHexMetadataItem {
   }
 };
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-typedef QLinkedList<QHexMetadataItem> QHexLineMetadata;
-#else
 typedef std::list<QHexMetadataItem> QHexLineMetadata;
-#endif
 
 class QHexMetadata : public QObject {
   Q_OBJECT

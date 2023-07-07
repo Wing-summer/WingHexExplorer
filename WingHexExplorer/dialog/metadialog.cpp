@@ -55,7 +55,7 @@ MetaDialog::MetaDialog(DMainWindow *parent)
   connect(cbackground, &DCheckBox::clicked, ibackground,
           &DPushButton::setEnabled);
   connect(ccomment, &DCheckBox::clicked, m_comment, &DPushButton::setEnabled);
-  connect(iforeground, &DPushButton::clicked, [=] {
+  connect(iforeground, &DPushButton::clicked, this, [=] {
     QColorDialog cd;
     if (cd.exec()) {
       QPalette pe;
@@ -64,7 +64,7 @@ MetaDialog::MetaDialog(DMainWindow *parent)
       _foreground = cd.currentColor();
     }
   });
-  connect(ibackground, &DPushButton::clicked, [=] {
+  connect(ibackground, &DPushButton::clicked, this, [=] {
     QColorDialog cd;
     if (cd.exec()) {
       QPalette pe;
@@ -121,7 +121,7 @@ QColor MetaDialog::backGroundColor() {
 void MetaDialog::setComment(QString comment) {
   if (comment.length() > 0) {
     ccomment->setChecked(true);
-    ccomment->clicked(true);
+    emit ccomment->clicked(true);
     _comment = comment;
     m_comment->setText(comment);
   }
@@ -130,7 +130,7 @@ void MetaDialog::setComment(QString comment) {
 void MetaDialog::setBackGroundColor(QColor color) {
   if (color.rgba()) {
     cbackground->setChecked(true);
-    cbackground->clicked(true);
+    emit cbackground->clicked(true);
     _background = color;
     QPalette pe;
     pe.setColor(QPalette::ButtonText, color);
@@ -141,7 +141,7 @@ void MetaDialog::setBackGroundColor(QColor color) {
 void MetaDialog::setForeGroundColor(QColor color) {
   if (color.rgba()) {
     cforeground->setChecked(true);
-    cforeground->clicked(true);
+    emit cforeground->clicked(true);
     _foreground = color;
     QPalette pe;
     pe.setColor(QPalette::ButtonText, color);

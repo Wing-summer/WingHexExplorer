@@ -1,4 +1,5 @@
 #include "pluginsystem.h"
+#include "class/logger.h"
 #include <QDir>
 #include <QFileInfoList>
 #include <QMessageBox>
@@ -8,8 +9,6 @@
 
 PluginSystem::PluginSystem(QObject *parent)
     : QObject(parent), curpluginctl(nullptr) {
-  logger = Logger::getInstance();
-
   // init plugin dispathcer
 #define InitDispathcer(hookindex)                                              \
   dispatcher.insert(hookindex, QList<IWingPlugin *>());
@@ -26,7 +25,7 @@ PluginSystem::PluginSystem(QObject *parent)
 }
 
 PluginSystem::~PluginSystem() {
-  for (auto item : loadedplgs) {
+  for (auto &item : loadedplgs) {
     item->plugin2MessagePipe(WingPluginMessage::PluginUnLoading, emptyparam);
     item->controller.disconnect();
     item->reader.disconnect();
@@ -51,49 +50,48 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
 
   if (fileinfo.exists()) {
     QPluginLoader loader(fileinfo.absoluteFilePath());
-    qInfo() << (tr("LoadingPlugin") + fileinfo.fileName());
+    Logger::info(tr("LoadingPlugin") + fileinfo.fileName());
     QList<WingPluginInfo> loadedplginfos;
     try {
       auto p = qobject_cast<IWingPlugin *>(loader.instance());
       if (p) {
         lp = LP::signature;
         if (p->signature() != WINGSUMMER) {
-          qCritical() << tr("ErrLoadPluginSign");
+          Logger::critical(tr("ErrLoadPluginSign"));
           loader.unload();
           return;
         }
         lp = LP::sdkVersion;
         if (p->sdkVersion() != SDKVERSION) {
-          qCritical() << tr("ErrLoadPluginSDKVersion");
+          Logger::critical(tr("ErrLoadPluginSDKVersion"));
           loader.unload();
           return;
         }
         lp = LP::pluginName;
         if (!p->pluginName().trimmed().length()) {
-          qCritical() << tr("ErrLoadPluginNoName");
+          Logger::critical(tr("ErrLoadPluginNoName"));
           loader.unload();
           return;
         }
         lp = LP::puid;
         auto puid = IWingPlugin::GetPUID(p);
         if (puid != p->puid()) {
-          qCritical() << tr("ErrLoadPluginPUID");
+          Logger::critical(tr("ErrLoadPluginPUID"));
           loader.unload();
           return;
         }
 
         if (loadedpuid.contains(puid)) {
-          qCritical() << tr("ErrLoadLoadedPlugin");
+          Logger::critical(tr("ErrLoadLoadedPlugin"));
           loader.unload();
           return;
         }
 
         lp = LP::plugin2MessagePipe;
-        emit p->plugin2MessagePipe(WingPluginMessage::PluginLoading,
-                                   emptyparam);
+        p->plugin2MessagePipe(WingPluginMessage::PluginLoading, emptyparam);
 
         if (!p->init(loadedplginfos)) {
-          qCritical() << tr("ErrLoadInitPlugin");
+          Logger::critical(tr("ErrLoadInitPlugin"));
           loader.unload();
           return;
         }
@@ -109,9 +107,9 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         loadedplgs.push_back(p);
         loadedpuid << puid;
 
-        qWarning() << (tr("PluginName :") + info.pluginName);
-        qWarning() << (tr("PluginAuthor :") + info.pluginAuthor);
-        qWarning() << tr("PluginWidgetRegister");
+        Logger::warning(tr("PluginName :") + info.pluginName);
+        Logger::warning(tr("PluginAuthor :") + info.pluginAuthor);
+        Logger::warning(tr("PluginWidgetRegister"));
         lp = LP::registerMenu;
         auto menu = p->registerMenu();
         if (menu) {
@@ -129,7 +127,7 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         }
 
         lp = LP::registerDockWidget;
-        QMap<QDockWidget *, Qt::DockWidgetArea> dws;
+        QHash<QDockWidget *, Qt::DockWidgetArea> dws;
         p->registerDockWidget(dws);
         if (dws.count()) {
           emit this->PluginDockWidgetAdd(p->pluginName(), dws);
@@ -154,19 +152,19 @@ void PluginSystem::loadPlugin(QFileInfo fileinfo) {
         INSERTSUBSCRIBE(HookIndex::NewFileEnd);
         INSERTSUBSCRIBE(HookIndex::DocumentSwitched);
 
-        emit p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
+        p->plugin2MessagePipe(WingPluginMessage::PluginLoaded, emptyparam);
 
       } else {
-        qCritical() << loader.errorString();
+        Logger::critical(loader.errorString());
         loader.unload();
       }
     } catch (...) {
       auto m = QMetaEnum::fromType<LP>();
-      qCritical() << (QString(tr("ErrLoadPluginLoc") + m.valueToKey(int(lp))));
+      Logger::critical(tr("ErrLoadPluginLoc") + m.valueToKey(int(lp)));
       loader.unload();
     }
 
-    qDebug() << "";
+    Logger::_log("");
   }
 }
 
@@ -181,13 +179,13 @@ bool PluginSystem::LoadPlugin() {
   plugindir.setNameFilters(QStringList("*.wingplg"));
 #endif
   auto plgs = plugindir.entryInfoList();
-  qInfo() << (tr("FoundPluginCount") + QString::number(plgs.count()));
+  Logger::info(tr("FoundPluginCount") + QString::number(plgs.count()));
 
-  for (auto item : plgs) {
+  for (auto &item : plgs) {
     loadPlugin(item);
   }
 
-  qInfo() << tr("PluginLoadingFinished");
+  Logger::info(tr("PluginLoadingFinished"));
 
   return true;
 }
@@ -209,20 +207,20 @@ bool PluginSystem::requestControl(IWingPlugin *plugin, int timeout) {
       return true;
     } else {
       if (plugintimeout[oldctl]) {
-        qCritical() << (tr("[PluginTimeout]") + plugin->pluginName() + " --> " +
-                        oldctl->pluginName());
+        Logger::critical(tr("[PluginTimeout]") + plugin->pluginName() +
+                         " --> " + oldctl->pluginName());
         initControl(plugin);
         oldctl->plugin2MessagePipe(
             WingPluginMessage::ConnectTimeout,
             QList<QVariant>({plugin->pluginName(), plugin->puid()}));
       } else {
-        qCritical() << (tr("[PluginRequestError]") + plugin->pluginName());
+        Logger::critical(tr("[PluginRequestError]") + plugin->pluginName());
         mutex.unlock();
         return false;
       }
     }
   } else {
-    qWarning() << (tr("[PluginRequestSuccess]") + plugin->pluginName());
+    Logger::warning(tr("[PluginRequestSuccess]") + plugin->pluginName());
     initControl(plugin);
   }
   mutex.unlock();
@@ -255,7 +253,7 @@ void PluginSystem::initControl(IWingPlugin *plugin) {
   if (!plugintimer.contains(plugin)) {
     auto timer = new QTimer(this);
     plugintimer.insert(plugin, timer);
-    connect(timer, &QTimer::timeout, [=] {
+    connect(timer, &QTimer::timeout, this, [=] {
       plugintimeout[plugin] = true;
       timer->stop();
     });

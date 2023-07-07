@@ -48,7 +48,7 @@ FileInfoDialog::FileInfoDialog(QString filename, bool isRegionFile,
     b->append(QString(TextBroswerWidth / w, '='));
     b->append(tr("IsRegionFile:") + (isRegionFile ? tr("True") : tr("False")));
   }
-  l->setPixmap(icon.pixmap(icon.availableSizes().last()));
+  l->setPixmap(icon.pixmap(icon.availableSizes().constLast()));
   addContent(l, Qt::AlignHCenter);
   addSpacing(10);
   b->setFixedSize(TextBroswerWidth, 300);

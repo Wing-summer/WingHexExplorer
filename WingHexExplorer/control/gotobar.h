@@ -26,7 +26,7 @@ public slots:
 
   void activeInput(int oldrow, int oldcolumn, quint64 oldoffset,
                    quint64 maxfilebytes, int maxfilelines);
-
+  void clearInput();
   void handleLineChanged();
 
   void jumpCancel();

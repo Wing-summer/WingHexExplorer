@@ -11,7 +11,7 @@
 #include <QWidget>
 #include <QtCore>
 
-#define SDKVERSION 10
+#define SDKVERSION 11
 #define GETPLUGINQM(name)                                                      \
   (QCoreApplication::applicationDirPath() + "/plglang/" + name)
 #define PLUGINDIR (QCoreApplication::applicationDirPath() + "/plugin")
@@ -121,11 +121,7 @@ struct HexMetadataItem {
   }
 };
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-typedef QLinkedList<HexMetadataItem> HexLineMetadata;
-#else
 typedef QList<HexMetadataItem> HexLineMetadata;
-#endif
 
 enum class WingPluginMessage {
   PluginLoading,
@@ -200,7 +196,7 @@ signals:
   qint16 readInt16(qint64 offset);
   qint32 readInt32(qint64 offset);
   qint64 readInt64(qint64 offset);
-  QString readString(qint64 offset, QString encoding = QString());
+  QString readString(qint64 offset, const QString encoding = QString());
 
   qint64 searchForward(qint64 begin, const QByteArray &ba);
   qint64 searchBackward(qint64 begin, const QByteArray &ba);
@@ -212,9 +208,9 @@ signals:
   int documentLastColumn();
 
   // metadata
-  bool lineHasMetadata(quint64 line) const;
+  bool lineHasMetadata(quint64 line);
   QList<HexMetadataAbsoluteItem> getMetadatas(qint64 offset);
-  HexLineMetadata getMetaLine(quint64 line) const;
+  HexLineMetadata getMetaLine(quint64 line);
 
   // bookmark
   bool lineHasBookMark(quint64 line);
@@ -255,9 +251,10 @@ signals:
   bool writeInt16(qint64 offset, qint16 value);
   bool writeInt32(qint64 offset, qint32 value);
   bool writeInt64(qint64 offset, qint64 value);
-  bool writeString(qint64 offset, QString value, QString encoding = QString());
+  bool writeString(qint64 offset, const QString &value,
+                   const QString &encoding = QString());
 
-  bool insert(qint64 offset, uchar b);
+  bool insert(qint64 offset, const uchar b);
   bool insert(qint64 offset, const QByteArray &data);
 
   // extesion
@@ -265,7 +262,8 @@ signals:
   bool insertInt16(qint64 offset, qint16 value);
   bool insertInt32(qint64 offset, qint32 value);
   bool insertInt64(qint64 offset, qint64 value);
-  bool insertString(qint64 offset, QString value, QString encoding = QString());
+  bool insertString(qint64 offset, const QString &value,
+                    const QString &encoding = QString());
 
   bool append(uchar b);
   bool append(const QByteArray &data);
@@ -275,7 +273,7 @@ signals:
   bool appendInt16(qint16 value);
   bool appendInt32(qint32 value);
   bool appendInt64(qint64 value);
-  bool appendString(QString value, QString encoding = QString());
+  bool appendString(const QString &value, const QString &encoding = QString());
 
   bool remove(qint64 offset, int len);
   bool removeAll(qint64 offset); // extension
@@ -302,7 +300,7 @@ signals:
   bool foreground(quint64 line, int start, int length, const QColor &fgcolor);
   bool background(quint64 line, int start, int length, const QColor &bgcolor);
   bool comment(quint64 line, int start, int length, const QString &comment);
-  void applyMetas(QList<HexMetadataAbsoluteItem> metas);
+  void applyMetas(const QList<HexMetadataAbsoluteItem> &metas);
   bool setMetaVisible(bool b);
   void setMetafgVisible(bool b);
   void setMetabgVisible(bool b);
@@ -310,20 +308,22 @@ signals:
 
   // mainwindow
   void newFile(bool bigfile = false);
-  ErrFile openFile(QString filename, int *openedIndex = nullptr);
-  ErrFile openRegionFile(QString filename, int *openedIndex = nullptr,
+  ErrFile openFile(const QString &filename, int *openedIndex = nullptr);
+  ErrFile openRegionFile(const QString &filename, int *openedIndex = nullptr,
                          qint64 start = 0, qint64 length = 1024);
-  ErrFile openDriver(QString driver);
+  ErrFile openDriver(const QString &driver);
   ErrFile closeFile(int index, bool force = false);
   ErrFile saveFile(int index, bool ignoreMd5 = false);
-  ErrFile exportFile(QString filename, int index, bool ignoreMd5 = false);
+  ErrFile exportFile(const QString &filename, int index,
+                     bool ignoreMd5 = false);
   void exportFileGUI();
-  ErrFile saveasFile(QString filename, int index, bool ignoreMd5 = false);
+  ErrFile saveasFile(const QString &filename, int index,
+                     bool ignoreMd5 = false);
   void saveasFileGUI();
   ErrFile closeCurrentFile(bool force = false);
   ErrFile saveCurrentFile(bool ignoreMd5 = false);
   void openFileGUI();
-  void openRegionFileGUI(QString filename, qint64 start = 0,
+  void openRegionFileGUI(const QString &filename, qint64 start = 0,
                          qint64 length = 1024);
   void openDriverGUI();
   void findGUI();
@@ -333,15 +333,15 @@ signals:
   void fillnopGUI();
 
   // bookmark
-  bool addBookMark(qint64 pos, QString comment);
-  bool modBookMark(qint64 pos, QString comment);
-  void applyBookMarks(QList<BookMark> books);
+  bool addBookMark(qint64 pos, const QString &comment);
+  bool modBookMark(qint64 pos, const QString &comment);
+  void applyBookMarks(const QList<BookMark> &books);
   bool removeBookMark(qint64 pos);
   bool clearBookMark();
 
   // workspace
-  bool openWorkSpace(QString filename);
-  bool setCurrentEncoding(QString encoding);
+  bool openWorkSpace(const QString &filename);
+  bool setCurrentEncoding(const QString &encoding);
 };
 } // namespace WingPlugin
 
@@ -359,33 +359,32 @@ class IWingPlugin : public QObject {
   Q_OBJECT
 public:
   virtual int sdkVersion() = 0;
-  virtual QString signature() = 0;
-  QString puid() { return GetPUID(this); }
+  virtual const QString signature() = 0;
+  QString const puid() { return GetPUID(this); }
   virtual ~IWingPlugin() {}
   virtual QMenu *registerMenu() { return nullptr; }
   virtual QToolButton *registerToolButton() { return nullptr; }
   virtual void
-  registerDockWidget(QMap<QDockWidget *, Qt::DockWidgetArea> &rdw) {
+  registerDockWidget(QHash<QDockWidget *, Qt::DockWidgetArea> &rdw) {
     Q_UNUSED(rdw);
   }
   virtual QToolBar *registerToolBar() { return nullptr; }
   virtual Qt::ToolBarArea registerToolBarArea() {
     return Qt::ToolBarArea::TopToolBarArea;
   }
-  virtual bool init(QList<WingPluginInfo> loadedplugin) = 0;
+  virtual bool init(const QList<WingPluginInfo> loadedplugin) = 0;
   virtual void unload() = 0;
-  virtual QString pluginName() = 0;
-  virtual QString pluginAuthor() = 0;
+  virtual const QString pluginName() = 0;
+  virtual const QString pluginAuthor() = 0;
   virtual uint pluginVersion() = 0;
-  virtual QString pluginComment() = 0;
+  virtual const QString pluginComment() = 0;
   virtual HookIndex getHookSubscribe() { return HookIndex::None; }
 
   static QString GetPUID(IWingPlugin *plugin) {
-    auto str = QString("%1%2%3%4")
-                   .arg(WINGSUMMER)
-                   .arg(plugin->pluginName())
-                   .arg(plugin->pluginAuthor())
-                   .arg(plugin->pluginVersion());
+    auto str =
+        QString("%1%2%3%4")
+            .arg(WINGSUMMER, plugin->pluginName(), plugin->pluginAuthor(),
+                 QString::number(plugin->pluginVersion()));
     return QCryptographicHash::hash(str.toLatin1(), QCryptographicHash::Md5)
         .toHex();
   }
@@ -400,15 +399,19 @@ signals:
   bool hasControl();
 
   // extension and exposed to WingHexPyScript
-  void toast(QIcon icon, QString message);
+  void toast(const QIcon &icon, const QString &message);
+  void debug(const QString &message);
+  void warn(const QString &message);
+  void error(const QString &message);
+  void info(const QString &message);
 
   // extension only expoesd to plugin
   QWidget *getParentWindow();
-  QDialog *newAboutDialog(QPixmap img = QPixmap(),
-                          QStringList searchPaths = QStringList(),
-                          QString source = QString());
-  QDialog *newSponsorDialog(QPixmap qrcode = QPixmap(),
-                            QString message = QString());
+  QDialog *newAboutDialog(const QPixmap &img = QPixmap(),
+                          const QStringList &searchPaths = QStringList(),
+                          const QString &source = QString());
+  QDialog *newSponsorDialog(const QPixmap &qrcode = QPixmap(),
+                            const QString &message = QString());
 
   // 以下是为不想添加 DTK 依赖的插件提供统一样式的窗体函数
   QDialog *newDDialog();
@@ -527,6 +530,7 @@ public:
   }
 
 #define IWINGPLUGIN_INTERFACE_IID "com.wingsummer.iwingplugin"
+
 Q_DECLARE_INTERFACE(IWingPlugin, IWINGPLUGIN_INTERFACE_IID)
 
 #endif // IWINGPLUGIN_H

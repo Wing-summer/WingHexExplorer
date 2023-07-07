@@ -28,6 +28,7 @@ DISTFILES += \
     README.md
 
 HEADERS += \
+    $$PWD/define.h \
   $$PWD/dialog/mainwindow.h \
     $$PWD/utilities.h \
     $$PWD/control/gotobar.h \

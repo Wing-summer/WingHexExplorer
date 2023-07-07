@@ -1,6 +1,7 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include "qlogger.h"
 #include <QObject>
 
 class Logger : public QObject {
@@ -8,12 +9,19 @@ class Logger : public QObject {
 public:
   explicit Logger(QObject *parent = nullptr);
   static Logger *getInstance();
-signals:
-  void log(QString msg);
 
-private:
-  static void messageHandler(QtMsgType type, const QMessageLogContext &,
-                             const QString &msg);
+signals:
+  void log(const QString &message);
+
+public slots:
+  // internal use only
+  static void _log(const QString &message);
+
+  // external use
+  static void warning(const QString &message);
+  static void info(const QString &message);
+  static void debug(const QString &message);
+  static void critical(const QString &message);
 
 private:
   static Logger *instance;

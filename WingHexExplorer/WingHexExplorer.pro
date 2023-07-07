@@ -8,5 +8,7 @@ TEMPLATE = app
 include($$PWD/QHexView/QHexView.pri)
 include($$PWD/WingHexExplorer.pri)
 include($$PWD/qBreakpad/qBreakpad.pri)
+include($$PWD/QLogger/QLogger.pri)
 
 CONFIG += exceptions
+

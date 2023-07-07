@@ -1,6 +1,4 @@
 #include "mainwindow.h"
-#include "QHexView/document/buffer/qfilebuffer.h"
-#include "QHexView/document/buffer/qfileregionbuffer.h"
 #include "QHexView/document/buffer/qmemorybuffer.h"
 #include "QHexView/document/qhexcursor.h"
 #include "QHexView/document/qhexmetadata.h"
@@ -692,15 +690,15 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   AddFunctionIconButton(iColInfo, "mColInfo");
   iColInfo->setToolTip(tr("SetColInfo"));
-  connect(iColInfo, &DIconButton::clicked,
+  connect(iColInfo, &DIconButton::clicked, this,
           [=] { hexeditor->setAddressVisible(!hexeditor->addressVisible()); });
   AddFunctionIconButton(iHeaderInfo, "mLineInfo");
   iHeaderInfo->setToolTip(tr("SetHeaderInfo"));
-  connect(iHeaderInfo, &DIconButton::clicked,
+  connect(iHeaderInfo, &DIconButton::clicked, this,
           [=] { hexeditor->setHeaderVisible(!hexeditor->headerVisible()); });
   AddFunctionIconButton(iAsciiString, "mStr");
   iAsciiString->setToolTip(tr("SetAsciiString"));
-  connect(iAsciiString, &DIconButton::clicked,
+  connect(iAsciiString, &DIconButton::clicked, this,
           [=] { hexeditor->setAsciiVisible(!hexeditor->asciiVisible()); });
 
   AddPermanentStatusLabel(QString(2, ' '));
@@ -756,7 +754,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   iOver->setIconSize(QSize(20, 20));
   iOver->setToolTip(tr("SetOver"));
 
-  connect(iLocked, &DIconButton::clicked, [=]() {
+  connect(iLocked, &DIconButton::clicked, this, [=]() {
     CheckEnabled;
     if (!hexeditor->setLockedFile(!hexeditor->isLocked())) {
       auto d = DMessageManager::instance();
@@ -764,7 +762,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
     }
   });
 
-  connect(iOver, &DIconButton::clicked, [=]() {
+  connect(iOver, &DIconButton::clicked, this, [=]() {
     CheckEnabled;
     if (!hexeditor->setKeepSize(!hexeditor->isKeepSize())) {
       DMessageManager::instance()->sendMessage(this, infoCannotOver,
@@ -818,14 +816,14 @@ MainWindow::MainWindow(DMainWindow *parent) {
   findresult->setColumnWidth(1, 250);
   findresult->setColumnWidth(2, 350);
   findresult->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
-  connect(findresult, &QTableWidget::customContextMenuRequested,
+  connect(findresult, &QTableWidget::customContextMenuRequested, this,
           [=]() { findresultMenu->popup(cursor().pos()); });
-  connect(findresult, &QTableWidget::itemDoubleClicked, [=] {
+  connect(findresult, &QTableWidget::itemDoubleClicked, this, [=] {
     auto item = findresult->item(findresult->currentRow(), 0);
     auto filename = hexfiles.at(_currentfile).filename;
     if (filename != item->text()) {
       int i = 0;
-      for (auto item : hexfiles) {
+      for (auto &item : hexfiles) {
         if (filename == item.filename) {
           break;
         }
@@ -854,9 +852,9 @@ MainWindow::MainWindow(DMainWindow *parent) {
   dw->setWidget(pluginInfo);
   this->addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, dw);
 
-  logger = new Logger(this);
-  connect(logger, &Logger::log, [=](QString msg) {
+  connect(Logger::getInstance(), &Logger::log, this, [=](QString msg) {
     QMutexLocker locker(&logmutex);
+    Q_ASSERT(pluginInfo);
     auto cur = pluginInfo->textCursor();
     cur.movePosition(QTextCursor::End);
     pluginInfo->setTextCursor(cur);
@@ -864,7 +862,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
     pluginInfo->append("");
   });
 
-  qInfo() << tr("LoggerInitFinish");
+  Logger::info(tr("LoggerInitFinish"));
 
   auto dw2 = new DDockWidget(this);
   AddDockWin2(tr("Number"));
@@ -946,7 +944,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   connect(a, &QAction::triggered, this, [=] {
     auto s = bookmarks->selectedItems();
     QList<qint64> pos;
-    for (auto item : s) {
+    for (auto &item : s) {
       pos.push_back(item->data(Qt::UserRole).toLongLong());
     }
     hexeditor->document()->RemoveBookMarks(pos);
@@ -959,7 +957,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
   bookmarks->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
   bookmarks->setSelectionMode(DListWidget::SelectionMode::ExtendedSelection);
   bookmarks->setFocusPolicy(Qt::StrongFocus);
-  connect(bookmarks, &DListWidget::itemDoubleClicked, [=]() {
+  connect(bookmarks, &DListWidget::itemDoubleClicked, this, [=]() {
     hexeditor->renderer()->enableCursor(true);
     hexeditor->document()->gotoBookMark(bookmarks->currentRow());
   });
@@ -998,15 +996,15 @@ MainWindow::MainWindow(DMainWindow *parent) {
     w->setEnabled(b);
 
   // connect hexeditor status
-  connect(hexeditor, &QHexView::canUndoChanged, [=](bool b) {
+  connect(hexeditor, &QHexView::canUndoChanged, this, [=](bool b) {
     toolbartools[ToolBoxIndex::Undo]->setEnabled(b);
     toolmenutools[ToolBoxIndex::Undo]->setEnabled(b);
   });
-  connect(hexeditor, &QHexView::canRedoChanged, [=](bool b) {
+  connect(hexeditor, &QHexView::canRedoChanged, this, [=](bool b) {
     toolbartools[ToolBoxIndex::Redo]->setEnabled(b);
     toolmenutools[ToolBoxIndex::Redo]->setEnabled(b);
   });
-  connect(hexeditor, &QHexView::documentSaved, [=](bool b) {
+  connect(hexeditor, &QHexView::documentSaved, this, [=](bool b) {
     CheckEnabled;
     iSaved->setPixmap(b ? infoSaved : infoUnsaved);
   });
@@ -1075,51 +1073,53 @@ MainWindow::MainWindow(DMainWindow *parent) {
   ConnectShortCut(keymetashow, MainWindow::on_metashowall);
   ConnectShortCut(keymetahide, MainWindow::on_metahideall);
 
-  qInfo() << tr("SettingLoading");
+  Logger::info(tr("SettingLoading"));
 
   // setting
   _font = this->font();
   _hexeditorfont = QHexView::getHexeditorFont();
   m_settings = new Settings(this);
-  connect(m_settings, &Settings::sigAdjustFont, [=](QString name) {
+  connect(m_settings, &Settings::sigAdjustFont, this, [=](QString name) {
     _font.setFamily(name);
     numshowtable->setFont(_font);
     findresult->setFont(_font);
     pluginInfo->setFont(_font);
     txtDecode->setFont(_font);
   });
-  connect(m_settings, &Settings::sigShowColNumber,
+  connect(m_settings, &Settings::sigShowColNumber, this,
           [=](bool b) { _showheader = b; });
-  connect(m_settings, &Settings::sigAdjustEditorFontSize, [=](int fontsize) {
-    _hexeditorfont.setPointSize(fontsize);
-    hexeditor->setFont(_hexeditorfont);
-  });
-  connect(m_settings, &Settings::sigAdjustInfoFontSize, [=](int fontsize) {
-    _font.setPointSize(fontsize);
-    numshowtable->setFont(_font);
-    findresult->setFont(_font);
-  });
-  connect(m_settings, &Settings::sigShowEncodingText,
+  connect(m_settings, &Settings::sigAdjustEditorFontSize, this,
+          [=](int fontsize) {
+            _hexeditorfont.setPointSize(fontsize);
+            hexeditor->setFont(_hexeditorfont);
+          });
+  connect(m_settings, &Settings::sigAdjustInfoFontSize, this,
+          [=](int fontsize) {
+            _font.setPointSize(fontsize);
+            numshowtable->setFont(_font);
+            findresult->setFont(_font);
+          });
+  connect(m_settings, &Settings::sigShowEncodingText, this,
           [=](bool b) { _showascii = b; });
-  connect(m_settings, &Settings::sigShowAddressNumber,
+  connect(m_settings, &Settings::sigShowAddressNumber, this,
           [=](bool b) { _showaddr = b; });
-  connect(m_settings, &Settings::sigChangeWindowSize,
+  connect(m_settings, &Settings::sigChangeWindowSize, this,
           [=](QString mode) { _windowmode = mode; });
-  connect(m_settings, &Settings::sigChangePluginEnabled,
+  connect(m_settings, &Settings::sigChangePluginEnabled, this,
           [=](bool b) { _enableplugin = b; });
-  connect(m_settings, &Settings::sigChangeRootPluginEnabled,
+  connect(m_settings, &Settings::sigChangeRootPluginEnabled, this,
           [=](bool b) { _rootenableplugin = b; });
-  connect(m_settings, &Settings::sigChangedEncoding,
+  connect(m_settings, &Settings::sigChangedEncoding, this,
           [=](QString encoding) { _encoding = encoding; });
-  connect(m_settings, &Settings::sigAdjustFindMaxCount,
+  connect(m_settings, &Settings::sigAdjustFindMaxCount, this,
           [=](int count) { _findmax = count; });
-  connect(m_settings, &Settings::sigAdjustCopyLimit, [=](int count) {
+  connect(m_settings, &Settings::sigAdjustCopyLimit, this, [=](int count) {
     _cplim = count;
     for (auto &item : hexfiles) {
       item.doc->setCopyLimit(count);
     }
   });
-  connect(m_settings, &Settings::sigAdjustDecodeStringLimit,
+  connect(m_settings, &Settings::sigAdjustDecodeStringLimit, this,
           [=](int count) { _decstrlim = count; });
 
   m_settings->applySetting();
@@ -1144,7 +1144,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
 
   if (_enableplugin) {
     addToolBarBreak();
-    qInfo() << tr("PluginLoading");
+    Logger::info(tr("PluginLoading"));
     winmenu->addSeparator();
     // init plugin system
     plgsys = new PluginSystem(this);
@@ -1162,7 +1162,7 @@ MainWindow::MainWindow(DMainWindow *parent) {
     plgsys->LoadPlugin();
   } else {
     plgmenu->setEnabled(false);
-    qCritical() << tr("UnLoadPluginSetting");
+    Logger::critical(tr("UnLoadPluginSetting"));
     settingplg->setEnabled(false);
   }
 
@@ -1175,7 +1175,7 @@ MainWindow::~MainWindow() {
   delete[] numsitem;
   if (findresitem)
     delete[] findresitem;
-  for (auto item : hexfiles) {
+  for (auto &item : hexfiles) {
     item.doc->deleteLater();
     item.render->deleteLater();
   }
@@ -1184,16 +1184,20 @@ MainWindow::~MainWindow() {
 
 void MainWindow::PluginMenuNeedAdd(QMenu *menu) {
   if (menu) {
-    qWarning() << (tr("MenuName :") + menu->title());
+    Logger::warning(tr("MenuName :") + menu->title());
     plgmenu->addMenu(menu);
   }
 }
 
 void MainWindow::PluginDockWidgetAdd(
-    QString pluginname, QMap<QDockWidget *, Qt::DockWidgetArea> &rdw) {
+    const QString &pluginname,
+    const QHash<QDockWidget *, Qt::DockWidgetArea> &rdw) {
+  if (rdw.isEmpty()) {
+    return;
+  }
   if (rdw.count() == 1) {
-    auto dockw = rdw.firstKey();
-    auto align = rdw.first();
+    auto dockw = rdw.begin().key();
+    auto align = rdw.begin().value();
     if (align == Qt::DockWidgetArea::NoDockWidgetArea ||
         align == Qt::DockWidgetArea::AllDockWidgetAreas ||
         align == Qt::DockWidgetArea::DockWidgetArea_Mask) {
@@ -1201,10 +1205,10 @@ void MainWindow::PluginDockWidgetAdd(
     }
     auto t = dockw->windowTitle();
     if (!t.trimmed().length()) {
-      qCritical() << tr("ErrDockWidgetAddNoName");
+      Logger::critical(tr("ErrDockWidgetAddNoName"));
       return;
     }
-    qWarning() << (tr("DockWidgetName :") + t);
+    Logger::warning(tr("DockWidgetName :") + t);
     dockw->setParent(this);
     addDockWidget(align, dockw);
     dockw->close();
@@ -1227,10 +1231,11 @@ void MainWindow::PluginDockWidgetAdd(
       }
       auto t = dockw->windowTitle();
       if (!t.trimmed().length()) {
-        qCritical() << tr("ErrDockWidgetAddNoName");
+        Logger::critical(tr("ErrDockWidgetAddNoName"));
+        d->deleteLater();
         return;
       }
-      qWarning() << (tr("DockWidgetName :") + t);
+      Logger::warning(tr("DockWidgetName :") + t);
       dockw->setParent(this);
       addDockWidget(align, dockw);
       dockw->close();
@@ -1266,33 +1271,44 @@ void MainWindow::PluginToolBarAdd(QToolBar *tb, Qt::ToolBarArea align) {
   }
 }
 
-void MainWindow::connectBase(IWingPlugin *plugin) {
+void MainWindow::connectBase(const IWingPlugin *plugin) {
   if (plugin == nullptr)
     return;
 
 #define ConnectBase(Signal, Slot) connect(plugin, &Signal, this, &Slot)
-#define ConnectBaseLamba(Signal, Function) connect(plugin, &Signal, Function)
+#define ConnectBaseLamba(Signal, Function)                                     \
+  connect(plugin, &Signal, this, Function)
 #define ConnectBase2(Signal, Slot)                                             \
   connect(&plugin->reader, &Signal, this, &Slot)
 #define ConnectBaseLamba2(Signal, Function)                                    \
-  connect(&plugin->reader, &Signal, Function)
+  connect(&plugin->reader, &Signal, this, Function)
 
   // connect neccessary signal-slot
   ConnectBase(IWingPlugin::requestControl, MainWindow::requestControl);
   ConnectBase(IWingPlugin::requestRelease, MainWindow::requestRelease);
   ConnectBase(IWingPlugin::hasControl, MainWindow::hasControl);
   ConnectBaseLamba(IWingPlugin::getParentWindow, [=] { return this; });
-  ConnectBaseLamba(IWingPlugin::toast, [=](QIcon icon, QString message) {
-    DMessageManager::instance()->sendMessage(this, icon, message);
-  });
+  ConnectBaseLamba(
+      IWingPlugin::toast, [=](const QIcon &icon, const QString &message) {
+        DMessageManager::instance()->sendMessage(this, icon, message);
+      });
+  ConnectBaseLamba(IWingPlugin::debug,
+                   [=](const QString &message) { Logger::debug(message); });
+  ConnectBaseLamba(IWingPlugin::info,
+                   [=](const QString &message) { Logger::info(message); });
+  ConnectBaseLamba(IWingPlugin::warn,
+                   [=](const QString &message) { Logger::warning(message); });
+  ConnectBaseLamba(IWingPlugin::error,
+                   [=](const QString &message) { Logger::critical(message); });
   ConnectBaseLamba(IWingPlugin::newDDialog, [=] { return new DDialog(this); });
   ConnectBaseLamba(IWingPlugin::newAboutDialog,
-                   [=](QPixmap img, QStringList searchPaths, QString source) {
+                   [=](const QPixmap &img, const QStringList &searchPaths,
+                       const QString &source) {
                      return new AboutSoftwareDialog(this, img, searchPaths,
                                                     source);
                    });
   ConnectBaseLamba(IWingPlugin::newSponsorDialog,
-                   [=](QPixmap qrcode, QString message) {
+                   [=](const QPixmap &qrcode, const QString &message) {
                      return new SponsorDialog(this, message, qrcode);
                    });
   ConnectBaseLamba(IWingPlugin::addContent,
@@ -1526,39 +1542,43 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
         },
         return qint64(-1););
   });
-  ConnectBaseLamba2(
-      WingPlugin::Reader::readString, [=](qint64 offset, QString encoding) {
-        PCHECK(
-            {
-              auto doc = hexfiles[_pcurfile].doc;
-              auto render = hexfiles[_pcurfile].render;
-              auto pos = doc->searchForward(offset, QByteArray(1, 0));
-              if (pos < 0)
-                return QString();
-              auto buffer = doc->read(offset, int(pos - offset));
-              if (!encoding.length())
-                encoding = render->encoding();
-              auto enc = QTextCodec::codecForName(encoding.toUtf8());
-              auto d = enc->makeDecoder();
-              auto unicode = d->toUnicode(buffer);
-              return unicode;
-            },
-            {
-              auto doc = hexeditor->document();
-              auto render = hexeditor->renderer();
-              auto pos = doc->searchForward(offset, QByteArray(1, 0));
-              if (pos < 0)
-                return QString();
-              auto buffer = doc->read(offset, int(pos - offset));
-              if (!encoding.length())
-                encoding = render->encoding();
-              auto enc = QTextCodec::codecForName(encoding.toUtf8());
-              auto d = enc->makeDecoder();
-              auto unicode = d->toUnicode(buffer);
-              return unicode;
-            },
-            return QString());
-      });
+  ConnectBaseLamba2(WingPlugin::Reader::readString,
+                    [=](qint64 offset, const QString &encoding) {
+                      PCHECK(
+                          {
+                            auto doc = hexfiles[_pcurfile].doc;
+                            auto render = hexfiles[_pcurfile].render;
+                            auto pos =
+                                doc->searchForward(offset, QByteArray(1, 0));
+                            if (pos < 0)
+                              return QString();
+                            auto buffer = doc->read(offset, int(pos - offset));
+                            QString enco = encoding;
+                            if (!enco.length())
+                              enco = render->encoding();
+                            auto enc = QTextCodec::codecForName(enco.toUtf8());
+                            auto d = enc->makeDecoder();
+                            auto unicode = d->toUnicode(buffer);
+                            return unicode;
+                          },
+                          {
+                            auto doc = hexeditor->document();
+                            auto render = hexeditor->renderer();
+                            auto pos =
+                                doc->searchForward(offset, QByteArray(1, 0));
+                            if (pos < 0)
+                              return QString();
+                            auto buffer = doc->read(offset, int(pos - offset));
+                            QString enco = encoding;
+                            if (!enco.length())
+                              enco = render->encoding();
+                            auto enc = QTextCodec::codecForName(enco.toUtf8());
+                            auto d = enc->makeDecoder();
+                            auto unicode = d->toUnicode(buffer);
+                            return unicode;
+                          },
+                          return QString());
+                    });
 
   ConnectBaseLamba2(WingPlugin::Reader::findAllBytes,
                     [=](qlonglong begin, qlonglong end, QByteArray b,
@@ -1585,7 +1605,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   ConnectBaseLamba2(WingPlugin::Reader::getMetaLine, [=](quint64 line) {
     auto ometas = hexfiles[_pcurfile].doc->metadata()->get(line);
     HexLineMetadata metas;
-    for (auto item : ometas) {
+    for (auto &item : ometas) {
       metas.push_back(HexMetadataItem(item.line, item.start, item.length,
                                       item.foreground, item.background,
                                       item.comment));
@@ -1595,7 +1615,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   ConnectBaseLamba2(WingPlugin::Reader::getMetadatas, [=](qint64 offset) {
     auto ometaline = hexfiles[_pcurfile].doc->metadata()->gets(offset);
     QList<HexMetadataAbsoluteItem> metaline;
-    for (auto item : ometaline) {
+    for (auto &item : ometaline) {
       metaline.push_back(
           HexMetadataAbsoluteItem(item.begin, item.end, item.foreground,
                                   item.background, item.comment));
@@ -1630,7 +1650,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
         PCHECK(
             {
               auto bs = hexfiles[_pcurfile].doc->getAllBookMarks();
-              for (auto item : bs) {
+              for (auto &item : bs) {
                 BookMark i;
                 i.pos = item.pos;
                 i.comment = item.comment;
@@ -1639,7 +1659,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
             },
             {
               auto bs = hexeditor->document()->getAllBookMarks();
-              for (auto item : bs) {
+              for (auto &item : bs) {
                 BookMark i;
                 i.pos = item.pos;
                 i.comment = item.comment;
@@ -1654,7 +1674,7 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
 
   ConnectBaseLamba2(WingPlugin::Reader::getOpenFiles, [=] {
     QList<QString> files;
-    for (auto item : hexfiles) {
+    for (auto &item : hexfiles) {
       files.push_back(item.filename);
     }
     return files;
@@ -1667,12 +1687,14 @@ void MainWindow::connectBase(IWingPlugin *plugin) {
   });
 }
 
-void MainWindow::connectControl(IWingPlugin *plugin) {
+void MainWindow::connectControl(const IWingPlugin *plugin) {
 
   auto pctl = &plugin->controller;
 
-#define ConnectControlLamba(Signal, Function) connect(plugin, &Signal, Function)
-#define ConnectControlLamba2(Signal, Function) connect(pctl, &Signal, Function)
+#define ConnectControlLamba(Signal, Function)                                  \
+  connect(plugin, &Signal, this, Function)
+#define ConnectControlLamba2(Signal, Function)                                 \
+  connect(pctl, &Signal, this, Function)
 
   ConnectControlLamba2(
       WingPlugin::Controller::switchDocument, [=](int index, bool gui) {
@@ -1739,7 +1761,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   });
 
   connect(pctl, QOverload<qint64, uchar>::of(&WingPlugin::Controller::insert),
-          [=](qint64 offset, uchar b) {
+          this, [=](qint64 offset, uchar b) {
             plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
             PCHECKRETURN(hexfiles[_pcurfile].doc->insert(offset, b),
                          hexeditor->document()->insert(offset, b), false);
@@ -1748,13 +1770,13 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   connect(pctl,
           QOverload<qint64, const QByteArray &>::of(
               &WingPlugin::Controller::insert),
-          [=](qint64 offset, const QByteArray &data) {
+          this, [=](qint64 offset, const QByteArray &data) {
             plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
             PCHECKRETURN(hexfiles[_pcurfile].doc->insert(offset, data),
                          hexeditor->document()->insert(offset, data), false);
           });
   connect(pctl, QOverload<qint64, uchar>::of(&WingPlugin::Controller::write),
-          [=](qint64 offset, uchar b) {
+          this, [=](qint64 offset, uchar b) {
             plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
             PCHECKRETURN(hexfiles[_pcurfile].doc->replace(offset, b),
                          hexeditor->document()->replace(offset, b), false);
@@ -1825,23 +1847,25 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
       });
   ConnectControlLamba2(
       WingPlugin::Controller::insertString,
-      [=](qint64 offset, QString value, QString encoding) {
+      [=](qint64 offset, QString value, const QString &encoding) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         PCHECK(
             {
               auto render = hexfiles[_pcurfile].render;
-              if (!encoding.length())
-                encoding = render->encoding();
-              auto enc = QTextCodec::codecForName(encoding.toUtf8());
+              QString enco = encoding;
+              if (!enco.length())
+                enco = render->encoding();
+              auto enc = QTextCodec::codecForName(enco.toUtf8());
               auto e = enc->makeEncoder();
               return hexfiles[_pcurfile].doc->insert(offset,
                                                      e->fromUnicode(value));
             },
             {
               auto render = hexeditor->renderer();
-              if (!encoding.length())
-                encoding = render->encoding();
-              auto enc = QTextCodec::codecForName(encoding.toUtf8());
+              QString enco = encoding;
+              if (!enco.length())
+                enco = render->encoding();
+              auto enc = QTextCodec::codecForName(enco.toUtf8());
               auto e = enc->makeEncoder();
               return hexeditor->document()->insert(offset,
                                                    e->fromUnicode(value));
@@ -1851,7 +1875,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   connect(
       pctl,
       QOverload<qint64, const QByteArray &>::of(&WingPlugin::Controller::write),
-      [=](qint64 offset, const QByteArray &data) {
+      this, [=](qint64 offset, const QByteArray &data) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         PCHECKRETURN(hexfiles[_pcurfile].doc->replace(offset, data),
                      hexeditor->document()->replace(offset, data), false);
@@ -1922,30 +1946,32 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
       });
   ConnectControlLamba2(
       WingPlugin::Controller::writeString,
-      [=](qint64 offset, QString value, QString encoding) {
+      [=](qint64 offset, const QString &value, const QString &encoding) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         PCHECK(
             {
               auto render = hexfiles[_pcurfile].render;
-              if (!encoding.length())
-                encoding = render->encoding();
-              auto enc = QTextCodec::codecForName(encoding.toUtf8());
+              QString enco = encoding;
+              if (!enco.length())
+                enco = render->encoding();
+              auto enc = QTextCodec::codecForName(enco.toUtf8());
               auto e = enc->makeEncoder();
               return hexfiles[_pcurfile].doc->replace(offset,
                                                       e->fromUnicode(value));
             },
             {
               auto render = hexeditor->renderer();
-              if (!encoding.length())
-                encoding = render->encoding();
-              auto enc = QTextCodec::codecForName(encoding.toUtf8());
+              QString enco = encoding;
+              if (!enco.length())
+                enco = render->encoding();
+              auto enc = QTextCodec::codecForName(enco.toUtf8());
               auto e = enc->makeEncoder();
               return hexeditor->document()->replace(offset,
                                                     e->fromUnicode(value));
             },
             return false);
       });
-  connect(pctl, QOverload<uchar>::of(&WingPlugin::Controller::append),
+  connect(pctl, QOverload<uchar>::of(&WingPlugin::Controller::append), this,
           [=](uchar b) {
             plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
             PCHECK(
@@ -1964,7 +1990,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
 
   connect(pctl,
           QOverload<const QByteArray &>::of(&WingPlugin::Controller::append),
-          [=](const QByteArray &data) {
+          this, [=](const QByteArray &data) {
             plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
             PCHECK(
                 {
@@ -2057,25 +2083,27 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   });
   ConnectControlLamba2(
       WingPlugin::Controller::appendString,
-      [=](QString value, QString encoding) {
+      [=](const QString &value, const QString &encoding) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         PCHECK(
             {
               auto render = hexfiles[_pcurfile].render;
-              if (!encoding.length())
-                encoding = render->encoding();
+              QString enco = encoding;
+              if (!enco.length())
+                enco = render->encoding();
+              auto enc = QTextCodec::codecForName(enco.toUtf8());
               auto offset = hexfiles[_pcurfile].doc->length();
-              auto enc = QTextCodec::codecForName(encoding.toUtf8());
               auto e = enc->makeEncoder();
               return hexfiles[_pcurfile].doc->insert(offset,
                                                      e->fromUnicode(value));
             },
             {
               auto render = hexeditor->renderer();
-              if (!encoding.length())
-                encoding = render->encoding();
+              QString enco = encoding;
+              if (!enco.length())
+                enco = render->encoding();
+              auto enc = QTextCodec::codecForName(enco.toUtf8());
               auto offset = hexeditor->document()->length();
-              auto enc = QTextCodec::codecForName(encoding.toUtf8());
               auto e = enc->makeEncoder();
               return hexeditor->document()->replace(offset,
                                                     e->fromUnicode(value));
@@ -2106,7 +2134,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   });
   connect(pctl,
           QOverload<const HexPosition &>::of(&WingPlugin::Controller::moveTo),
-          [=](const HexPosition &pos) {
+          this, [=](const HexPosition &pos) {
             plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
             PCHECK(
                 {
@@ -2128,21 +2156,21 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
           });
   connect(pctl,
           QOverload<quint64, int, int>::of(&WingPlugin::Controller::moveTo),
-          [=](quint64 line, int column, int nibbleindex) {
+          this, [=](quint64 line, int column, int nibbleindex) {
             plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
             PCHECK(hexfiles[_pcurfile].doc->cursor()->moveTo(line, column,
                                                              nibbleindex),
                    hexeditor->document()->cursor()->moveTo(line, column,
                                                            nibbleindex), );
           });
-  connect(pctl, QOverload<qint64>::of(&WingPlugin::Controller::moveTo),
+  connect(pctl, QOverload<qint64>::of(&WingPlugin::Controller::moveTo), this,
           [=](qint64 offset) {
             plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
             PCHECK(hexfiles[_pcurfile].doc->cursor()->moveTo(offset),
                    hexeditor->document()->cursor()->moveTo(offset), );
           });
   connect(pctl, QOverload<qint64, int>::of(&WingPlugin::Controller::select),
-          [=](qint64 offset, int length) {
+          this, [=](qint64 offset, int length) {
             PCHECK(
                 hexfiles[_pcurfile].doc->cursor()->setSelection(offset, length),
                 {
@@ -2152,7 +2180,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
           });
   connect(pctl,
           QOverload<quint64, int, int>::of(&WingPlugin::Controller::select),
-          [=](quint64 line, int column, int nibbleindex) {
+          this, [=](quint64 line, int column, int nibbleindex) {
             plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
             PCHECK(hexfiles[_pcurfile].doc->cursor()->select(line, column,
                                                              nibbleindex),
@@ -2185,6 +2213,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
       pctl,
       QOverload<qint64, qint64, const QColor &, const QColor &,
                 const QString &>::of(&WingPlugin::Controller::metadata),
+      this,
       [=](qint64 begin, qint64 end, const QColor &fgcolor,
           const QColor &bgcolor, const QString &comment) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
@@ -2210,6 +2239,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   connect(pctl,
           QOverload<quint64, int, int, const QColor &, const QColor &,
                     const QString &>::of(&WingPlugin::Controller::metadata),
+          this,
           [=](quint64 line, int start, int length, const QColor &fgcolor,
               const QColor &bgcolor, const QString &comment) {
             plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
@@ -2251,25 +2281,26 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
             }, );
       });
 
-  connect(pctl, QOverload<>::of(&WingPlugin::Controller::clearMeta), [=]() {
-    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    PCHECK(
-        {
-          auto doc = hexfiles[_pcurfile].doc;
-          if (!doc->isKeepSize())
-            return false;
-          doc->metadata()->clear();
-          return true;
-        },
-        {
-          auto doc = hexeditor->document();
-          if (!doc->isKeepSize())
-            return false;
-          doc->metadata()->clear();
-          return true;
-        },
-        return false);
-  });
+  connect(pctl, QOverload<>::of(&WingPlugin::Controller::clearMeta), this,
+          [=]() {
+            plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+            PCHECK(
+                {
+                  auto doc = hexfiles[_pcurfile].doc;
+                  if (!doc->isKeepSize())
+                    return false;
+                  doc->metadata()->clear();
+                  return true;
+                },
+                {
+                  auto doc = hexeditor->document();
+                  if (!doc->isKeepSize())
+                    return false;
+                  doc->metadata()->clear();
+                  return true;
+                },
+                return false);
+          });
 
   ConnectControlLamba2(
       WingPlugin::Controller::color,
@@ -2360,12 +2391,12 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
       });
   ConnectControlLamba2(
       WingPlugin::Controller::applyMetas,
-      [=](QList<HexMetadataAbsoluteItem> metas) {
+      [=](const QList<HexMetadataAbsoluteItem> &metas) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         PCHECK(
             {
               QList<QHexMetadataAbsoluteItem> ms;
-              for (auto item : metas) {
+              for (auto &item : metas) {
                 QHexMetadataAbsoluteItem i;
                 i.begin = item.begin;
                 i.end = item.end;
@@ -2378,7 +2409,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
             },
             {
               QList<QHexMetadataAbsoluteItem> ms;
-              for (auto item : metas) {
+              for (auto &item : metas) {
                 QHexMetadataAbsoluteItem i;
                 i.begin = item.begin;
                 i.end = item.end;
@@ -2408,19 +2439,21 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
       });
 
   ConnectControlLamba2(
-      WingPlugin::Controller::setCurrentEncoding, [=](QString encoding) {
+      WingPlugin::Controller::setCurrentEncoding, [=](const QString &encoding) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         PCHECKRETURN(hexfiles[_pcurfile].render->setEncoding(encoding),
                      hexeditor->renderer()->setEncoding(encoding), false);
       });
   ConnectControlLamba2(
-      WingPlugin::Controller::addBookMark, [=](qint64 pos, QString comment) {
+      WingPlugin::Controller::addBookMark,
+      [=](qint64 pos, const QString &comment) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         PCHECKRETURN(hexfiles[_pcurfile].doc->addBookMark(pos, comment),
                      hexeditor->document()->addBookMark(pos, comment), false);
       });
   ConnectControlLamba2(
-      WingPlugin::Controller::modBookMark, [=](qint64 pos, QString comment) {
+      WingPlugin::Controller::modBookMark,
+      [=](qint64 pos, const QString &comment) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         PCHECKRETURN(hexfiles[_pcurfile].doc->modBookMark(pos, comment),
                      hexeditor->document()->modBookMark(pos, comment), false);
@@ -2435,34 +2468,35 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     PCHECKRETURN(hexfiles[_pcurfile].doc->clearBookMark(),
                  hexeditor->document()->clearBookMark(), false);
   });
-  ConnectControlLamba2(
-      WingPlugin::Controller::applyBookMarks, [=](QList<BookMark> books) {
-        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-        PCHECK(
-            {
-              QList<BookMarkStruct> bs;
-              for (auto item : books) {
-                BookMarkStruct b;
-                b.pos = item.pos;
-                b.comment = item.comment;
-                bs.append(b);
-              }
-              hexfiles[_pcurfile].doc->applyBookMarks(bs);
-            },
-            {
-              QList<BookMarkStruct> bs;
-              for (auto item : books) {
-                BookMarkStruct b;
-                b.pos = item.pos;
-                b.comment = item.comment;
-                bs.append(b);
-              }
-              hexeditor->document()->applyBookMarks(bs);
-            }, );
-      });
+  ConnectControlLamba2(WingPlugin::Controller::applyBookMarks,
+                       [=](const QList<BookMark> &books) {
+                         plgsys->resetTimeout(
+                             qobject_cast<IWingPlugin *>(sender()));
+                         PCHECK(
+                             {
+                               QList<BookMarkStruct> bs;
+                               for (auto &item : books) {
+                                 BookMarkStruct b;
+                                 b.pos = item.pos;
+                                 b.comment = item.comment;
+                                 bs.append(b);
+                               }
+                               hexfiles[_pcurfile].doc->applyBookMarks(bs);
+                             },
+                             {
+                               QList<BookMarkStruct> bs;
+                               for (auto &item : books) {
+                                 BookMarkStruct b;
+                                 b.pos = item.pos;
+                                 b.comment = item.comment;
+                                 bs.append(b);
+                               }
+                               hexeditor->document()->applyBookMarks(bs);
+                             }, );
+                       });
 
   ConnectControlLamba2(
-      WingPlugin::Controller::openWorkSpace, [=](QString filename) {
+      WingPlugin::Controller::openWorkSpace, [=](const QString &filename) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         return openWorkSpace(filename);
       });
@@ -2470,21 +2504,24 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
     newFile();
   });
-  ConnectControlLamba2(WingPlugin::Controller::openFile, [=](QString filename,
-                                                             int *openedIndex) {
-    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    return openFile(filename, openedIndex);
-  });
+  ConnectControlLamba2(WingPlugin::Controller::openFile,
+                       [=](const QString &filename, int *openedIndex) {
+                         plgsys->resetTimeout(
+                             qobject_cast<IWingPlugin *>(sender()));
+                         return openFile(filename, openedIndex);
+                       });
   ConnectControlLamba2(
       WingPlugin::Controller::openRegionFile,
-      [=](QString filename, int *openedIndex, qint64 start, qint64 length) {
+      [=](const QString &filename, int *openedIndex, qint64 start,
+          qint64 length) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         return openRegionFile(filename, openedIndex, start, length);
       });
-  ConnectControlLamba2(WingPlugin::Controller::openDriver, [=](QString driver) {
-    plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
-    return openDriver(driver);
-  });
+  ConnectControlLamba2(
+      WingPlugin::Controller::openDriver, [=](const QString &driver) {
+        plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
+        return openDriver(driver);
+      });
   ConnectControlLamba2(
       WingPlugin::Controller::closeFile, [=](int index, bool force) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
@@ -2496,7 +2533,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
         return save(index, ignoreMd5);
       });
   ConnectControlLamba2(WingPlugin::Controller::exportFile,
-                       [=](QString filename, int index, bool ignoreMd5) {
+                       [=](const QString &filename, int index, bool ignoreMd5) {
                          plgsys->resetTimeout(
                              qobject_cast<IWingPlugin *>(sender()));
                          return exportFile(filename, index, ignoreMd5);
@@ -2506,7 +2543,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
     on_exportfile();
   });
   ConnectControlLamba2(WingPlugin::Controller::saveasFile,
-                       [=](QString filename, int index, bool ignoreMd5) {
+                       [=](const QString &filename, int index, bool ignoreMd5) {
                          plgsys->resetTimeout(
                              qobject_cast<IWingPlugin *>(sender()));
                          return saveAs(filename, index, ignoreMd5);
@@ -2531,7 +2568,7 @@ void MainWindow::connectControl(IWingPlugin *plugin) {
   });
   ConnectControlLamba2(
       WingPlugin::Controller::openRegionFileGUI,
-      [=](QString filename, qint64 start, qint64 length) {
+      [=](const QString &filename, qint64 start, qint64 length) {
         plgsys->resetTimeout(qobject_cast<IWingPlugin *>(sender()));
         OpenRegionDialog d(lastusedpath, filename, int(start), int(length));
         if (d.exec()) {
@@ -2597,10 +2634,7 @@ bool MainWindow::requestRelease() {
 }
 
 void MainWindow::setTheme(DGuiApplicationHelper::ColorType theme) {
-  auto p = palette();
-  if (theme == DGuiApplicationHelper::LightType) {
-  } else {
-  }
+  Q_UNUSED(theme);
 }
 
 void MainWindow::on_hexeditor_customContextMenuRequested(const QPoint &pos) {
@@ -2718,7 +2752,7 @@ ErrFile MainWindow::openRegionFile(QString filename, int *openedindex,
     }
 
     int i = 0;
-    for (auto item : hexfiles) {
+    for (auto &item : hexfiles) {
       if (item.filename == filename) {
         if (openedindex) {
           *openedindex = i;
@@ -2804,7 +2838,7 @@ ErrFile MainWindow::openFile(QString filename, int *openedindex,
     }
 
     int i = 0;
-    for (auto item : hexfiles) {
+    for (auto &item : hexfiles) {
       if (item.filename == filename) {
         if (oldworkspace) {
           *oldworkspace = item.workspace.length() > 0;
@@ -2913,7 +2947,7 @@ ErrFile MainWindow::openDriver(QString driver) {
         return ErrFile::Permission;
       }
 
-      for (auto item : hexfiles) {
+      for (auto &item : hexfiles) {
         if (item.filename == driver) {
           if (_enableplugin) {
             params << ErrFile::AlreadyOpened;
@@ -3028,6 +3062,7 @@ ErrFile MainWindow::closeFile(int index, bool force) {
   if (hexfiles.count() == 0) {
     setEditModeEnabled(false);
     txtDecode->clear();
+    gotobar->setVisible(false);
   }
   if (_enableplugin) {
     params << ErrFile::Success;
@@ -3228,9 +3263,8 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event) {
 void MainWindow::dropEvent(QDropEvent *event) {
   const QMimeData *mimeData = event->mimeData();
   if (mimeData->hasUrls()) {
-    QList<QUrl> urlList = mimeData->urls();
     QStringList files;
-    for (auto item : mimeData->urls()) {
+    for (auto &item : mimeData->urls()) {
       if (!item.isEmpty())
         files << item.toLocalFile();
     }
@@ -3651,7 +3685,7 @@ void MainWindow::on_bookmarkChanged(BookMarkModEnum flag, int index, qint64 pos,
     QList<BookMarkStruct> bookmaps;
     bookmarks->clear();
     doc->getBookMarks(bookmaps);
-    for (auto item : bookmaps) {
+    for (auto &item : bookmaps) {
       QListWidgetItem *litem = new QListWidgetItem;
       litem->setIcon(ICONRES("bookmark"));
       litem->setData(Qt::UserRole, item.pos);
@@ -3675,6 +3709,9 @@ void MainWindow::on_documentSwitched() {
                       : infouw);
   } else {
     iw->setPixmap(infouw);
+  }
+  if (gotobar->isVisible()) {
+    gotobar->clearInput();
   }
 }
 
@@ -4046,14 +4083,14 @@ void MainWindow::on_fileInfo() {
 }
 
 void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
-  for (auto item : toolbartools.values()) {
+  for (auto &item : toolbartools) {
     item->setEnabled(b);
   }
   hexeditorMenu->setEnabled(b);
-  for (auto item : toolmenutools.values()) {
+  for (auto &item : toolmenutools) {
     item->setEnabled(b);
   }
-  for (auto item : toolbtnstools.values()) {
+  for (auto &item : toolbtnstools) {
     item->setEnabled(b);
   }
 
@@ -4062,8 +4099,8 @@ void MainWindow::setEditModeEnabled(bool b, bool isdriver) {
     auto dm = hexeditor->document()->documentType() == DocumentType::WorkSpace;
     iw->setPixmap(dm ? infow : infouw);
     auto doc = hexeditor->document();
-    doc->canRedoChanged(doc->canRedo());
-    doc->canUndoChanged(doc->canUndo());
+    emit doc->canRedoChanged(doc->canRedo());
+    emit doc->canUndoChanged(doc->canUndo());
   } else {
     iw->setPixmap(infouw);
   }

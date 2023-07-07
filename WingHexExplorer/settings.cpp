@@ -1,5 +1,4 @@
 #include "settings.h"
-#include "dthememanager.h"
 #include "utilities.h"
 #include <DMessageManager>
 #include <DSettings>
@@ -8,7 +7,6 @@
 #include <DSettingsWidgetFactory>
 #include <QApplication>
 #include <QComboBox>
-#include <QDebug>
 #include <QDir>
 #include <QFontDatabase>
 #include <QMessageBox>
@@ -17,13 +15,14 @@
 #include <QStyleFactory>
 #include <QTextCodec>
 
+#include "define.h"
+
 Settings *Settings::s_pSetting = nullptr;
 Settings::Settings(QWidget *parent) : QObject(parent) {
   QString strConfigPath =
       QString("%1/%2/%3/config.conf")
-          .arg(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation))
-          .arg(qApp->organizationName())
-          .arg(qApp->applicationName());
+          .arg(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation),
+               ORGNAME, APPNAME);
 
   m_backend = new QSettingBackend(strConfigPath);
 
@@ -171,34 +170,34 @@ void Settings::applySetting() {
 #define Apply(Var, SettingName, Signal)                                        \
   auto Var = settings->option(SettingName);                                    \
   if (Var != nullptr)                                                          \
-    emit Signal;
+    Signal;
 
   Apply(plugin, "editor.plugin.enableplugin",
-        sigChangePluginEnabled(plugin->value().toBool()));
+        emit sigChangePluginEnabled(plugin->value().toBool()));
   Apply(rootplugin, "editor.plugin.rootenableplugin",
-        sigChangeRootPluginEnabled(rootplugin->value().toBool()));
+        emit sigChangeRootPluginEnabled(rootplugin->value().toBool()));
   Apply(fontFamliy, "appearance.font.family",
-        sigAdjustFont(fontFamliy->value().toString()));
+        emit sigAdjustFont(fontFamliy->value().toString()));
   Apply(hexfontSize, "editor.basic.size",
-        sigAdjustEditorFontSize(hexfontSize->value().toInt()));
+        emit sigAdjustEditorFontSize(hexfontSize->value().toInt()));
   Apply(infofontSize, "appearance.font.size",
-        sigAdjustInfoFontSize(infofontSize->value().toInt()));
+        emit sigAdjustInfoFontSize(infofontSize->value().toInt()));
   Apply(showAddr, "editor.basic.showaddr",
-        sigShowAddressNumber(showAddr->value().toBool()));
+        emit sigShowAddressNumber(showAddr->value().toBool()));
   Apply(showCol, "editor.basic.showcol",
-        sigShowColNumber(showCol->value().toBool()));
+        emit sigShowColNumber(showCol->value().toBool()));
   Apply(showText, "editor.basic.showtext",
-        sigShowEncodingText(showText->value().toBool()));
+        emit sigShowEncodingText(showText->value().toBool()));
   Apply(windowstate, "appearance.window.windowsize",
-        sigChangeWindowSize(windowstate->value().toString()));
+        emit sigChangeWindowSize(windowstate->value().toString()));
   Apply(encoding, "editor.basic.encoding",
-        sigChangedEncoding(encoding->value().toString()));
+        emit sigChangedEncoding(encoding->value().toString()));
   Apply(fmax, "editor.basic.findmaxcount",
-        sigAdjustFindMaxCount(fmax->value().toInt()););
+        emit sigAdjustFindMaxCount(fmax->value().toInt()););
   Apply(cplim, "editor.basic.copylimit",
-        sigAdjustCopyLimit(cplim->value().toInt()););
+        emit sigAdjustCopyLimit(cplim->value().toInt()););
   Apply(decstrlim, "editor.basic.decstrlimit",
-        sigAdjustDecodeStringLimit(decstrlim->value().toInt()););
+        emit sigAdjustDecodeStringLimit(decstrlim->value().toInt()););
 }
 
 DDialog *Settings::createDialog(const QString &title, const QString &content,

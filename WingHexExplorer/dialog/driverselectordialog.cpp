@@ -14,8 +14,8 @@ DriverSelectorDialog::DriverSelectorDialog(DMainWindow *parent)
   auto infos = si.mountedVolumes();
   addContent(new DLabel("PleaseChooseDriver", this));
   addSpacing(5);
-  for (auto item : infos) {
-    if (item.device()[0] == '/') {
+  for (auto &item : infos) {
+    if (item.device().at(0) == '/') {
       drivers->addItem(new QListWidgetItem(ico, item.device()));
       m_infos.push_back(item);
     }

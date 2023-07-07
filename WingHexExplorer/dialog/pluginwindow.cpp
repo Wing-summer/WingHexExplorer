@@ -34,7 +34,7 @@ void PluginWindow::setPluginSystem(PluginSystem *pluginsys) {
   m_pluginsys = pluginsys;
   plglist->clear();
   auto pico = ICONRES("plugin");
-  for (auto item : pluginsys->plugins()) {
+  for (auto &item : pluginsys->plugins()) {
     plglist->addItem(new QListWidgetItem(pico, item->pluginName()));
   }
 

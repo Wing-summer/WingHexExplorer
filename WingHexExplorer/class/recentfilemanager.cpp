@@ -21,7 +21,7 @@ void RecentFileManager::apply() {
   a = new QAction(m_menu);
   a->setText(tr("RemoveItem"));
   a->setIcon(ICONRES("del"));
-  connect(a, &QAction::triggered, [=] {
+  connect(a, &QAction::triggered, this, [=] {
     if (hitems.count() == 0) {
       DMessageManager::instance()->sendMessage(m_parent, ICONRES("clearhis"),
                                                tr("NoHistoryDel"));
@@ -43,7 +43,7 @@ void RecentFileManager::apply() {
   m_menu->addSeparator();
   auto s = Settings::instance()->loadRecent();
   int i = 0;
-  for (auto item : s) {
+  for (auto &item : s) {
     if (QFile::exists(item)) {
       if (m_recents.count() > 10)
         break;
@@ -71,7 +71,6 @@ void RecentFileManager::addRecentFile(QString filename) {
     }
 
     auto a = new QAction(m_menu);
-    a = new QAction(m_menu);
     a->setData(filename);
     connect(a, &QAction::triggered, this, &RecentFileManager::trigger);
     m_recents.push_front(filename);
@@ -81,7 +80,7 @@ void RecentFileManager::addRecentFile(QString filename) {
       m_menu->addAction(a);
     hitems.push_front(a);
     auto i = 0;
-    for (auto item : hitems) {
+    for (auto &item : hitems) {
       item->setText(QString("%1 : %2").arg(i++).arg(item->data().toString()));
     }
   } else {
@@ -91,7 +90,7 @@ void RecentFileManager::addRecentFile(QString filename) {
       m_menu->insertAction(hitems.first(), a);
       hitems.move(o, 0);
       auto i = 0;
-      for (auto item : hitems) {
+      for (auto &item : hitems) {
         item->setText(QString("%1 : %2").arg(i++).arg(item->data().toString()));
       }
     }
@@ -123,7 +122,7 @@ void RecentFileManager::clearFile() {
                                              tr("NoHistoryDel"));
     return;
   }
-  for (auto item : hitems) {
+  for (auto &item : hitems) {
     m_menu->removeAction(item);
   }
   m_recents.clear();

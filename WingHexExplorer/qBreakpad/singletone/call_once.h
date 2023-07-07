@@ -67,15 +67,14 @@ inline static void qCallOnce(Function func, QBasicAtomicInt& flag)
     }
 }
 
-template <class Function>
-inline static void qCallOncePerThread(Function func)
-{
-    using namespace CallOnce;
-    if (!once_flag()->hasLocalData()) {
-        once_flag()->setLocalData(new QAtomicInt(CO_Request));
-        qCallOnce(func, *once_flag()->localData());
-    }
-}
+//template <class Function>
+//inline static void qCallOncePerThread(Function func)
+//{
+//    using namespace CallOnce;
+//    if (!once_flag()->hasLocalData()) {
+//        once_flag()->setLocalData(new QAtomicInt(CO_Request));
+//        qCallOnce(func, *once_flag()->localData());
+//    }
+//}
 
 #endif // CALL_ONCE
-

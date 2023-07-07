@@ -50,13 +50,13 @@ FindDialog::FindDialog(bool sel, DMainWindow *parent) : DDialog(parent) {
 
   QList<DButtonBoxButton *> blist;
   auto b = new DButtonBoxButton(tr("BeforeCursor"), this);
-  connect(b, &DButtonBoxButton::toggled, [=](bool b) {
+  connect(b, &DButtonBoxButton::toggled, this, [=](bool b) {
     if (b)
       _dir = SearchDirection::Foreword;
   });
   blist.push_back(b);
   b = new DButtonBoxButton(tr("AfterCursor"), this);
-  connect(b, &DButtonBoxButton::toggled, [=](bool b) {
+  connect(b, &DButtonBoxButton::toggled, this, [=](bool b) {
     if (b)
       _dir = SearchDirection::Backword;
   });
@@ -64,7 +64,7 @@ FindDialog::FindDialog(bool sel, DMainWindow *parent) : DDialog(parent) {
   blist.push_back(b);
   b = new DButtonBoxButton(tr("Selection"), this);
   if (sel) {
-    connect(b, &DButtonBoxButton::toggled, [=](bool b) {
+    connect(b, &DButtonBoxButton::toggled, this, [=](bool b) {
       if (b)
         _dir = SearchDirection::Selection;
     });
@@ -73,7 +73,7 @@ FindDialog::FindDialog(bool sel, DMainWindow *parent) : DDialog(parent) {
   }
   blist.push_back(b);
   b = new DButtonBoxButton(tr("None"), this);
-  connect(b, &DButtonBoxButton::toggled, [=](bool b) {
+  connect(b, &DButtonBoxButton::toggled, this, [=](bool b) {
     if (b)
       _dir = SearchDirection::None;
   });

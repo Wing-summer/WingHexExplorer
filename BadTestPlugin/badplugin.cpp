@@ -18,15 +18,15 @@ BadPlugin::~BadPlugin() {}
 
 void BadPlugin::unload() {}
 
-QString BadPlugin::pluginName() { return "BadPlugin"; }
+const QString BadPlugin::pluginName() { return "BadPlugin"; }
 
-QString BadPlugin::pluginAuthor() { return "wingsummer"; }
+const QString BadPlugin::pluginAuthor() { return "wingsummer"; }
 
 uint BadPlugin::pluginVersion() { return 1; }
 
-QString BadPlugin::signature() { return WINGSUMMER; }
+const QString BadPlugin::signature() { return WINGSUMMER; }
 
-QString BadPlugin::pluginComment() {
+const QString BadPlugin::pluginComment() {
   return "This is a bad plugin , hia, hia~";
 }
 

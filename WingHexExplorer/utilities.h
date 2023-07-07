@@ -5,9 +5,6 @@
 #include "QHexView/document/qhexrenderer.h"
 #include "plugin/iwingplugin.h"
 #include <QCryptographicHash>
-#include <QDBusInterface>
-#include <QDBusReply>
-#include <QDebug>
 #include <QList>
 #include <QStyle>
 #include <QTextCodec>

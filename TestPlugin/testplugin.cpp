@@ -34,17 +34,17 @@ bool TestPlugin::init(QList<WingPluginInfo> loadedplugin) {
 
 void TestPlugin::unload() {}
 
-QString TestPlugin::pluginName() { return "TestPlugin"; }
+const QString TestPlugin::pluginName() { return "TestPlugin"; }
 
-QString TestPlugin::pluginAuthor() { return "Wingsummer"; }
+const QString TestPlugin::pluginAuthor() { return "Wingsummer"; }
 
-QString TestPlugin::pluginComment() {
+const QString TestPlugin::pluginComment() {
   return "A Sample Plugin for WingHex Explorer by Wingsummer!";
 }
 
 uint TestPlugin::pluginVersion() { return 1; }
 
-QString TestPlugin::signature() { return WINGSUMMER; }
+const QString TestPlugin::signature() { return WINGSUMMER; }
 
 void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
                                     QList<QVariant> msg) {
@@ -66,6 +66,6 @@ void TestPlugin::plugin2MessagePipe(WingPluginMessage type,
 QMenu *TestPlugin::registerMenu() { return testmenu; }
 
 void TestPlugin::registerDockWidget(
-    QMap<QDockWidget *, Qt::DockWidgetArea> &rdw) {
+    QHash<QDockWidget *, Qt::DockWidgetArea> &rdw) {
   rdw.insert(dw, Qt::DockWidgetArea::BottomDockWidgetArea);
 }

@@ -1,8 +1,10 @@
 #include "./dialog/mainwindow.h"
 #include "class/appmanager.h"
 #include "qBreakpad/QBreakpadHandler.h"
+#include <DAboutDialog>
 #include <DApplication>
 #include <DApplicationSettings>
+#include <DConfig>
 #include <DFontSizeManager>
 #include <DMessageBox>
 #include <DProgressBar>
@@ -17,6 +19,9 @@
 #include <QLayout>
 #include <QStandardPaths>
 #include <QUrl>
+#include <dfeaturedisplaydialog.h>
+
+#include "define.h"
 
 DWIDGET_USE_NAMESPACE
 
@@ -38,30 +43,33 @@ int main(int argc, char *argv[]) {
     fakeArgs[i + 2] = argv[i];
   int fakeArgc = argc + 2;
 
-  DApplication a(fakeArgc, fakeArgs.data());
+  auto a = DApplication::globalApplication(fakeArgc, fakeArgs.data());
+
   QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
-  auto s = a.applicationDirPath() + "/lang/default.qm";
+  auto s = a->applicationDirPath() + "/lang/default.qm";
   QTranslator translator;
   if (!translator.load(s)) {
     DMessageBox::critical(nullptr, "Error", "Error Loading Translation File!",
                           DMessageBox::Ok);
     return -1;
   }
-  a.installTranslator(&translator);
+  a->installTranslator(&translator);
 
-  a.setOrganizationName("WingCloud");
-  a.setApplicationName(QObject::tr("WingHexExplorer"));
-  a.setApplicationVersion("1.5.4");
-  a.setApplicationLicense("AGPL-3.0");
-  a.setProductIcon(QIcon(":/images/icon.png"));
-  a.setProductName(QObject::tr("WingHexExplorer"));
-  a.setApplicationDescription(QObject::tr("AppDescription"));
-  a.setVisibleMenuShortcutText(true);
+  a->setOrganizationName(QObject::tr("WingCloud"));
+  a->setApplicationName(APPNAME);
+  a->setApplicationVersion("1.5.5");
+  a->setApplicationLicense("AGPL-3.0");
+  a->setProductIcon(QIcon(":/images/icon.png"));
+  a->setProductName(QObject::tr("WingHexExplorer"));
+  a->setApplicationDescription(QObject::tr("AppDescription"));
+  a->setVisibleMenuShortcutText(true);
+  a->setApplicationHomePage("https://www.cnblogs.com/wingsummer/");
+  a->setApplicationAcknowledgementPage("https://www.cnblogs.com/wingsummer/");
 
-  a.loadTranslator();
-  a.setApplicationDisplayName("WingHexExplorer");
+  a->loadTranslator();
+  a->setApplicationDisplayName(QObject::tr("WingHexExplorer"));
 
-  if (!a.setSingleInstance("com.Wingsummer.WingHexExplorer")) {
+  if (!a->setSingleInstance("com.Wingsummer.WingHexExplorer")) {
     return -1;
   }
 
@@ -73,15 +81,16 @@ int main(int argc, char *argv[]) {
                      AppManager::openFiles(arguments.mid(1));
                    });
 
-  QCommandLineParser parser;
-  parser.process(a);
-
   QStringList urls;
-  QStringList arguments = parser.positionalArguments();
 
-  for (const QString &path : arguments) {
-    QFileInfo info(path);
-    urls << info.absoluteFilePath();
+  {
+    QCommandLineParser parser;
+    parser.process(*a);
+
+    for (auto &path : parser.positionalArguments()) {
+      QFileInfo info(path);
+      urls << info.absoluteFilePath();
+    }
   }
 
   // 保存程序的窗口主题设置
@@ -105,10 +114,8 @@ int main(int argc, char *argv[]) {
         msg.setInformativeText(QObject::tr("Issue2Author"));
         msg.setDetailedText(
             QString("%1:%2\n%3:%4")
-                .arg(QObject::tr("dmpPath"))
-                .arg(path)
-                .arg(QObject::tr("logPath"))
-                .arg(logfile.isEmpty() ? QObject::tr("ExportFail") : logfile));
+                .arg(QObject::tr("dmpPath"), path, QObject::tr("logPath"),
+                     logfile.isEmpty() ? QObject::tr("ExportFail") : logfile));
         msg.exec();
       });
 
@@ -116,5 +123,5 @@ int main(int argc, char *argv[]) {
 
   manager->openFiles(urls);
   Dtk::Widget::moveToCenter(&w);
-  return a.exec();
+  return a->exec();
 }

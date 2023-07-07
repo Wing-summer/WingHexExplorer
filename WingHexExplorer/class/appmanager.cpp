@@ -1,4 +1,5 @@
 #include "appmanager.h"
+#include "class/logger.h"
 #include <DMessageManager>
 #include <QMessageBox>
 
@@ -40,7 +41,7 @@ void AppManager::openFiles(QStringList files) {
   if (mWindow) {
     bool err = false;
     QStringList errof;
-    for (auto file : files) {
+    for (auto &file : files) {
       if (openFile(file)) {
         err = true;
         errof << file;

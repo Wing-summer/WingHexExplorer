@@ -2,7 +2,6 @@
 #include "utilities.h"
 #include <QShortcut>
 
-const int nJumpLineBarWidth = 212;
 const int nJumpLineBarHeight = 60;
 
 GotoBar::GotoBar(QWidget *parent) : DFloatingWidget(parent) {
@@ -68,6 +67,8 @@ void GotoBar::activeInput(int oldrow, int oldcolumn, quint64 oldoffset,
   edit->setFocus();
   setVisible(true);
 }
+
+void GotoBar::clearInput() { m_editLine->clear(); }
 
 void GotoBar::handleLineChanged() {
   QString content = m_editLine->lineEdit()->text();

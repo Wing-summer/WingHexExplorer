@@ -266,12 +266,12 @@ private:
 
 private:
   void PluginMenuNeedAdd(QMenu *menu);
-  void PluginDockWidgetAdd(QString pluginname,
-                           QMap<QDockWidget *, Qt::DockWidgetArea> &rdw);
+  void PluginDockWidgetAdd(const QString &pluginname,
+                           const QHash<QDockWidget *, Qt::DockWidgetArea> &rdw);
   void PluginToolButtonAdd(QToolButton *btn);
   void PluginToolBarAdd(QToolBar *tb, Qt::ToolBarArea align);
-  void connectBase(IWingPlugin *plugin);
-  void connectControl(IWingPlugin *plugin);
+  void connectBase(const IWingPlugin *plugin);
+  void connectControl(const IWingPlugin *plugin);
   // shadow
   bool requestControl(int timeout);
   bool requestRelease();
@@ -323,7 +323,6 @@ private:
   DListWidget *bookmarks;
   QTableWidgetItem *numsitem = nullptr;
   QTableWidgetItem (*findresitem)[3] = {nullptr};
-  Logger *logger;
   RecentFileManager *recentmanager;
 
   QTextBrowser *txtDecode;
